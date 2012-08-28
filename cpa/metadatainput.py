@@ -83,9 +83,7 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
         self.settings_container.SetSizer(wx.BoxSizer())
         self.settings_panel = wx.Panel(self)
 
-        self.SetMinimumPaneSize(40)
-        self.SplitVertically(self.tree, self.settings_container, self.tree.MinWidth)
-        self.SetSashPosition(180)
+        self.SplitVertically(self.tree, self.settings_container, -280)
         self.Centre()
     
     def OnLeafSelect(self):

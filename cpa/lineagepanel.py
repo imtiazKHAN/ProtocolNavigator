@@ -850,27 +850,8 @@ class LineagePanel(wx.Panel):
 
         
 if __name__ == "__main__":
-    
-    N_FURCATIONS = 2
-    N_TIMEPOINTS = 1
-    MAX_TIMEPOINT = 100
-    PLATE_TYPE = exp.P24
-    
     app = wx.PySimpleApp()
     
-    f = LineageFrame(None, size=(600, 300))
+    f = LineageFrame(None)
     f.Show()
-    #f.generate_random_data()
-
-    exp.PlateDesign.add_plate('Plate', '1', PLATE_TYPE, 'groupA')
-    allwells = exp.PlateDesign.get_well_ids(exp.PlateDesign.get_plate_format('Plate1'))
-    f.lineage_panel.on_timeline_updated('')
-    ## GENERATE RANDOM EVENTS ON RANDOM WELLS
-    #for t in [0] + list(np.random.random_integers(1, MAX_TIMEPOINT, N_TIMEPOINTS)):
-        #for j in range(np.random.randint(1, N_FURCATIONS)):
-            #np.random.shuffle(allwells)
-            #well_ids = [('test', well) for well in allwells[:np.random.randint(0, len(allwells))]]
-            ##timeline.add_event(t, 'event%d'%(t), well_ids)
-            #meta.set_field('AddProcess|Stain|Wells|0|%s'%(t), well_ids)
-    
     app.MainLoop()

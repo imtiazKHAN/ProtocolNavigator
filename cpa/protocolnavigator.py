@@ -19,7 +19,7 @@ class LineageProfiler(wx.App):
     def OnInit(self):
 
         self.settings_frame = wx.Frame(None, title='ProtocolNavigator', 
-                                  size=(1024, 768), pos=(-1,-1))
+                                  size=(900, 768), pos=(-1,-1))
         self.settings_frame.Sizer = wx.BoxSizer()
         self.lr_splitter = wx.SplitterWindow(self.settings_frame)
         self.settings_frame.Sizer.Add(self.lr_splitter, 1, wx.EXPAND)
@@ -39,10 +39,10 @@ class LineageProfiler(wx.App):
         self.settings_frame.GetMenuBar().Append(fileMenu, 'File')
         
         self.bench_frame = Bench(self, self.ud_splitter)
-        self.ud_splitter.SplitHorizontally(self.exptsetting_frame, self.bench_frame)
+        self.ud_splitter.SplitHorizontally(self.exptsetting_frame, self.bench_frame, -400)
         
         self.lineage_frame = LineageFrame(self.lr_splitter)
-        self.lr_splitter.SplitVertically(self.ud_splitter, self.lineage_frame)
+        self.lr_splitter.SplitVertically(self.ud_splitter, self.lineage_frame, -500)
         
         if hasattr(sys, 'frozen'):
             path = os.path.split(os.path.abspath(sys.argv[0]))[0]
