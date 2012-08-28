@@ -22,12 +22,11 @@ SPACE_TIME_COMPACT = 2
 
 meta = exp.ExperimentSettings.getInstance()
 
-class LineageFrame(wx.Frame):
-    def __init__(self, parent, id=-1, title='Visualization Panel', **kwargs):
-        wx.Frame.__init__(self, parent, id, title=title, **kwargs)
+class LineageFrame(wx.ScrolledWindow):
+    def __init__(self, parent, id=-1, **kwargs):
+        wx.ScrolledWindow.__init__(self, parent, id, **kwargs)
         
-        sw = wx.ScrolledWindow(self)
-        self.sw = sw
+        sw = self
         timeline_panel = TimelinePanel(sw)
         self.timeline_panel = timeline_panel
         lineage_panel = LineagePanel(sw)
@@ -38,7 +37,6 @@ class LineageFrame(wx.Frame):
         sw.Sizer.Add(timeline_panel, 0, wx.EXPAND|wx.LEFT, 40)
         sw.Sizer.Add(lineage_panel, 1, wx.EXPAND)
         sw.SetScrollbars(20, 20, self.Size[0]/20, self.Size[1]/20, 0, 0)
-        sw.Fit()
         
         #tb = self.CreateToolBar(wx.TB_HORZ_TEXT|wx.TB_FLAT)
         #tb.AddControl(wx.StaticText(tb, -1, 'zoom'))
@@ -152,7 +150,6 @@ class TimelinePanel(wx.Panel):
             self.ICON_SIZE = icon_size
         self._recalculate_min_size()
         self.Refresh(eraseBackground=False)
-        self.Parent.FitInside()
         
     def set_x_spacing(self, mode):
         if mode == SPACE_TIME:
@@ -161,7 +158,6 @@ class TimelinePanel(wx.Panel):
             self.time_x = False
         self._recalculate_min_size()
         self.Refresh(eraseBackground=False)
-        self.Parent.FitInside()
 
     def on_timeline_updated(self, tag):
         timeline = meta.get_timeline()
@@ -175,7 +171,6 @@ class TimelinePanel(wx.Panel):
             self.min_time_gap = 1
         self._recalculate_min_size()
         self.Refresh(eraseBackground=False)
-        self.Parent.FitInside()
 	
     def on_note_icon_add(self):
 	note_num = {}
@@ -190,7 +185,6 @@ class TimelinePanel(wx.Panel):
 	    self.NOTE_ICON_FACTOR = (max(note_num.values())+1) * self.ICON_SIZE
 	    self._recalculate_min_size()
 	    self.Refresh(eraseBackground=False)
-	    self.Parent.FitInside()	
 	
     def _recalculate_min_size(self):
         if self.timepoints is not None and len(self.timepoints) > 0:
@@ -388,7 +382,6 @@ class LineagePanel(wx.Panel):
             self.time_x = False
         self._recalculate_min_size()
         self.Refresh(eraseBackground=False)
-        self.Parent.FitInside()
         
     def set_style(self, padding=None, xgap=None, ygap=None, node_radius=None,
                   flask_gap=None):
@@ -404,7 +397,6 @@ class LineagePanel(wx.Panel):
             self.FLASK_GAP = flask_gap
         self._recalculate_min_size()
         self.Refresh(eraseBackground=False)
-        self.Parent.FitInside()
      
     def on_timeline_updated(self, tag):
         '''called to add events to the timeline and update the lineage
@@ -428,7 +420,6 @@ class LineagePanel(wx.Panel):
 
         self._recalculate_min_size()
         self.Refresh(eraseBackground=False)
-        self.Parent.FitInside()
         
     def _recalculate_min_size(self):
         timepoints = meta.get_timeline().get_unique_timepoints()

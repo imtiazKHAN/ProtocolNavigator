@@ -15,9 +15,9 @@ from wx.lib.masked import TimeCtrl
 
 meta = ExperimentSettings.getInstance()
 
-class Bench(wx.Frame):
-    def __init__(self, protocol_navigator, id=-1, title='Bench', **kwargs):
-        wx.Frame.__init__(self, None, id, title=title, **kwargs)
+class Bench(wx.Panel):
+    def __init__(self, protocol_navigator, parent, id=-1, **kwargs):
+        wx.Panel.__init__(self, parent, id, **kwargs)
         self.protocol_navigator = protocol_navigator
 
         # --- FRAME IS SPLIT INTO 2 PARTS (top, bottom) ---

@@ -15,7 +15,7 @@ AppUpdatesURL=http://www.cellprofiler.org
 DefaultDirName={pf}\ProtocolNavigator
 DefaultGroupName=ProtocolNavigator
 OutputDir=.\output
-;SetupIconFile=.\CellProfilerIcon.ico
+SetupIconFile=.\icons\protocol_navigator.ico
 Compression=lzma
 SolidCompression=yes
 

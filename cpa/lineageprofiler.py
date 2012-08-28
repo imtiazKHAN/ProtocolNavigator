@@ -18,8 +18,11 @@ class LineageProfiler(wx.App):
 
         self.settings_frame = wx.Frame(None, title='ProtocolNavigator', 
                                   size=(600, 400), pos=(-1,-1))
-        self.exptsetting_frame = ExperimentSettingsWindow(self.settings_frame)
-        self.settings_frame.Show()
+        self.settings_frame.Sizer = wx.BoxSizer()
+        self.lr_splitter = wx.SplitterWindow(self.settings_frame)
+        self.settings_frame.Sizer.Add(self.lr_splitter, 1, wx.EXPAND)
+        self.ud_splitter = wx.SplitterWindow(self.lr_splitter)
+        self.exptsetting_frame = ExperimentSettingsWindow(self.ud_splitter)
         self.settings_frame.SetMenuBar(wx.MenuBar())
         fileMenu = wx.Menu()
         
@@ -33,11 +36,13 @@ class LineageProfiler(wx.App):
         self.settings_frame.Bind(wx.EVT_MENU, self.on_print_protocol, printExperimentMenuItem)
         self.settings_frame.GetMenuBar().Append(fileMenu, 'File')
         
-        self.bench_frame = Bench(None, size=(600,450), pos=(0, self.settings_frame.Position[1]+410))
-        self.bench_frame.Show()
+        self.bench_frame = Bench(self.ud_splitter, size=(600,450), pos=(0, self.settings_frame.Position[1]+410))
+        self.ud_splitter.SplitVertically(self.exptsetting_frame, self.bench_frame)
         
-        self.lineage_frame = LineageFrame(None, size=(700, 800), pos=(610, -1))
-        self.lineage_frame.Show()
+        self.lineage_frame = LineageFrame(self.lr_splitter, size=(700, 800), pos=(610, -1))
+        self.lr_splitter.SplitHorizontally(self.ud_splitter, self.lineage_frame)
+        self.settings_frame.Layout()
+        self.settings_frame.Show()
         
         return True
  
