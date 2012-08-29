@@ -2,7 +2,7 @@
 Delete build and dist folder from the cpa folder
 Also delete previous version of setup.exe from the output folder
 To invoke, from the command-line type change directory to ..\cpa and type the following command:
-python protocol_navigator_py2exe.py msi
+python protocol_navigator_py2exe.py py2exe msi
 
 This script will create three subdirectories
 build: contains the collection of files needed during packaging
