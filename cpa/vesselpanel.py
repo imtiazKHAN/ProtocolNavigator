@@ -273,7 +273,7 @@ class VesselPanel(wx.Panel):
         # Set font size to fit
         font = dc.GetFont()
         if R > 40:
-            font.SetPixelSize((R-10, f(R-10)*2))
+            font.SetPixelSize((R-10, (R-10)*2))
         elif R > 6:
             font.SetPixelSize((R-2, (R-2)*2))
         else:
