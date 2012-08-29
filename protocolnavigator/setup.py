@@ -8,7 +8,7 @@
 #   $ ditto --rsrc --arch i386 'dist/pn.app' 'dist/Protocol Navigator.app'
 #   $ rm -rf 'dist/pn.app'
 #   $ VERSION=`git rev-parse HEAD|cut -c1-6` # or pick a more sensible number
-#   $ hdiutil create -volname "Protocol Navigator $VERSION" -imagekey zlib-level=9 -srcfolder dist 'Protocol_Navigator_$VERSION.dmg'
+#   $ hdiutil create -volname "Protocol Navigator $VERSION" -imagekey zlib-level=9 -srcfolder dist "Protocol_Navigator_$VERSION.dmg"
 #
 
 from setuptools import setup, Extension
