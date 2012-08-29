@@ -51,10 +51,10 @@ class LineageProfiler(wx.App):
             path = os.path.join(os.path.split(__file__)[0], "icons")
         icon = wx.EmptyIcon()
         if sys.platform.startswith('win'):
-            icon_path = os.path.join(path, "protocol_navigator32x32.png")
+            icon_image = icons.protocol_navigator32x32
         else:
-            icon_path = os.path.join(path, "protocol_navigator128x128.png")
-        icon.CopyFromBitmap(wx.BitmapFromImage(wx.Image(icon_path)))
+            icon_image = icons.protocol_navigator128x128
+        icon.CopyFromBitmap(wx.BitmapFromImage(icon_image))
         self.settings_frame.SetIcon(icon)
         self.settings_frame.Layout()
         self.settings_frame.Show()
