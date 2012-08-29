@@ -1,14 +1,14 @@
 #
-# setup.py for building the Protocol Navigator application for Mac.
+# setup.py for building the ProtocolNavigator application for Mac.
 #
 # How to build:
 #
 #   $ pythonw32 setup.py py2app
-#   $ mv 'dist/Protocol Navigator.app' 'dist/pn.app'
-#   $ ditto --rsrc --arch i386 'dist/pn.app' 'dist/Protocol Navigator.app'
+#   $ mv 'dist/ProtocolNavigator.app' 'dist/pn.app'
+#   $ ditto --rsrc --arch i386 'dist/pn.app' 'dist/ProtocolNavigator.app'
 #   $ rm -rf 'dist/pn.app'
 #   $ VERSION=`git rev-parse HEAD|cut -c1-6` # or pick a more sensible number
-#   $ hdiutil create -volname "Protocol Navigator $VERSION" -imagekey zlib-level=9 -srcfolder dist "Protocol_Navigator_$VERSION.dmg"
+#   $ hdiutil create -volname "ProtocolNavigator $VERSION" -imagekey zlib-level=9 -srcfolder dist "ProtocolNavigator_$VERSION.dmg"
 #
 
 from setuptools import setup, Extension
@@ -21,14 +21,14 @@ import numpy
 import pytz
 pytz.zoneinfo = pytz.tzinfo
 pytz.zoneinfo.UTC = pytz.UTC
-import pilfix
+#import pilfix
 
 import util.version
 f = open("util/frozen_version.py", "w")
 f.write("# MACHINE_GENERATED\nversion_string = '%s'" % util.version.version_string)
 f.close()
 
-APPNAME = 'Protocol Navigator'
+APPNAME = 'ProtocolNavigator'
 APP = ['protocolnavigator.py']
 OPTIONS = {'argv_emulation': True,
            'iconfile' : "icons/cpa.icns",
@@ -44,4 +44,3 @@ setup(
     setup_requires=['py2app'],
     name = APPNAME,
 )
-
