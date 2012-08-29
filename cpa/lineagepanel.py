@@ -171,6 +171,7 @@ class TimelinePanel(wx.Panel):
             self.min_time_gap = 1
         self._recalculate_min_size()
         self.Refresh(eraseBackground=False)
+	self.Parent.FitInside()
 	
     def on_note_icon_add(self):
 	note_num = {}
@@ -185,6 +186,7 @@ class TimelinePanel(wx.Panel):
 	    self.NOTE_ICON_FACTOR = (max(note_num.values())+1) * self.ICON_SIZE
 	    self._recalculate_min_size()
 	    self.Refresh(eraseBackground=False)
+	    self.Parent.FitInside()
 	
     def _recalculate_min_size(self):
         if self.timepoints is not None and len(self.timepoints) > 0:

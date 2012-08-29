@@ -19,11 +19,11 @@ class LineageProfiler(wx.App):
     def OnInit(self):
 
         self.settings_frame = wx.Frame(None, title='ProtocolNavigator', 
-                                  size=(900, 768), pos=(-1,-1))
+                                  size=(900, 720), pos=(50,10))
         self.settings_frame.Sizer = wx.BoxSizer()
         self.lr_splitter = wx.SplitterWindow(self.settings_frame)
         self.settings_frame.Sizer.Add(self.lr_splitter, 1, wx.EXPAND)
-        self.ud_splitter = wx.SplitterWindow(self.lr_splitter)
+        self.ud_splitter = wx.SplitterWindow(self.lr_splitter, style=wx.NO_BORDER|wx.SP_3DSASH)
         self.exptsetting_frame = ExperimentSettingsWindow(self.ud_splitter)
         self.settings_frame.SetMenuBar(wx.MenuBar())
         fileMenu = wx.Menu()
