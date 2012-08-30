@@ -9,7 +9,7 @@ from wx.html import HtmlEasyPrinting, HtmlWindow
 import snapshotPrinter
 import wx
 import os
-
+# test comment
 
 class LineageProfiler(wx.App):
     '''The ProtocolNavigator Application
