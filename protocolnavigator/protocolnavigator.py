@@ -10,6 +10,7 @@ import snapshotPrinter
 import wx
 import os
 # test comment
+# test comment #2
 
 class LineageProfiler(wx.App):
     '''The ProtocolNavigator Application
