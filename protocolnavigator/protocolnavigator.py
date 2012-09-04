@@ -12,6 +12,7 @@ import os
 # test comment
 # test comment #2
 #test comment 3
+# test comment 4
 
 class LineageProfiler(wx.App):
     '''The ProtocolNavigator Application
