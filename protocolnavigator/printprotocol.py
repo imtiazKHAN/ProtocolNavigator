@@ -96,11 +96,11 @@ class PrintProtocol(wx.Frame):
         for element in protocol_info[1]:
             self.printfile.write('<dfn>'+element[0]+': </dfn><code>'+element[1]+'</code><br />')
         #---- Stock Culture ----#
-	stockcultures = meta.get_field_instances('StockCulture|Sample')
+	stockcultures = meta.get_field_instances('Sample|CellLine')
 	self.printfile.write('<h3>2. Stock Culture</h3>')	
 	if stockcultures:
 	    for instance in stockcultures:
-		protocol_info = self.decode_event_description('StockCulture|Sample|%s'%instance)
+		protocol_info = self.decode_event_description('Sample|CellLine|%s'%instance)
 		self.printfile.write('<i>'+protocol_info[0]+' </i><br />')
 		for element in protocol_info[1]:
 		    self.printfile.write('<dfn>'+element[0]+': </dfn><code>'+element[1]+'</code><br />')
@@ -400,39 +400,39 @@ class PrintProtocol(wx.Frame):
 	    
             return (header, info)
 	
-	if exp.get_tag_type(protocol) == 'StockCulture':
-	    header += '%s cell line (Authority %s, Ref: %s) was used. This will be referred as Stock Instance %s' %(meta.get_field('StockCulture|Sample|CellLine|%s'%instance, default='Not specified'),
-	                                                meta.get_field('StockCulture|Sample|Authority|%s'%instance, default='Not specified'),
+	if exp.get_tag_event(protocol) == 'StockCulture':
+	    header += '%s cell line (Authority %s, Ref: %s) was used. This will be referred as Stock Instance %s' %(meta.get_field('Sample|CellLine|Name|%s'%instance, default='Not specified'),
+	                                                meta.get_field('Sample|CellLine|Authority|%s'%instance, default='Not specified'),
 	                                                                                                         str(instance),	                                                
-	                                                 meta.get_field('StockCulture|Sample|CatalogueNo|%s'%instance, default='Not specified'),
+	                                                 meta.get_field('Sample|CellLine|CatalogueNo|%s'%instance, default='Not specified'),
 	                                                 str(instance))
-	    info.append(('Depositors', meta.get_field('StockCulture|Sample|Depositors|%s'%instance, default='Not specified')))
-	    info.append(('Biosafety Level', meta.get_field('StockCulture|Sample|Biosafety|%s'%instance, default='Not specified')))
-	    info.append(('Shipment', meta.get_field('StockCulture|Sample|Shipment|%s'%instance, default='Not specified')))
-	    info.append(('Permit', meta.get_field('StockCulture|Sample|Permit|%s'%instance, default='Not specified')))
-	    info.append(('Growth Property', meta.get_field('StockCulture|Sample|GrowthProperty|%s'%instance, default='Not specified')))
-	    info.append(('Organism', meta.get_field('StockCulture|Sample|Organism|%s'%instance, default='Not specified')))
-	    info.append(('Morphology', meta.get_field('StockCulture|Sample|Morphology|%s'%instance, default='Not specified')))
-	    info.append(('Organ', meta.get_field('StockCulture|Sample|Organ|%s'%instance, default='Not specified')))    
-	    info.append(('Disease', meta.get_field('StockCulture|Sample|Disease|%s'%instance, default='Not specified')))
-	    info.append(('Products', meta.get_field('StockCulture|Sample|Products|%s'%instance, default='Not specified')))
-	    info.append(('Applications', meta.get_field('StockCulture|Sample|Applications|%s'%instance, default='Not specified')))
-	    info.append(('Receptors', meta.get_field('StockCulture|Sample|Receptors|%s'%instance, default='Not specified')))
-	    info.append(('Antigen', meta.get_field('StockCulture|Sample|Antigen|%s'%instance, default='Not specified')))
-	    info.append(('DNA', meta.get_field('StockCulture|Sample|DNA|%s'%instance, default='Not specified')))
-	    info.append(('Cytogenetic', meta.get_field('StockCulture|Sample|Cytogenetic|%s'%instance, default='Not specified')))
-	    info.append(('Isoenzymes', meta.get_field('StockCulture|Sample|Isoenzymes|%s'%instance, default='Not specified')))
-	    info.append(('Age of Organism (days)', meta.get_field('StockCulture|Sample|Age|%s'%instance, default='Not specified')))
-	    info.append(('Gender', meta.get_field('StockCulture|Sample|Gender|%s'%instance, default='Not specified')))
-	    info.append(('Ethnicity', meta.get_field('StockCulture|Sample|Ethnicity|%s'%instance, default='Not specified')))
-	    info.append(('Comments', meta.get_field('StockCulture|Sample|Comments|%s'%instance, default='Not specified')))
-	    info.append(('Publications', meta.get_field('StockCulture|Sample|Publications|%s'%instance, default='Not specified')))
-	    info.append(('Related Products', meta.get_field('StockCulture|Sample|RelProduct|%s'%instance, default='Not specified')))
-	    info.append(('Original Passage Number', meta.get_field('StockCulture|Sample|OrgPassageNo|%s'%instance, default='Not specified')))
-	    info.append(('Preservation', meta.get_field('StockCulture|Sample|Preservation|%s'%instance, default='Not specified')))
-	    info.append(('GrowthMedium', meta.get_field('StockCulture|Sample|GrowthMedium|%s'%instance, default='Not specified')))
+	    info.append(('Depositors', meta.get_field('Sample|CellLine|Depositors|%s'%instance, default='Not specified')))
+	    info.append(('Biosafety Level', meta.get_field('Sample|CellLine|Biosafety|%s'%instance, default='Not specified')))
+	    info.append(('Shipment', meta.get_field('Sample|CellLine|Shipment|%s'%instance, default='Not specified')))
+	    info.append(('Permit', meta.get_field('Sample|CellLine|Permit|%s'%instance, default='Not specified')))
+	    info.append(('Growth Property', meta.get_field('Sample|CellLine|GrowthProperty|%s'%instance, default='Not specified')))
+	    info.append(('Organism', meta.get_field('Sample|CellLine|Organism|%s'%instance, default='Not specified')))
+	    info.append(('Morphology', meta.get_field('Sample|CellLine|Morphology|%s'%instance, default='Not specified')))
+	    info.append(('Organ', meta.get_field('Sample|CellLine|Organ|%s'%instance, default='Not specified')))    
+	    info.append(('Disease', meta.get_field('Sample|CellLine|Disease|%s'%instance, default='Not specified')))
+	    info.append(('Products', meta.get_field('Sample|CellLine|Products|%s'%instance, default='Not specified')))
+	    info.append(('Applications', meta.get_field('Sample|CellLine|Applications|%s'%instance, default='Not specified')))
+	    info.append(('Receptors', meta.get_field('Sample|CellLine|Receptors|%s'%instance, default='Not specified')))
+	    info.append(('Antigen', meta.get_field('Sample|CellLine|Antigen|%s'%instance, default='Not specified')))
+	    info.append(('DNA', meta.get_field('Sample|CellLine|DNA|%s'%instance, default='Not specified')))
+	    info.append(('Cytogenetic', meta.get_field('Sample|CellLine|Cytogenetic|%s'%instance, default='Not specified')))
+	    info.append(('Isoenzymes', meta.get_field('Sample|CellLine|Isoenzymes|%s'%instance, default='Not specified')))
+	    info.append(('Age of Organism (days)', meta.get_field('Sample|CellLine|Age|%s'%instance, default='Not specified')))
+	    info.append(('Gender', meta.get_field('Sample|CellLine|Gender|%s'%instance, default='Not specified')))
+	    info.append(('Ethnicity', meta.get_field('Sample|CellLine|Ethnicity|%s'%instance, default='Not specified')))
+	    info.append(('Comments', meta.get_field('Sample|CellLine|Comments|%s'%instance, default='Not specified')))
+	    info.append(('Publications', meta.get_field('Sample|CellLine|Publications|%s'%instance, default='Not specified')))
+	    info.append(('Related Products', meta.get_field('Sample|CellLine|RelProduct|%s'%instance, default='Not specified')))
+	    info.append(('Original Passage Number', meta.get_field('Sample|CellLine|OrgPassageNo|%s'%instance, default='Not specified')))
+	    info.append(('Preservation', meta.get_field('Sample|CellLine|Preservation|%s'%instance, default='Not specified')))
+	    info.append(('GrowthMedium', meta.get_field('Sample|CellLine|GrowthMedium|%s'%instance, default='Not specified')))
 	    
-	    passages = [attr for attr in meta.get_attribute_list_by_instance('StockCulture|Sample', instance)
+	    passages = [attr for attr in meta.get_attribute_list_by_instance('Sample|CellLine', instance)
 			                        if attr.startswith('Passage')]
 	    
 	    if passages:
@@ -540,10 +540,10 @@ class PrintProtocol(wx.Frame):
 	
 	if exp.get_tag_event(protocol) == 'Seed':
 	    if meta.get_field('CellTransfer|Seed|StockInstance|%s'%instance) is not None:
-		header += meta.get_field('StockCulture|Sample|CellLine|%s'%meta.get_field('CellTransfer|Seed|StockInstance|%s'%instance)) 
+		header += meta.get_field('Sample|CellLine|Name|%s'%meta.get_field('CellTransfer|Seed|StockInstance|%s'%instance)) 
 	    header += ' cells were seeded with a density of %s from the stock flask (Instance %s). ' %(meta.get_field('CellTransfer|Seed|SeedingDensity|%s'%instance, default = ''), meta.get_field('CellTransfer|Seed|StockInstance|%s'%instance))
 	    #if meta.get_field('CellTransfer|Seed|HarvestInstance|%s'%instance) is not None:
-		#header += meta.get_field('StockCulture|Sample|CellLine|%s'%meta.get_field('CellTransfer|Seed|HarvestInstance|%s'%instance)) 
+		#header += meta.get_field('Sample|CellLine|Name|%s'%meta.get_field('CellTransfer|Seed|HarvestInstance|%s'%instance)) 
 		#header += ' cells were seeded with a density of %s from the Wells depicted bellow. ' %meta.get_field('CellTransfer|Seed|SeedingDensity|%s'%instance, default = '')	    
 	    if meta.get_field('CellTransfer|Seed|MediumUsed|%s'%instance) is not None:
 		header += meta.get_field('CellTransfer|Seed|MediumUsed|%s'%instance)+' medium was used '
@@ -727,7 +727,7 @@ class PrintProtocol(wx.Frame):
             
             #if event == 'Harvest':
                     ##if meta.get_field('CellTransfer|Harvest|StockInstance|%s'%instance) is not None:
-                        ##text += meta.get_field('StockCulture|Sample|CellLine|%s'%meta.get_field('CellTransfer|Harvest|StockInstance|%s'%instance))
+                        ##text += meta.get_field('Sample|CellLine|Name|%s'%meta.get_field('CellTransfer|Harvest|StockInstance|%s'%instance))
                     #if meta.get_field('CellTransfer|Seed|Trypsinizatiton|%s'%instance) is 'Yes':   
                         #text += ' cells were harvested by trypsinisation '
                     #text += 'cell density was %s. ' %meta.get_field('CellTransfer|Seed|SeedingDensity|%s'%instance, default = '')

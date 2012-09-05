@@ -107,7 +107,7 @@ class VesselPanel(wx.Panel):
         sample_inst = str(sample_instances.pop())
         new_harvest_inst = meta.get_new_protocol_id('CellTransfer|Harvest')
         new_seed_inst = meta.get_new_protocol_id('CellTransfer|Seed')
-	cell_line = meta.get_field('StockCulture|Sample|CellLine|%s'%meta.get_field('CellTransfer|Seed|StockInstance|%s'%sample_inst))
+	cell_line = meta.get_field('Sample|CellLine|Name|%s'%meta.get_field('CellTransfer|Seed|StockInstance|%s'%sample_inst))
         #establish connection with the Bench panel
         try:
             bench = wx.GetApp().get_bench()
