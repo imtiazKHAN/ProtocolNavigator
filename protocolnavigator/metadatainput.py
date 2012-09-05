@@ -71,7 +71,7 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
         self.tree.AppendItem(dta, 'Timelapse Image')
         self.tree.AppendItem(dta, 'Static Image')
         self.tree.AppendItem(dta, 'Flow Cytometer Files')
-	nte = self.tree.AppendItem(stc, 'Notes')
+	#nte = self.tree.AppendItem(stc, 'Notes')
             
         self.tree.Expand(root)
         self.tree.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnSelChanged)
@@ -141,9 +141,9 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
 	if get_tag_type(tag) == 'DataAcquis' and get_tag_event(tag) == 'FCS':  # may link with flowcytometer settings??
 	    self.settings_panel = FCSSettingPanel(self.settings_container)
 	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)
-	if get_tag_type(tag) == 'Notes':  
-	    self.settings_panel = NoteSettingPanel(self.settings_container)
-	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)	
+	#if get_tag_type(tag) == 'Notes':  
+	    #self.settings_panel = NoteSettingPanel(self.settings_container)
+	    #self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)	
 	    
 	self.settings_container.Sizer.Add(self.settings_panel, 1, wx.EXPAND)        
 	self.settings_container.Layout()
