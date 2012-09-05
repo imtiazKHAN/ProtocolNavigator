@@ -3419,7 +3419,7 @@ class CellSeedPanel(wx.Panel):
 	    fgs.Add(self.settings_controls[celllineselcTAG], 0, wx.EXPAND) 
 	    fgs.Add(wx.StaticText(self.sw, -1, ''), 0)	
 	else:
-	    celllineselcTAG = 'CellTransfer|Seed|StockInstance|'+str(self.page_counter)
+	    celllineselcTAG = 'CellTransfer|Seed|CellLineInstance|'+str(self.page_counter)
 	    self.settings_controls[celllineselcTAG] = wx.TextCtrl(self.sw, value=meta.get_field(celllineselcTAG, default=''), style=wx.TE_PROCESS_ENTER)
 	    self.settings_controls[celllineselcTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
 	    self.settings_controls[celllineselcTAG].SetToolTipString('Stock culture from where cells were transferred')
@@ -3479,7 +3479,7 @@ class CellSeedPanel(wx.Panel):
         if dia.ShowModal() == wx.ID_OK:
             if dia.listctrl.get_selected_instances() != []:
                 instance = dia.listctrl.get_selected_instances()[0]
-                celllineselcTAG = 'CellTransfer|Seed|StockInstance|'+str(self.page_counter)
+                celllineselcTAG = 'CellTransfer|Seed|CellLineInstance|'+str(self.page_counter)
                 self.settings_controls[celllineselcTAG].SetValue(str(instance))
         dia.Destroy()
 
@@ -3567,7 +3567,7 @@ class CellHarvestPanel(wx.Panel):
             cell_Line_choices.append(meta.get_field('Sample|CellLine|Name|'+cell_Line_instance)+'_'+cell_Line_instance)
   
         #-- Cell Line selection ---#
-        celllineselcTAG = 'CellTransfer|Harvest|StockInstance|'+str(self.page_counter)
+        celllineselcTAG = 'CellTransfer|Harvest|CellLineInstance|'+str(self.page_counter)
         self.settings_controls[celllineselcTAG] = wx.Choice(self.sw, -1,  choices=cell_Line_choices)
         if meta.get_field(celllineselcTAG) is not None:
             self.settings_controls[celllineselcTAG].SetStringSelection(meta.get_field(celllineselcTAG))

@@ -107,7 +107,7 @@ class VesselPanel(wx.Panel):
         sample_inst = str(sample_instances.pop())
         new_harvest_inst = meta.get_new_protocol_id('CellTransfer|Harvest')
         new_seed_inst = meta.get_new_protocol_id('CellTransfer|Seed')
-	cell_line = meta.get_field('Sample|CellLine|Name|%s'%meta.get_field('CellTransfer|Seed|StockInstance|%s'%sample_inst))
+	cell_line = meta.get_field('Sample|CellLine|Name|%s'%meta.get_field('CellTransfer|Seed|CellLineInstance|%s'%sample_inst))
         #establish connection with the Bench panel
         try:
             bench = wx.GetApp().get_bench()
@@ -121,7 +121,7 @@ class VesselPanel(wx.Panel):
             destination_wells = dlg.get_selected_platewell_ids()
             assert destination_wells
 	    
-	    meta.set_field('CellTransfer|Harvest|StockInstance|%s'%new_harvest_inst, sample_inst)
+	    meta.set_field('CellTransfer|Harvest|CellLineInstance|%s'%new_harvest_inst, sample_inst)
 	    meta.set_field('CellTransfer|Harvest|HarvestingDensity|%s'%new_harvest_inst, [dlg.h_cell_density.GetValue(), dlg.h_cell_dunit.GetStringSelection()])
 	    meta.set_field('CellTransfer|Harvest|MediumAddatives|%s'%new_harvest_inst, dlg.h_medium.GetValue())
 	    meta.set_field('CellTransfer|Harvest|Wells|%s|%s'%(new_harvest_inst, bench.get_selected_timepoint()), [harvest_from_well])

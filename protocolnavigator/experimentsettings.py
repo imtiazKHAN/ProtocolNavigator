@@ -564,10 +564,10 @@ class ExperimentSettings(Singleton):
 	'''
 	instance = get_tag_instance(seed_tag)
 	# if seed from stock culture
-	if self.global_settings.has_key('CellTransfer|Seed|StockInstance|%s'%instance):
-	    return self.get_field('CellTransfer|Seed|StockInstance|%s'%instance)
+	if self.global_settings.has_key('CellTransfer|Seed|CellLineInstance|%s'%instance):
+	    return self.get_field('CellTransfer|Seed|CellLineInstance|%s'%instance)
 	elif self.global_settings.has_key('CellTransfer|Seed|HarvestInstance|%s'%instance):
-	    return self.get_field('CellTransfer|Harvest|StockInstance|%s'
+	    return self.get_field('CellTransfer|Harvest|CellLineInstance|%s'
 	                          %str(self.get_field('CellTransfer|Seed|HarvestInstance|%s'%instance)))	
 	    
     #----------------------------------------------------------------------
@@ -596,7 +596,7 @@ class ExperimentSettings(Singleton):
 	"""get the associated icon for the given action/event"""
 	if act == 'Seed':
 	    icon = icons.seed.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
-	elif act == 'Stock':
+	elif act == 'CellLine':
 	    icon = icons.stock.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
 	elif act =='Harvest':
 	    icon = icons.harvest.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()

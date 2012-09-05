@@ -557,8 +557,8 @@ class LineagePanel(wx.Panel):
 			#dc.DrawCircle(X, Y, NODE_R)
 			#evt_categories = list(set([exp.get_tag_stump(tag, 1) for tag in node.get_tags()]))
 			#if all(evt_categories[0] == cat and cat == 'DataAcquis' for cat in evt_categories):
-			if 'CellTransfer|Seed|StockInstance' in node_tags:
-			    event = 'Stock'
+			if 'CellTransfer|Seed|CellLineInstance' in node_tags:
+			    event = 'CellLine'
 			else:
 			    event = exp.get_tag_event(node_tags[0])
 			
@@ -631,8 +631,8 @@ class LineagePanel(wx.Panel):
 		    if not empty_path:
 			if event_status:
 			    if (node_tags[0].startswith('CellTransfer|Seed') and 
-				        meta.get_field('CellTransfer|Seed|StockInstance|'+exp.get_tag_instance(node_tags[0])) is not None):
-				event = 'Stock'
+				        meta.get_field('CellTransfer|Seed|CellLineInstance|'+exp.get_tag_instance(node_tags[0])) is not None):
+				event = 'CellLine'
 			    else:
 				event = exp.get_tag_event(node_tags[0])
 			    #dc.DrawCircle(X, Y, NODE_R)
