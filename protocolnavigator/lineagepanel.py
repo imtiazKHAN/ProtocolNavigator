@@ -557,11 +557,11 @@ class LineagePanel(wx.Panel):
 			#dc.DrawCircle(X, Y, NODE_R)
 			#evt_categories = list(set([exp.get_tag_stump(tag, 1) for tag in node.get_tags()]))
 			#if all(evt_categories[0] == cat and cat == 'DataAcquis' for cat in evt_categories):
-			if 'CellTransfer|Seed|CellLineInstance' in node_tags:
+			if (node_tags[0].startswith('CellTransfer|Seed') and 
+		           meta.get_field('CellTransfer|Seed|CellLineInstance|'+exp.get_tag_instance(node_tags[0])) is not None):
 			    event = 'CellLine'
 			else:
 			    event = exp.get_tag_event(node_tags[0])
-			
 			dc.DrawBitmap(meta.getEventIcon(16.0, event), X - 16.0 / 2.0, Y - 16.0 / 2.0)
 ##                      dc.DrawText(str(node.get_tags()), X, Y+NODE_R)
                     nodeY[node.id] = Y
