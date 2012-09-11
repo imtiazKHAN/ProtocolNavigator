@@ -44,7 +44,7 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
         ins = self.tree.AppendItem(stc, 'Instrument')
         self.tree.AppendItem(ins, 'Microscope')
         self.tree.AppendItem(ins, 'Flow Cytometer')
-        exv = self.tree.AppendItem(stc, 'Experimental Vessel')
+        exv = self.tree.AppendItem(stc, 'Experimental Matrix')
         self.tree.AppendItem(exv, 'Plate')
         self.tree.AppendItem(exv, 'Flask')
         self.tree.AppendItem(exv, 'Dish')
