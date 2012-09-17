@@ -682,21 +682,23 @@ class LineagePanel(wx.Panel):
 			
                     nodeY[node.id] = Y
 		    
-		    
-	#if self.timepoint_cursor is not None:  # BUG: New addition of 24hr will not work, i.e. the timeline cant hover over no event time zone****
-	    #timepoints = meta.get_timeline().get_unique_timepoints()	
-	    #ti = bisect.bisect_left(timepoints, self.timepoint_cursor)
-	    #time_interval =  timepoints[ti]-timepoints[ti-1]
-	    ##according to the time interval calculate the px per time.
-	    ##px_per_time = max((w_win - PAD * 2 - FLASK_GAP) / MAX_TIMEPOINT,
-			                      ##MIN_X_GAP)	
-	    #px_per_ti = (w_win - PAD * 2 - FLASK_GAP) /(len(timepoints)-1)
-	    #adjusted_factor = px_per_ti/time_interval
-	   
-	    #X = PAD + FLASK_GAP +px_per_ti*(ti-1)+(self.timepoint_cursor - timepoints[ti-1])* adjusted_factor
-	   
-	    #dc.SetPen(wx.Pen(wx.BLACK, 3))
-	    #dc.DrawLine(X, 0, X, h_win)
+	# Draw time slider insync with the slider in the Bench	    
+	if self.timepoint_cursor is not None:  # BUG: New addition of 24hr will not work, i.e. the timeline cant hover over no event time zone****
+	    timepoints = meta.get_timeline().get_unique_timepoints()	
+	    if timepoints and self.timepoint_cursor <= timepoints[-1] and self.timepoint_cursor > 0:
+		ti = bisect.bisect_left(timepoints, self.timepoint_cursor)
+		time_interval =  timepoints[ti]-timepoints[ti-1]
+		#according to the time interval calculate the px per time.
+		#px_per_time = max((w_win - PAD * 2 - FLASK_GAP) / MAX_TIMEPOINT,
+						  #MIN_X_GAP)	
+		px_per_ti = (w_win - PAD * 2 - FLASK_GAP) /(len(timepoints)-1)
+		adjusted_factor = px_per_ti/time_interval
+	       
+		X = PAD + FLASK_GAP +px_per_ti*(ti-1)+(self.timepoint_cursor - timepoints[ti-1])* adjusted_factor
+	       
+		penclr   = wx.Colour(178, 34, 34, wx.ALPHA_TRANSPARENT)
+		dc.SetPen(wx.Pen('Blue',3))
+		dc.DrawLine(X, 0, X, h_win)
 	  
         dc.EndDrawing()
         #print 'rendered lineage in %.2f seconds'%(time() - t0)
