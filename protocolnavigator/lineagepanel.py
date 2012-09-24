@@ -740,9 +740,11 @@ class LineagePanel(wx.Panel):
         if self.current_node.get_tags():
             exptsettings.ShowInstance(self.current_node.get_tags()[0])
             
-        ancestors = [exp.get_tag_stump(ptag, 2)
-                     for pnode in timeline.reverse_iter_tree(self.current_node) if pnode
-                     for ptag in pnode.tags]   
+        self.find_ancestors(self.current_node)    
+        #ancestors = [ptag
+                     #for pnode in timeline.reverse_iter_tree(self.current_node) if pnode
+                     #for ptag in pnode.tags]  
+	#print ancestors
 	
 	# -- show the data url list --- #
         data_acquis = False
@@ -817,30 +819,29 @@ class LineagePanel(wx.Panel):
 	        for cnodes in timeline.get_progeny(node) if cnodes
 	        for ctag in cnodes.tags]	
 	
-    
-    def get_ancestral_tags(self, node):
-	#ancestral_tags = []
-	#for pnode in timeline.reverse_iter_tree(node):
-	    #if pnode:
-		#if 'CellTransfer|Seed' in node.tags:
-		    #for tag in node.tags:
-			##if (tag.startswith('CellTransfer|Seed') and 
-			    ##meta.get_field('CellTransfer|Seed|HarvestInstance|'+exp.get_tag_instance(tag)) is not None):
-			    #h_instance = meta.get_field('CellTransfer|Seed|HarvestInstance|'+exp.get_tag_instance(tag))
-			    #for tpnode in self.nodes_by_timepoint[node.get_timepoint()-1]:
-				#if tpnode:
-				    #for tptag in tpnode.tags:	       
-					#if exp.get_tag_protocol(tptag) == 'CellTransfer|Harvest|'+h_instance:
-					    #for npnode in timeline.reverse_iter_tree(tpnode):
-						#if npnode:
-						    #for nptag in npnode.tags:
-							#ancestral_tags.append(exp.get_tag_stump(nptag, 2))
-		#else:
-		    #for ptag in pnode.tags:
-			#ancestral_tags.append(exp.get_tag_stump(ptag, 2))
-	
-	#return ancestral_tags
+   
+    def find_ancestors(self, node):
+	ancestral_tags = []
+	for pnode in timeline.reverse_iter_tree(node):
+	    if pnode: 
+		for ptag in pnode.tags:
+		    if ptag.startswith('CellTransfer|Seed')and meta.get_field('CellTransfer|Seed|HarvestInstance|'+exp.get_tag_instance(ptag)) is not None:
+			for tpnode in self.nodes_by_timepoint[pnode.get_timepoint()-1]:
+			    if tpnode:
+				for tptag in tpnode.tags:
+				    if exp.get_tag_protocol(tptag) == 'CellTransfer|Harvest|%s'%meta.get_field('CellTransfer|Seed|HarvestInstance|'+exp.get_tag_instance(ptag)):
+					for npnode in timeline.reverse_iter_tree(tpnode):
+					    if npnode:
+						for nptag in npnode.tags:
+						    ancestral_tags.append(exp.get_tag_stump(nptag, 2))	
+		    else:
+			ancestral_tags.append(exp.get_tag_stump(ptag, 2))
+			
+	print ancestral_tags
+		
 
+	
+    def get_ancestral_tags(self, node):
 	return [exp.get_tag_stump(ptag, 2)
 	        for pnode in timeline.reverse_iter_tree(node) if pnode
 	        for ptag in pnode.tags]
