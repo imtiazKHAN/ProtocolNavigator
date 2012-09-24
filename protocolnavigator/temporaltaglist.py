@@ -60,21 +60,11 @@ class TemporalTagListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):#, listmi
             
             self._il = wx.ImageList(16, 16)
             self.SetImageList(self._il, wx.IMAGE_LIST_SMALL)           
-            
-            
-            #for prot in self.protocols:
-                #cat, action, inst = prot.split('|')
-                #i = self.InsertStringItem(sys.maxint, cat)
-                #self.SetStringItem(i, 1, action)
-                #self.SetStringItem(i, 2, inst)
-                #self.SetStringItem(i, 3, self.get_description(prot))
-            #self.set_selected_protocols(sel)
-        #else:
-            #for i, prot in enumerate(self.protocols):
-                #self.SetStringItem(i, 3, self.get_description(prot))
                 
             for prot in self.protocols:
                 cat, action, inst = prot.split('|')
+                if meta.get_field('%s|%s|CellLineInstance|%s'%(cat, action, inst )) is not None:
+                    action = 'CellLine'
                 i = self.InsertStringItem(sys.maxint, action)
                 self.SetItemImage(self.GetItemCount() - 1, self._il.Add(meta.getEventIcon(16.0, action)))                   
                 self.SetStringItem(i, 1, inst)
@@ -112,56 +102,6 @@ class TemporalTagListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):#, listmi
             
         return sel
     
-    def setActionImage(self, act):
-        
-        ICON_SIZE = 16.0
-        
-        if act == 'Seed':
-            self.SetItemImage(self.GetItemCount() - 1, self._il.Add(icons.seed.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())) 
-        elif act =='Harvest':
-            self.SetItemImage(self.GetItemCount() - 1, self._il.Add(icons.harvest.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())) 
-            
-        elif act =='Chem':
-            self.SetItemImage(self.GetItemCount() - 1, self._il.Add(icons.treat.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())) 
-        elif act =='Bio':
-            self.SetItemImage(self.GetItemCount() - 1, self._il.Add(icons.dna.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())) 
-            
-        elif act =='Dye':
-            self.SetItemImage(self.GetItemCount() - 1, self._il.Add(icons.stain.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())) 
-        elif act =='Immuno':
-            self.SetItemImage(self.GetItemCount() - 1, self._il.Add(icons.antibody.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())) 
-        elif act =='Genetic':
-            self.SetItemImage(self.GetItemCount() - 1, self._il.Add(icons.primer.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())) 
-            
-        elif act =='Spin':
-            self.SetItemImage(self.GetItemCount() - 1, self._il.Add(icons.spin.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())) 
-        elif act =='Wash':
-            self.SetItemImage(self.GetItemCount() - 1, self._il.Add(icons.wash.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())) 
-        elif act =='Dry':
-            self.SetItemImage(self.GetItemCount() - 1, self._il.Add(icons.dry.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())) 
-        elif act =='Medium':
-            self.SetItemImage(self.GetItemCount() - 1, self._il.Add(icons.medium.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())) 
-        elif act =='Incubator':
-            self.SetItemImage(self.GetItemCount() - 1, self._il.Add(icons.incubator.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())) 
-            
-        elif act =='HCS':
-            self.SetItemImage(self.GetItemCount() - 1, self._il.Add(icons.staticimage.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())) 
-        elif act =='FCS':
-            self.SetItemImage(self.GetItemCount() - 1, self._il.Add(icons.fcs.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())) 
-        elif act =='TLM':
-            self.SetItemImage(self.GetItemCount() - 1, self._il.Add(icons.tlm.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())) 
-        
-        elif act =='Hint':
-            self.SetItemImage(self.GetItemCount() - 1, self._il.Add(icons.hint.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()))  
-        elif act =='Critical':
-            self.SetItemImage(self.GetItemCount() - 1, self._il.Add(icons.critical.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()))  
-        elif act =='Rest':
-            self.SetItemImage(self.GetItemCount() - 1, self._il.Add(icons.rest.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()))   
-        elif act =='URL':
-            self.SetItemImage(self.GetItemCount() - 1, self._il.Add(icons.url.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()))   
-        elif act =='Video':
-            self.SetItemImage(self.GetItemCount() - 1, self._il.Add(icons.video.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()))                         
-            
     def getColumnText(self, index, col):
         return self.GetItem(index, col).GetText()
     
