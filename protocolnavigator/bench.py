@@ -266,7 +266,7 @@ class Bench(wx.Panel):
         
         # SPECIAL CASE: For harvesting, we prompt the user to specify the 
         # destination well(s) for each harvested well.
-        if prefix == 'CellTransfer|Harvest':
+        if prefix == 'Transfer|Harvest':
             if selected:
                 #
                 # TODO:
@@ -280,20 +280,20 @@ class Bench(wx.Panel):
                 if dlg.ShowModal() == wx.ID_OK:
                     destination_wells = dlg.get_selected_platewell_ids()
                     assert destination_wells
-                    new_id = meta.get_new_protocol_id('CellTransfer|Seed')
-                    meta.set_field('CellTransfer|Seed|Wells|%s|%s'%
+                    new_id = meta.get_new_protocol_id('Transfer|Seed')
+                    meta.set_field('Transfer|Seed|Wells|%s|%s'%
                                    (new_id, self.get_selected_timepoint() + 1), # For now all reseeding instances are set 1 minute after harvesting
                                    destination_wells)
-                    meta.set_field('CellTransfer|Seed|HarvestInstance|%s'%(new_id), instance)
-                    h_density = meta.get_field('CellTransfer|Harvest|HarvestingDensity|%s'%instance, [])
+                    meta.set_field('Transfer|Seed|HarvestInstance|%s'%(new_id), instance)
+                    h_density = meta.get_field('Transfer|Harvest|HarvestingDensity|%s'%instance, [])
                     s_density = [0,'']
                     if len(h_density) > 0:
                         s_density[0]= h_density[0]
                     if len(h_density) > 1:
                         s_density[1]= h_density[1]
-                    meta.set_field('CellTransfer|Seed|SeedingDensity|%s'%(new_id), s_density)
-                    if meta.get_field('CellTransfer|Harvest|MediumAddatives|%s'%instance) is not None:
-                        meta.set_field('CellTransfer|Seed|MediumAddatives|%s'%(new_id), meta.get_field('CellTransfer|Harvest|MediumAddatives|%s'%instance))  
+                    meta.set_field('Transfer|Seed|SeedingDensity|%s'%(new_id), s_density)
+                    if meta.get_field('Transfer|Harvest|MediumAddatives|%s'%instance) is not None:
+                        meta.set_field('Transfer|Seed|MediumAddatives|%s'%(new_id), meta.get_field('Transfer|Harvest|MediumAddatives|%s'%instance))  
                     
                     
                 else:
@@ -303,13 +303,13 @@ class Bench(wx.Panel):
             else:
                 # Harvesting event removed.
                 # Remove all Seeding events that were linked to it.
-                seed_harvest_tags = meta.get_field_tags('CellTransfer|Seed|HarvestInstance')
+                seed_harvest_tags = meta.get_field_tags('Transfer|Seed|HarvestInstance')
                 for t in seed_harvest_tags:
                     if meta.get_field(t) == instance:
                         # if this seed harvest instance is the same as the 
                         # harvest instance that is being removed, then remove 
                         # all seed tags of this instance
-                        seed_tags = meta.get_field_tags('CellTransfer|Seed', get_tag_instance(t))
+                        seed_tags = meta.get_field_tags('Transfer|Seed', get_tag_instance(t))
                         for seed_tag in seed_tags:
                             meta.remove_field(seed_tag)
                 

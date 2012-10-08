@@ -162,7 +162,7 @@ class PrintProtocol(wx.Frame):
 		welltag = exp.get_tag_stump(protocol, 2)+'|Wells|%s|%s'%(instance, str(timepoint)) 
 		spatial_info = self.decode_event_location(welltag)
 		# -- write the description and location of the event --#
-                if (exp.get_tag_event(protocol) == 'Seed') and (meta.get_field('CellTransfer|Seed|CellLineInstance|%s'%instance) is not None):  
+                if (exp.get_tag_event(protocol) == 'Seed') and (meta.get_field('Transfer|Seed|CellLineInstance|%s'%instance) is not None):  
                     self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
 		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Seeding from Stock Culture</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
                     self.printfile.write('<code><font size="1">'+protocol_info[0]+'</font></code><br />')
@@ -549,14 +549,14 @@ class PrintProtocol(wx.Frame):
 	    
 	
 	if exp.get_tag_event(protocol) == 'Seed':
-	    if meta.get_field('CellTransfer|Seed|CellLineInstance|%s'%instance) is not None:
-		header += meta.get_field('Sample|CellLine|Name|%s'%meta.get_field('CellTransfer|Seed|CellLineInstance|%s'%instance)) 
-	    header += ' cells were seeded with a density of %s from the stock flask (Instance %s). ' %(meta.get_field('CellTransfer|Seed|SeedingDensity|%s'%instance, default = ''), meta.get_field('CellTransfer|Seed|CellLineInstance|%s'%instance))
-	    #if meta.get_field('CellTransfer|Seed|HarvestInstance|%s'%instance) is not None:
-		#header += meta.get_field('Sample|CellLine|Name|%s'%meta.get_field('CellTransfer|Seed|HarvestInstance|%s'%instance)) 
-		#header += ' cells were seeded with a density of %s %s from the Wells depicted bellow. ' %(meta.get_field('CellTransfer|Seed|SeedingDensity|%s'%instance, default = '')[0], meta.get_field('CellTransfer|Seed|SeedingDensity|%s'%instance, default = '')[1])	    
-	    if meta.get_field('CellTransfer|Seed|MediumAddatives|%s'%instance) is not None:
-		header += 'with following medium additives: %s. ' %meta.get_field('CellTransfer|Seed|MediumAddatives|%s'%instance)
+	    if meta.get_field('Transfer|Seed|CellLineInstance|%s'%instance) is not None:
+		header += meta.get_field('Sample|CellLine|Name|%s'%meta.get_field('Transfer|Seed|CellLineInstance|%s'%instance)) 
+	    header += ' cells were seeded with a density of %s from the stock flask (Instance %s). ' %(meta.get_field('Transfer|Seed|SeedingDensity|%s'%instance, default = ''), meta.get_field('Transfer|Seed|CellLineInstance|%s'%instance))
+	    #if meta.get_field('Transfer|Seed|HarvestInstance|%s'%instance) is not None:
+		#header += meta.get_field('Sample|CellLine|Name|%s'%meta.get_field('Transfer|Seed|HarvestInstance|%s'%instance)) 
+		#header += ' cells were seeded with a density of %s %s from the Wells depicted bellow. ' %(meta.get_field('Transfer|Seed|SeedingDensity|%s'%instance, default = '')[0], meta.get_field('Transfer|Seed|SeedingDensity|%s'%instance, default = '')[1])	    
+	    if meta.get_field('Transfer|Seed|MediumAddatives|%s'%instance) is not None:
+		header += 'with following medium additives: %s. ' %meta.get_field('Transfer|Seed|MediumAddatives|%s'%instance)
 	    
 	    return (header, info)
 	
@@ -753,15 +753,15 @@ class PrintProtocol(wx.Frame):
 	    return (header, info)
 	  
             #if event == 'Harvest':
-                    ##if meta.get_field('CellTransfer|Harvest|CellLineInstance|%s'%instance) is not None:
-                        ##text += meta.get_field('Sample|CellLine|Name|%s'%meta.get_field('CellTransfer|Harvest|CellLineInstance|%s'%instance))
-                    #if meta.get_field('CellTransfer|Seed|Trypsinizatiton|%s'%instance) is 'Yes':   
+                    ##if meta.get_field('Transfer|Harvest|CellLineInstance|%s'%instance) is not None:
+                        ##text += meta.get_field('Sample|CellLine|Name|%s'%meta.get_field('Transfer|Harvest|CellLineInstance|%s'%instance))
+                    #if meta.get_field('Transfer|Seed|Trypsinizatiton|%s'%instance) is 'Yes':   
                         #text += ' cells were harvested by trypsinisation '
-                    #text += 'cell density was %s. ' %meta.get_field('CellTransfer|Seed|SeedingDensity|%s'%instance, default = '')
-                    #if meta.get_field('CellTransfer|Seed|MediumUsed|%s'%instance) is not None:
-                        #text += meta.get_field('CellTransfer|Seed|MediumUsed|%s'%instance)+' medium was used '
-                    #if meta.get_field('CellTransfer|Seed|MediumAddatives|%s'%instance) is not None:
-                        #text += 'with following medium additives: %s. ' %meta.get_field('CellTransfer|Seed|MediumAddatives|%s'%instance)
+                    #text += 'cell density was %s. ' %meta.get_field('Transfer|Seed|SeedingDensity|%s'%instance, default = '')
+                    #if meta.get_field('Transfer|Seed|MediumUsed|%s'%instance) is not None:
+                        #text += meta.get_field('Transfer|Seed|MediumUsed|%s'%instance)+' medium was used '
+                    #if meta.get_field('Transfer|Seed|MediumAddatives|%s'%instance) is not None:
+                        #text += 'with following medium additives: %s. ' %meta.get_field('Transfer|Seed|MediumAddatives|%s'%instance)
               
          
 
@@ -823,11 +823,11 @@ class PrintProtocol(wx.Frame):
 	    self.printfile.write('</table>')	
 	    
     def printCellTransfer(self, harvest_inst, timepoint):
-	seed_instances = meta.get_protocol_instances('CellTransfer|Seed|HarvestInstance|')
+	seed_instances = meta.get_protocol_instances('Transfer|Seed|HarvestInstance|')
 	for seed_inst in seed_instances:
-	    if (meta.get_field('CellTransfer|Seed|Wells|%s|%s'%(seed_inst, str(timepoint+1))) is not None) and (meta.get_field('CellTransfer|Seed|HarvestInstance|%s'%seed_inst) == harvest_inst):
-		harvest_spatial_info = self.decode_event_location('CellTransfer|Harvest|Wells|%s|%s'%(harvest_inst, str(timepoint)))
-		seed_spatial_info = self.decode_event_location('CellTransfer|Seed|Wells|%s|%s'%(seed_inst, str(timepoint+1)))
+	    if (meta.get_field('Transfer|Seed|Wells|%s|%s'%(seed_inst, str(timepoint+1))) is not None) and (meta.get_field('Transfer|Seed|HarvestInstance|%s'%seed_inst) == harvest_inst):
+		harvest_spatial_info = self.decode_event_location('Transfer|Harvest|Wells|%s|%s'%(harvest_inst, str(timepoint)))
+		seed_spatial_info = self.decode_event_location('Transfer|Seed|Wells|%s|%s'%(seed_inst, str(timepoint+1)))
 	
 	self.printfile.write('<br /><table border="0">')
 	self.printfile.write('<tr><td>')

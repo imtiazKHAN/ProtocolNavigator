@@ -99,8 +99,8 @@ class LineageFrame(wx.ScrolledWindow):
                        'DataAcquis|TLM|Wells|0|',
                        'DataAcquis|FCS|Wells|0|',
                        'DataAcquis|HCS|Wells|0|',
-                       'CellTransfer|Seed|Wells|0|',
-                       'CellTransfer|Harvest|Wells|0|']
+                       'Transfer|Seed|Wells|0|',
+                       'Transfer|Harvest|Wells|0|']
         # GENERATE RANDOM EVENTS ON RANDOM WELLS
         for t in list(np.random.random_integers(0, MAX_TIMEPOINT, N_TIMEPOINTS)):
             for j in range(np.random.randint(1, N_FURCATIONS)):
@@ -540,7 +540,7 @@ class LineagePanel(wx.Panel):
 			if eventRGB == (255,255,255,100) and stateRGB == (255,255,255,100):
 			    dc.SetBrush(wx.Brush(wx.WHITE))
 			    dc.SetPen(wx.Pen(wx.WHITE))	
-                        if 'CellTransfer|Harvest' in self.get_ancestral_tags(node):
+                        if 'Transfer|Harvest' in self.get_ancestral_tags(node):
                             empty_path = True
 
                     if hover(self.cursor_pos, (X,Y), self.NODE_R):
@@ -557,8 +557,8 @@ class LineagePanel(wx.Panel):
 			#dc.DrawCircle(X, Y, NODE_R)
 			#evt_categories = list(set([exp.get_tag_stump(tag, 1) for tag in node.get_tags()]))
 			#if all(evt_categories[0] == cat and cat == 'DataAcquis' for cat in evt_categories):
-			if (node_tags[0].startswith('CellTransfer|Seed') and 
-		           meta.get_field('CellTransfer|Seed|CellLineInstance|'+exp.get_tag_instance(node_tags[0])) is not None):
+			if (node_tags[0].startswith('Transfer|Seed') and 
+		           meta.get_field('Transfer|Seed|CellLineInstance|'+exp.get_tag_instance(node_tags[0])) is not None):
 			    event = 'CellLine'
 			else:
 			    event = exp.get_tag_event(node_tags[0])
@@ -611,7 +611,7 @@ class LineagePanel(wx.Panel):
 				dc.SetBrush(wx.Brush(wx.WHITE))
 				dc.SetPen(wx.Pen(wx.WHITE))			    
 			    
-			if 'CellTransfer|Harvest' in self.get_ancestral_tags(node):
+			if 'Transfer|Harvest' in self.get_ancestral_tags(node):
 			    empty_path = True
 		
                     if hover(self.cursor_pos, (X,Y), self.NODE_R):
@@ -630,8 +630,8 @@ class LineagePanel(wx.Panel):
                     #else:
 		    if not empty_path:
 			if event_status:
-			    if (node_tags[0].startswith('CellTransfer|Seed') and 
-				        meta.get_field('CellTransfer|Seed|CellLineInstance|'+exp.get_tag_instance(node_tags[0])) is not None):
+			    if (node_tags[0].startswith('Transfer|Seed') and 
+				        meta.get_field('Transfer|Seed|CellLineInstance|'+exp.get_tag_instance(node_tags[0])) is not None):
 				event = 'CellLine'
 			    else:
 				event = exp.get_tag_event(node_tags[0])
@@ -653,7 +653,7 @@ class LineagePanel(wx.Panel):
 		    #dc.SetPen(wx.Pen(stateRGB))
                     harvest_tag = False
                     for tag in node.get_tags():
-                        if tag.startswith('CellTransfer|Harvest'):
+                        if tag.startswith('Transfer|Harvest'):
                             harvest_tag = tag
 		    # for children of this node check whether furhter event had occured to them if not do not draw the line 
                     for child in node.get_children():
@@ -662,8 +662,8 @@ class LineagePanel(wx.Panel):
 			    #       events from the previous timepoint
 			    for nn in nodes_by_tp[timepoints[i-1]]:
 				for tag in nn.get_tags():
-				    if (tag.startswith('CellTransfer|Seed') and 
-				        meta.get_field('CellTransfer|Seed|HarvestInstance|'+exp.get_tag_instance(tag)) == exp.get_tag_instance(harvest_tag)):
+				    if (tag.startswith('Transfer|Seed') and 
+				        meta.get_field('Transfer|Seed|HarvestInstance|'+exp.get_tag_instance(tag)) == exp.get_tag_instance(harvest_tag)):
 					dc.SetPen(wx.Pen('#948BB3', 1, wx.SHORT_DASH))
 					dc.DrawLine(X + NODE_R, Y, 
 				                    X + x_gap - NODE_R ,nodeY[nn.id])
@@ -825,11 +825,11 @@ class LineagePanel(wx.Panel):
 	for pnode in timeline.reverse_iter_tree(node):
 	    if pnode: 
 		for ptag in pnode.tags:
-		    if ptag.startswith('CellTransfer|Seed')and meta.get_field('CellTransfer|Seed|HarvestInstance|'+exp.get_tag_instance(ptag)) is not None:
+		    if ptag.startswith('Transfer|Seed')and meta.get_field('Transfer|Seed|HarvestInstance|'+exp.get_tag_instance(ptag)) is not None:
 			for tpnode in self.nodes_by_timepoint[pnode.get_timepoint()-1]:
 			    if tpnode:
 				for tptag in tpnode.tags:
-				    if exp.get_tag_protocol(tptag) == 'CellTransfer|Harvest|%s'%meta.get_field('CellTransfer|Seed|HarvestInstance|'+exp.get_tag_instance(ptag)):
+				    if exp.get_tag_protocol(tptag) == 'Transfer|Harvest|%s'%meta.get_field('Transfer|Seed|HarvestInstance|'+exp.get_tag_instance(ptag)):
 					for npnode in timeline.reverse_iter_tree(tpnode):
 					    if npnode:
 						for nptag in npnode.tags:

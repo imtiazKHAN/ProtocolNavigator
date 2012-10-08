@@ -105,9 +105,9 @@ class VesselPanel(wx.Panel):
 	
 	# TO DO check the validity of the well - i.e. it has cell lines in it. not harvested before etc.
         sample_inst = str(sample_instances.pop())
-        new_harvest_inst = meta.get_new_protocol_id('CellTransfer|Harvest')
-        new_seed_inst = meta.get_new_protocol_id('CellTransfer|Seed')
-	cell_line = meta.get_field('Sample|CellLine|Name|%s'%meta.get_field('CellTransfer|Seed|CellLineInstance|%s'%sample_inst))
+        new_harvest_inst = meta.get_new_protocol_id('Transfer|Harvest')
+        new_seed_inst = meta.get_new_protocol_id('Transfer|Seed')
+	cell_line = meta.get_field('Sample|CellLine|Name|%s'%meta.get_field('Transfer|Seed|CellLineInstance|%s'%sample_inst))
         #establish connection with the Bench panel
         try:
             bench = wx.GetApp().get_bench()
@@ -121,15 +121,15 @@ class VesselPanel(wx.Panel):
             destination_wells = dlg.get_selected_platewell_ids()
             assert destination_wells
 	    
-	    meta.set_field('CellTransfer|Harvest|CellLineInstance|%s'%new_harvest_inst, sample_inst)
-	    meta.set_field('CellTransfer|Harvest|HarvestingDensity|%s'%new_harvest_inst, [dlg.h_cell_density.GetValue(), dlg.h_cell_dunit.GetStringSelection()])
-	    meta.set_field('CellTransfer|Harvest|MediumAddatives|%s'%new_harvest_inst, dlg.h_medium.GetValue())
-	    meta.set_field('CellTransfer|Harvest|Wells|%s|%s'%(new_harvest_inst, bench.get_selected_timepoint()), [harvest_from_well])
+	    meta.set_field('Transfer|Harvest|CellLineInstance|%s'%new_harvest_inst, sample_inst)
+	    meta.set_field('Transfer|Harvest|HarvestingDensity|%s'%new_harvest_inst, [dlg.h_cell_density.GetValue(), dlg.h_cell_dunit.GetStringSelection()])
+	    meta.set_field('Transfer|Harvest|MediumAddatives|%s'%new_harvest_inst, dlg.h_medium.GetValue())
+	    meta.set_field('Transfer|Harvest|Wells|%s|%s'%(new_harvest_inst, bench.get_selected_timepoint()), [harvest_from_well])
 	    
-	    meta.set_field('CellTransfer|Seed|HarvestInstance|%s'%new_seed_inst, new_harvest_inst)
-	    meta.set_field('CellTransfer|Seed|SeedingDensity|%s'%new_seed_inst, [dlg.s_cell_density.GetValue(), dlg.s_cell_dunit.GetStringSelection()])
-	    meta.set_field('CellTransfer|Seed|MediumAddatives|%s'%new_seed_inst,dlg.s_medium.GetValue())	    
-            meta.set_field('CellTransfer|Seed|Wells|%s|%s'%
+	    meta.set_field('Transfer|Seed|HarvestInstance|%s'%new_seed_inst, new_harvest_inst)
+	    meta.set_field('Transfer|Seed|SeedingDensity|%s'%new_seed_inst, [dlg.s_cell_density.GetValue(), dlg.s_cell_dunit.GetStringSelection()])
+	    meta.set_field('Transfer|Seed|MediumAddatives|%s'%new_seed_inst,dlg.s_medium.GetValue())	    
+            meta.set_field('Transfer|Seed|Wells|%s|%s'%
                            (new_seed_inst, bench.get_selected_timepoint() + 1), # For now all reseeding instances are set 1 minute after harvesting
                            destination_wells)
 	    #bench.update_well_selections()
@@ -460,7 +460,7 @@ class VesselSelectionPopup(wx.Dialog):
 	h_fgs.Add(self.h_cell_line, 0, wx.EXPAND)
 	h_fgs.Add(wx.StaticText(self, -1, ''), 0)
 	# Density - value
-	harvestdensity = meta.get_field('CellTransfer|Seed|SeedingDensity|%s'%self.sample_inst, [])
+	harvestdensity = meta.get_field('Transfer|Seed|SeedingDensity|%s'%self.sample_inst, [])
 	self.h_cell_density = wx.lib.masked.NumCtrl(self, size=(20,-1), style=wx.TE_PROCESS_ENTER)
 	if len(harvestdensity) > 0:
 	    self.h_cell_density.SetValue(harvestdensity[0])		
@@ -472,7 +472,7 @@ class VesselSelectionPopup(wx.Dialog):
 	h_fgs.Add(self.h_cell_density, 0, wx.EXPAND)	
 	h_fgs.Add(self.h_cell_dunit, 0, wx.EXPAND)
 	# Medium
-	self.h_medium = wx.TextCtrl(self, -1, value=meta.get_field('CellTransfer|Seed|MediumAddatives|%s'%self.sample_inst, default=''), style=wx.TE_PROCESS_ENTER|wx.TE_MULTILINE) 
+	self.h_medium = wx.TextCtrl(self, -1, value=meta.get_field('Transfer|Seed|MediumAddatives|%s'%self.sample_inst, default=''), style=wx.TE_PROCESS_ENTER|wx.TE_MULTILINE) 
 	h_fgs.Add(wx.StaticText(self, -1, 'Medium Additives'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	h_fgs.Add(self.h_medium, 0, wx.EXPAND)
 	h_fgs.Add(wx.StaticText(self, -1, ''), 0) 	
@@ -502,7 +502,7 @@ class VesselSelectionPopup(wx.Dialog):
 	s_fgs.Add(self.s_cell_line, 0, wx.EXPAND)
 	s_fgs.Add(wx.StaticText(self, -1, ''), 0)
 	# Density - value
-	seeddensity = meta.get_field('CellTransfer|Seed|SeedingDensity|%s'%self.sample_inst, [])
+	seeddensity = meta.get_field('Transfer|Seed|SeedingDensity|%s'%self.sample_inst, [])
 	self.s_cell_density = wx.lib.masked.NumCtrl(self, size=(20,-1), style=wx.TE_PROCESS_ENTER)
 	if len(seeddensity) > 0:
 	    self.s_cell_density.SetValue(seeddensity[0])			
@@ -513,7 +513,7 @@ class VesselSelectionPopup(wx.Dialog):
 	s_fgs.Add(self.s_cell_density, 0, wx.EXPAND)	
 	s_fgs.Add(self.s_cell_dunit, 0, wx.EXPAND)	
 	# Medium
-	self.s_medium = wx.TextCtrl(self, -1, value=meta.get_field('CellTransfer|Seed|MediumAddatives|%s'%self.sample_inst, default=''), style=wx.TE_PROCESS_ENTER|wx.TE_MULTILINE) 
+	self.s_medium = wx.TextCtrl(self, -1, value=meta.get_field('Transfer|Seed|MediumAddatives|%s'%self.sample_inst, default=''), style=wx.TE_PROCESS_ENTER|wx.TE_MULTILINE) 
 	s_fgs.Add(wx.StaticText(self, -1, 'Medium Additives'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	s_fgs.Add(self.s_medium, 0, wx.EXPAND)
 	s_fgs.Add(wx.StaticText(self, -1, ''), 0)   

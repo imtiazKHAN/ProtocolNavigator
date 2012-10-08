@@ -14,7 +14,7 @@ import os
 #test comment 3
 # test comment 4
 
-class LineageProfiler(wx.App):
+class ProtocolNavigator(wx.App):
     '''The ProtocolNavigator Application
     This launches the main UI, and keeps track of the session.
     '''
@@ -39,6 +39,8 @@ class LineageProfiler(wx.App):
         self.settings_frame.Bind(wx.EVT_MENU, self.on_load_settings, loadSettingsMenuItem)
         self.settings_frame.Bind(wx.EVT_MENU, self.on_print_protocol, printExperimentMenuItem)
         self.settings_frame.GetMenuBar().Append(fileMenu, 'File')
+        
+        self.settings_frame.Bind(wx.EVT_CLOSE, self.onCloseWindow)
         
         self.bench_frame = Bench(self, self.ud_splitter)
         self.ud_splitter.SplitHorizontally(self.exptsetting_frame, self.bench_frame, -400)
@@ -120,10 +122,28 @@ class LineageProfiler(wx.App):
         
         PrintProtocol(rect)
         
-
-
+    def onCloseWindow(self, event):
+        if ExperimentSettings.global_settings:
+            dlg = wx.MessageDialog(None,
+                   "Do you want to save changes before exiting ProtocolNavigator?", "Confirm Exit", 
+                   wx.YES|wx.NO|wx.CANCEL|wx.ICON_EXCLAMATION)
+           
+	    try:
+		selection = dlg.ShowModal()
+		if  selection == wx.ID_YES:
+		    self.on_save_settings(self)
+		    event.Skip()
+		elif selection == wx.ID_NO:
+		    event.Skip()	
+		elif selection == wx.ID_CANCEL:
+		    event.Veto()
+	    finally:
+		dlg.Destroy()
+	else:
+	    event.Skip()
+		
 if __name__ == '__main__':
-    app = LineageProfiler(redirect=False)
+    app = ProtocolNavigator(redirect=False)
     # Load a settings file if passed in args
     if len(sys.argv) > 1:
         ExperimentSettings.getInstance().load_from_file(sys.argv[1])

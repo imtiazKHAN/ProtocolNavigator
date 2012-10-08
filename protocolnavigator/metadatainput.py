@@ -97,10 +97,10 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
 	self.settings_panel.Destroy()
 	self.settings_container.Sizer.Clear()
 	
-	if get_tag_type(tag) == 'CellTransfer' and get_tag_event(tag) == 'Seed':
+	if get_tag_type(tag) == 'Transfer' and get_tag_event(tag) == 'Seed':
 	    self.settings_panel = CellSeedSettingPanel(self.settings_container)
 	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)
-	if get_tag_type(tag) == 'CellTransfer' and get_tag_event(tag) == 'Harvest':
+	if get_tag_type(tag) == 'Transfer' and get_tag_event(tag) == 'Harvest':
 	    self.settings_panel = CellHarvestSettingPanel(self.settings_container)
 	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)
 	if get_tag_type(tag) == 'Perturbation' and get_tag_event(tag) == 'Chem':
@@ -3345,7 +3345,7 @@ class CellSeedSettingPanel(wx.Panel):
         self.settings_controls = {}
         meta = ExperimentSettings.getInstance()
 		
-	self.protocol = 'CellTransfer|Seed'	
+	self.protocol = 'Transfer|Seed'	
 
         self.notebook = fnb.FlatNotebook(self, -1, style=fnb.FNB_NO_X_BUTTON | fnb.FNB_VC8)
 	self.notebook.Bind(fnb.EVT_FLATNOTEBOOK_PAGE_CLOSING, meta.onTabClosing)
@@ -3410,8 +3410,8 @@ class CellSeedPanel(wx.Panel):
 	fgs.Add(wx.StaticText(self.sw, -1, ''), 0)
 	
 	#-- Cell Line selection ---#
-	if meta.get_field('CellTransfer|Seed|HarvestInstance|%s'%self.page_counter) is not None:
-	    celllineselcTAG = 'CellTransfer|Seed|HarvestInstance|'+str(self.page_counter)
+	if meta.get_field('Transfer|Seed|HarvestInstance|%s'%self.page_counter) is not None:
+	    celllineselcTAG = 'Transfer|Seed|HarvestInstance|'+str(self.page_counter)
 	    self.settings_controls[celllineselcTAG] = wx.TextCtrl(self.sw, value=meta.get_field(celllineselcTAG, default=''), style=wx.TE_PROCESS_ENTER)
 	    self.settings_controls[celllineselcTAG].Disable()
 	    showInstBut.Hide()
@@ -3419,7 +3419,7 @@ class CellSeedPanel(wx.Panel):
 	    fgs.Add(self.settings_controls[celllineselcTAG], 0, wx.EXPAND) 
 	    fgs.Add(wx.StaticText(self.sw, -1, ''), 0)	
 	else:
-	    celllineselcTAG = 'CellTransfer|Seed|CellLineInstance|'+str(self.page_counter)
+	    celllineselcTAG = 'Transfer|Seed|CellLineInstance|'+str(self.page_counter)
 	    self.settings_controls[celllineselcTAG] = wx.TextCtrl(self.sw, value=meta.get_field(celllineselcTAG, default=''), style=wx.TE_PROCESS_ENTER)
 	    self.settings_controls[celllineselcTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
 	    self.settings_controls[celllineselcTAG].SetToolTipString('Stock culture from where cells were transferred')
@@ -3428,7 +3428,7 @@ class CellSeedPanel(wx.Panel):
 	    fgs.Add(wx.StaticText(self.sw, -1, ''), 0)
 
         # Seeding Density
-       	seeddensityTAG = 'CellTransfer|Seed|SeedingDensity|'+str(self.page_counter)
+       	seeddensityTAG = 'Transfer|Seed|SeedingDensity|'+str(self.page_counter)
 	seeddensity = meta.get_field(seeddensityTAG, [])
 	self.settings_controls[seeddensityTAG+'|0'] = wx.lib.masked.NumCtrl(self.sw, size=(20,-1), style=wx.TE_PROCESS_ENTER)
 	if len(seeddensity) > 0:
@@ -3445,7 +3445,7 @@ class CellSeedPanel(wx.Panel):
 	fgs.Add(self.settings_controls[seeddensityTAG+'|1'], 0, wx.EXPAND)
 
         #  Medium Addatives
-        medaddTAG = 'CellTransfer|Seed|MediumAddatives|'+str(self.page_counter)
+        medaddTAG = 'Transfer|Seed|MediumAddatives|'+str(self.page_counter)
         self.settings_controls[medaddTAG] = wx.TextCtrl(self.sw, value=meta.get_field(medaddTAG, default=''), style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER)
         self.settings_controls[medaddTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
         self.settings_controls[medaddTAG].SetToolTipString(meta.get_field(medaddTAG, default='Any medium additives used with concentration, Glutamine'))
@@ -3479,7 +3479,7 @@ class CellSeedPanel(wx.Panel):
         if dia.ShowModal() == wx.ID_OK:
             if dia.listctrl.get_selected_instances() != []:
                 instance = dia.listctrl.get_selected_instances()[0]
-                celllineselcTAG = 'CellTransfer|Seed|CellLineInstance|'+str(self.page_counter)
+                celllineselcTAG = 'Transfer|Seed|CellLineInstance|'+str(self.page_counter)
                 self.settings_controls[celllineselcTAG].SetValue(str(instance))
         dia.Destroy()
 
@@ -3503,7 +3503,7 @@ class CellHarvestSettingPanel(wx.Panel):
         self.settings_controls = {}
         meta = ExperimentSettings.getInstance()
 		
-	self.protocol = 'CellTransfer|Harvest'	
+	self.protocol = 'Transfer|Harvest'	
 
         self.notebook = fnb.FlatNotebook(self, -1, style=fnb.FNB_NO_X_BUTTON | fnb.FNB_VC8)
 	self.notebook.Bind(fnb.EVT_FLATNOTEBOOK_PAGE_CLOSING, meta.onTabClosing)
@@ -3567,7 +3567,7 @@ class CellHarvestPanel(wx.Panel):
             cell_Line_choices.append(meta.get_field('Sample|CellLine|Name|'+cell_Line_instance)+'_'+cell_Line_instance)
   
         #-- Cell Line selection ---#
-        celllineselcTAG = 'CellTransfer|Harvest|CellLineInstance|'+str(self.page_counter)
+        celllineselcTAG = 'Transfer|Harvest|CellLineInstance|'+str(self.page_counter)
         self.settings_controls[celllineselcTAG] = wx.Choice(self.sw, -1,  choices=cell_Line_choices)
         if meta.get_field(celllineselcTAG) is not None:
             self.settings_controls[celllineselcTAG].SetStringSelection(meta.get_field(celllineselcTAG))
@@ -3578,7 +3578,7 @@ class CellHarvestPanel(wx.Panel):
 	fgs.Add(wx.StaticText(self.sw, -1, ''), 0)
 
         # Harvesting Density
-	harvestdensityTAG = 'CellTransfer|Harvest|HarvestingDensity|'+str(self.page_counter)
+	harvestdensityTAG = 'Transfer|Harvest|HarvestingDensity|'+str(self.page_counter)
 	harvestdensity = meta.get_field(harvestdensityTAG, [])
 	self.settings_controls[harvestdensityTAG+'|0'] = wx.lib.masked.NumCtrl(self.sw, size=(20,-1), style=wx.TE_PROCESS_ENTER)
 	if len(harvestdensity) > 0:
@@ -3595,7 +3595,7 @@ class CellHarvestPanel(wx.Panel):
 	fgs.Add(self.settings_controls[harvestdensityTAG+'|1'], 0, wx.EXPAND)	
 
         #  Medium Addatives
-        medaddTAG = 'CellTransfer|Harvest|MediumAddatives|'+str(self.page_counter)
+        medaddTAG = 'Transfer|Harvest|MediumAddatives|'+str(self.page_counter)
         self.settings_controls[medaddTAG] = wx.TextCtrl(self.sw, value=meta.get_field(medaddTAG, default=''), style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER)
         self.settings_controls[medaddTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
         self.settings_controls[medaddTAG].SetToolTipString(meta.get_field(medaddTAG, default='Any medium addatives used with concentration, Glutamine'))

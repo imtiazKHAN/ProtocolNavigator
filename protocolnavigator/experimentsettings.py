@@ -89,7 +89,7 @@ class ExperimentSettings(Singleton):
     def get_action_tags(self):
         '''returns all existing TEMPORAL tags as list'''
         return [tag for tag in self.global_settings 
-                if tag.split('|')[0] in ('CellTransfer', 'Perturbation', 
+                if tag.split('|')[0] in ('Transfer', 'Perturbation', 
                                     'Staining', 'AddProcess', 'DataAcquis', 'Notes')]
 
     def get_field_instances(self, tag_prefix):
@@ -126,7 +126,7 @@ class ExperimentSettings(Singleton):
     def get_attribute_dict(self, protocol):
         '''returns a dict mapping attribute names to their values for a given
         protocol.
-        eg: get_attribute_dict('CellTransfer|Seed|1') -->
+        eg: get_attribute_dict('Transfer|Seed|1') -->
                {'SeedingDensity': 12, 'MediumUsed': 'agar', 
                 'MediumAddatives': 'None', 'Trypsinization': True}
         '''
@@ -163,7 +163,7 @@ class ExperimentSettings(Singleton):
     def get_matching_tags(self, matchstring):
         '''returns a list of all tags matching matchstring
         matchstring -- a string that matches the tags you want
-        eg: CellTransfer|*
+        eg: Transfer|*
         '''
         tags = []
         for tag in self.global_settings:
@@ -186,7 +186,7 @@ class ExperimentSettings(Singleton):
     
     def get_new_protocol_id(self, prefix):
         '''returns an id string that hasn't been used for the given tag prefix
-        prefix -- eg: CellTransfer|Seed
+        prefix -- eg: Transfer|Seed
         '''
         instances = self.get_protocol_instances(prefix)
         for i in xrange(1, 100000):
@@ -554,21 +554,21 @@ class ExperimentSettings(Singleton):
 	for i, timepoint in enumerate(timepoints):
 	    for ev in events_by_timepoint[timepoint]:
 		for well_id in ev.get_well_ids():
-		    if well_id == platewell_id and ev.get_welltag().startswith('CellTransfer|Seed'):
+		    if well_id == platewell_id and ev.get_welltag().startswith('Transfer|Seed'):
 			seeding_instances.append(ev.get_welltag())
 			
 	return seeding_instances
     
     def get_sampleInstance(self, seed_tag):
-	'''This method returns the stock culutre or sample instance for a given seeding tag CellTransfer|Seed|Wells|<instance>
+	'''This method returns the stock culutre or sample instance for a given seeding tag Transfer|Seed|Wells|<instance>
 	'''
 	instance = get_tag_instance(seed_tag)
 	# if seed from stock culture
-	if self.global_settings.has_key('CellTransfer|Seed|CellLineInstance|%s'%instance):
-	    return self.get_field('CellTransfer|Seed|CellLineInstance|%s'%instance)
-	elif self.global_settings.has_key('CellTransfer|Seed|HarvestInstance|%s'%instance):
-	    return self.get_field('CellTransfer|Harvest|CellLineInstance|%s'
-	                          %str(self.get_field('CellTransfer|Seed|HarvestInstance|%s'%instance)))	
+	if self.global_settings.has_key('Transfer|Seed|CellLineInstance|%s'%instance):
+	    return self.get_field('Transfer|Seed|CellLineInstance|%s'%instance)
+	elif self.global_settings.has_key('Transfer|Seed|HarvestInstance|%s'%instance):
+	    return self.get_field('Transfer|Harvest|CellLineInstance|%s'
+	                          %str(self.get_field('Transfer|Seed|HarvestInstance|%s'%instance)))	
 	    
     #----------------------------------------------------------------------
     def getStateRGB(self, trackTags):

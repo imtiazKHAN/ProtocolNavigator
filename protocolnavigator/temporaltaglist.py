@@ -19,7 +19,7 @@ class TemporalTagListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):#, listmi
 
         self.protocols = []
         
-        meta.add_subscriber(self.update, 'CellTransfer.*')
+        meta.add_subscriber(self.update, 'Transfer.*')
         meta.add_subscriber(self.update, 'Perturbation.*')
         meta.add_subscriber(self.update, 'Staining.*')
         meta.add_subscriber(self.update, 'AddProcess.*')
@@ -45,7 +45,7 @@ class TemporalTagListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):#, listmi
                              for tag in meta.get_action_tags()])
         for new_prot in list(new_protocols):  #prevent showing harvest & seeding instances created due to harvest-seed (cell transfer) event
             cat, action, inst = new_prot.split('|')
-            if cat=='CellTransfer' and action=='Harvest':
+            if cat=='Transfer' and action=='Harvest':
                 new_protocols.remove(new_prot)
             if meta.get_field('%s|%s|HarvestInstance|%s'%(cat, action, inst )) is not None:
                 new_protocols.remove(new_prot)  
