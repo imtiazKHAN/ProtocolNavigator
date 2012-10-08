@@ -685,7 +685,7 @@ class LineagePanel(wx.Panel):
 	# Draw time slider insync with the slider in the Bench	    
 	if self.timepoint_cursor is not None:  
 	    timepoints = meta.get_timeline().get_unique_timepoints()	
-	    if timepoints:
+	    if timepoints and len(timepoints)>1:
 		px_per_ti = (w_win - PAD * 2 - FLASK_GAP) /(len(timepoints)-1)
 		if self.timepoint_cursor <= max(timepoints) and self.timepoint_cursor >= min(timepoints):   
 		    ti = bisect.bisect_left(timepoints, self.timepoint_cursor)
