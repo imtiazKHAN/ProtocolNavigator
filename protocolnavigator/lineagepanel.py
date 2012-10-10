@@ -710,9 +710,14 @@ class LineagePanel(wx.Panel):
         self.cursor_pos = None
         self.Refresh(eraseBackground=False)
 
+
     def _on_mouse_click(self, evt):
         if self.current_node is None:
             return
+    
+	#self.cursor_pos = (evt.X, evt.Y)
+	#print self.cursor_pos
+	
         
         # --- Update the Bench view ---
         try:
@@ -738,14 +743,10 @@ class LineagePanel(wx.Panel):
 	
         exptsettings.OnLeafSelect()
         if self.current_node.get_tags():
-            exptsettings.ShowInstance(self.current_node.get_tags()[0])
+	    tag = self.current_node.get_tags()[0] # TO DO: if multiple event tag are there need to itterate through the list
+	    if meta.get_field('Transfer|Seed|HarvestInstance|'+exp.get_tag_instance(tag)) is None or exp.get_tag_event(tag) is 'Harvest':
+		exptsettings.ShowInstance(tag)
             
-        self.find_ancestors(self.current_node)    
-        #ancestors = [ptag
-                     #for pnode in timeline.reverse_iter_tree(self.current_node) if pnode
-                     #for ptag in pnode.tags]  
-	#print ancestors
-	
 	# -- show the data url list --- #
         data_acquis = False
 
@@ -755,7 +756,7 @@ class LineagePanel(wx.Panel):
 		break
 	    
 	if data_acquis:
-	    dia = DataLinkListDialog(self, self.current_node.get_well_ids())
+	    dia = DataLinkListDialog(self, self.current_node.get_well_ids(), self.find_ancestral_tags(self.current_node))
 	    if dia.ShowModal() == wx.ID_OK:
 		if dia.output_options.GetSelection() == 0:
 		    file_dlg = wx.FileDialog(None, message='Exporting Data URL...', 
@@ -820,7 +821,7 @@ class LineagePanel(wx.Panel):
 	        for ctag in cnodes.tags]	
 	
    
-    def find_ancestors(self, node):
+    def find_ancestral_tags(self, node):
 	ancestral_tags = []
 	for pnode in timeline.reverse_iter_tree(node):
 	    if pnode: 
@@ -833,11 +834,11 @@ class LineagePanel(wx.Panel):
 					for npnode in timeline.reverse_iter_tree(tpnode):
 					    if npnode:
 						for nptag in npnode.tags:
-						    ancestral_tags.append(exp.get_tag_stump(nptag, 2))	
+						    ancestral_tags.append(nptag)	
 		    else:
-			ancestral_tags.append(exp.get_tag_stump(ptag, 2))
+			ancestral_tags.append(ptag)
 			
-	print ancestral_tags
+	return list(reversed(ancestral_tags))
 		
 
 	

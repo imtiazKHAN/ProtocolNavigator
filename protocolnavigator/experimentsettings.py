@@ -90,7 +90,7 @@ class ExperimentSettings(Singleton):
         '''returns all existing TEMPORAL tags as list'''
         return [tag for tag in self.global_settings 
                 if tag.split('|')[0] in ('Transfer', 'Perturbation', 
-                                    'Staining', 'AddProcess', 'DataAcquis', 'Notes')]
+                                    'Labelling', 'AddProcess', 'DataAcquis', 'Notes')]
 
     def get_field_instances(self, tag_prefix):
         '''returns a list of unique instance ids for each tag beginning with 

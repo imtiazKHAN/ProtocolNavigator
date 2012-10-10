@@ -43,10 +43,12 @@ class ProtocolNavigator(wx.App):
         self.settings_frame.Bind(wx.EVT_CLOSE, self.onCloseWindow)
         
         self.bench_frame = Bench(self, self.ud_splitter)
-        self.ud_splitter.SplitHorizontally(self.exptsetting_frame, self.bench_frame, -400)
+        self.ud_splitter.SplitHorizontally(self.exptsetting_frame, self.bench_frame)
+	self.ud_splitter.SetSashGravity(0.4)
         
         self.lineage_frame = LineageFrame(self.lr_splitter)
-        self.lr_splitter.SplitVertically(self.ud_splitter, self.lineage_frame, -500)
+        self.lr_splitter.SplitVertically(self.ud_splitter, self.lineage_frame)
+	self.lr_splitter.SetSashGravity(0.5)
         
         if hasattr(sys, 'frozen'):
             path = os.path.split(os.path.abspath(sys.argv[0]))[0]

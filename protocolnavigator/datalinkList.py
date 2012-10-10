@@ -7,9 +7,9 @@ from experimentsettings import *
 ########       Popup Dialog showing all instances of settings       ####
 ########################################################################            
 class DataLinkListDialog(wx.Dialog):
-    def __init__(self, parent, well_ids):
-        wx.Dialog.__init__(self, parent, -1, size=(500,400), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
-        self.listctrl = InstanceListCtrl(self, well_ids)
+    def __init__(self, parent, well_ids, ancestor_tags):
+        wx.Dialog.__init__(self, parent, -1, size=(500,450), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        self.listctrl = InstanceListCtrl(self, well_ids, ancestor_tags)
         
         outputs = ('Export Selected', 'Export All', 'Show in ImageJ')
         self.output_options = wx.RadioBox(self, -1, "Output Choices", choices=outputs)
@@ -25,6 +25,7 @@ class DataLinkListDialog(wx.Dialog):
         hbox1.Add(self.listctrl, 1, wx.EXPAND)
         hbox2.Add(self.output_options, 1)
         hbox3.Add(self.ok_btn, 1)
+        hbox3.AddSpacer((10,-1))
         hbox3.Add(self.close_btn, 1)
         vbox.Add(hbox1, 0, wx.ALL|wx.EXPAND|wx.ALIGN_CENTER, 5)
         vbox.Add(hbox2, 0, wx.ALL|wx.EXPAND|wx.ALIGN_CENTER, 5)
@@ -34,9 +35,7 @@ class DataLinkListDialog(wx.Dialog):
  
         
 class InstanceListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.ColumnSorterMixin, listmix.TextEditMixin):
-    def __init__(self, parent, well_ids):
-        
-
+    def __init__(self, parent, well_ids, ancestor_tags):
         '''
         tag_prefix -- the tag whose instances to list in this list control
         '''
@@ -59,6 +58,7 @@ class InstanceListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.Colu
         self.InsertColumn(0, 'Location')
         self.InsertColumn(1, 'Time')
         self.InsertColumn(2, 'Data URL')
+        self.InsertColumn(3, 'Data Provenance')
           
         items = self.data_acquis_well.items()
        
@@ -71,8 +71,10 @@ class InstanceListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.Colu
             r = 1
             for well in well_ids:
                 if str(well) == str(data[0]):
+                    provenance_description = self.decode_tags(ancestor_tags)
+                    self.SetStringItem(index, 3, provenance_description, wx.LIST_FORMAT_RIGHT)
+                    self.select_data_acquis_well[r] = (data[0], data[1], data[2], provenance_description)
                     self.Select(index)
-                    self.select_data_acquis_well[r] = (data[0], data[1], data[2])
                     r +=1
         
     def get_selected_urls(self):
@@ -90,6 +92,11 @@ class InstanceListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.Colu
         for row in range(self.GetItemCount()):
             selections.append([self.GetItem(row, col).GetText() for col in range(self.GetColumnCount())])
         return selections
-        
+    
+    def decode_tags(self, tags):
+        description = ''        
+        for tag in tags:
+            description += '@%s hr %s %s was done; '%(format_time_string(get_tag_timepoint(tag)), get_tag_event(tag), get_tag_type(tag))
+        return description
                     
                     

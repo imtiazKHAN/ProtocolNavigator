@@ -58,7 +58,7 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
         ptb = self.tree.AppendItem(stc, 'Perturbation')
         self.tree.AppendItem(ptb, 'Chemical')
         self.tree.AppendItem(ptb, 'Biological')
-        lbl = self.tree.AppendItem(stc, 'Staining')
+        lbl = self.tree.AppendItem(stc, 'Labelling')
         self.tree.AppendItem(lbl, 'Dye')
         self.tree.AppendItem(lbl, 'Immunofluorescence')
         self.tree.AppendItem(lbl, 'Genetic')
@@ -84,7 +84,8 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
         self.settings_container.SetSizer(wx.BoxSizer())
         self.settings_panel = wx.Panel(self)
 
-        self.SplitVertically(self.tree, self.settings_container, -280)
+        self.SplitVertically(self.tree, self.settings_container)
+	self.SetSashGravity(0.3)
         self.Centre()
     
     def OnLeafSelect(self):
@@ -97,25 +98,22 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
 	self.settings_panel.Destroy()
 	self.settings_container.Sizer.Clear()
 	
-	if get_tag_type(tag) == 'Transfer' and get_tag_event(tag) == 'Seed':
-	    self.settings_panel = CellSeedSettingPanel(self.settings_container)
-	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)
-	if get_tag_type(tag) == 'Transfer' and get_tag_event(tag) == 'Harvest':
-	    self.settings_panel = CellHarvestSettingPanel(self.settings_container)
-	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)
+	if get_tag_type(tag) == 'Transfer' and get_tag_event(tag) == 'Seed':  # may link with stock instance
+	    self.settings_panel = CellLineSettingPanel(self.settings_container)
+	    self.settings_panel.notebook.SetSelection(int(meta.get_field('Transfer|Seed|CellLineInstance|%s'%get_tag_instance(tag)))-1)
 	if get_tag_type(tag) == 'Perturbation' and get_tag_event(tag) == 'Chem':
 	    self.settings_panel = ChemicalSettingPanel(self.settings_container)
 	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)	
 	if get_tag_type(tag) == 'Perturbation' and get_tag_event(tag) == 'Bio':
             self.settings_panel = BiologicalSettingPanel(self.settings_container)
 	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)
-	if get_tag_type(tag) == 'Staining' and get_tag_event(tag) == 'Dye':
+	if get_tag_type(tag) == 'Labelling' and get_tag_event(tag) == 'Dye':
 	    self.settings_panel = DyeSettingPanel(self.settings_container)
 	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)
-	if get_tag_type(tag) == 'Staining' and get_tag_event(tag) == 'Immuno':
+	if get_tag_type(tag) == 'Labelling' and get_tag_event(tag) == 'Immuno':
 	    self.settings_panel = ImmunoSettingPanel(self.settings_container)
 	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)
-	if get_tag_type(tag) == 'Staining' and get_tag_event(tag) == 'Genetic':
+	if get_tag_type(tag) == 'Labelling' and get_tag_event(tag) == 'Genetic':
 	    self.settings_panel = GeneticSettingPanel(self.settings_container)
 	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)
 	if get_tag_type(tag) == 'AddProcess' and get_tag_event(tag) == 'Spin':
@@ -134,17 +132,15 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
 	    self.settings_panel = IncubatorSettingPanel(self.settings_container)
 	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)	
 	if get_tag_type(tag) == 'DataAcquis' and get_tag_event(tag) == 'TLM':  # may link with microscope settings??
-	    self.settings_panel = TLMSettingPanel(self.settings_container)
-	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)
+	    self.settings_panel = MicroscopeSettingPanel(self.settings_container)
+	    self.settings_panel.notebook.SetSelection(int(meta.get_field('DataAcquis|TLM|MicroscopeInstance|%s'%get_tag_instance(tag)))-1)
 	if get_tag_type(tag) == 'DataAcquis' and get_tag_event(tag) == 'HCS':  # may link with microscope settings??
-	    self.settings_panel = HCSSettingPanel(self.settings_container)
-	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)	
+	    self.settings_panel = MicroscopeSettingPanel(self.settings_container)
+	    self.settings_panel.notebook.SetSelection(int(meta.get_field('DataAcquis|HCS|MicroscopeInstance|%s'%get_tag_instance(tag)))-1)	
 	if get_tag_type(tag) == 'DataAcquis' and get_tag_event(tag) == 'FCS':  # may link with flowcytometer settings??
-	    self.settings_panel = FCSSettingPanel(self.settings_container)
-	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)
-	#if get_tag_type(tag) == 'Notes':  
-	    #self.settings_panel = NoteSettingPanel(self.settings_container)
-	    #self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)	
+	    self.settings_panel = FlowcytometerSettingPanel(self.settings_container)
+	    self.settings_panel.notebook.SetSelection(int(meta.get_field('DataAcquis|FCS|FlowcytInstance|%s'%get_tag_instance(tag)))-1)
+
 	    
 	self.settings_container.Sizer.Add(self.settings_panel, 1, wx.EXPAND)        
 	self.settings_container.Layout()
@@ -470,8 +466,8 @@ class CellLinePanel(wx.Panel):
 	self.bot_panel = wx.ScrolledWindow(self.splitwindow)
         
         self.splitwindow.SplitHorizontally(self.top_panel, self.bot_panel)
-	self.splitwindow.SetMinimumPaneSize(40)
-	self.splitwindow.SetSashPosition(350)
+	self.splitwindow.SetSashGravity(0.5)
+
         # Attach a flexi sizer for the text controler and labels
         fgs = wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
 	admin_fgs = wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
@@ -3389,45 +3385,28 @@ class CellSeedPanel(wx.Panel):
 
         # Attach the scrolling option with the panel
         self.sw = wx.ScrolledWindow(self)
+	swsizer = wx.BoxSizer(wx.VERTICAL)	
         # Attach a flexi sizer for the text controler and labels
         fgs = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
-	#------- Heading ---#
-	pic=wx.StaticBitmap(self.sw)
-	pic.SetBitmap(icons.seed.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
-	text = wx.StaticText(self.sw, -1, 'Seed')
-	font = wx.Font(9, wx.SWISS, wx.NORMAL, wx.BOLD)
-	text.SetFont(font)
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)
+	font = wx.Font(9, wx.SWISS, wx.NORMAL, wx.BOLD)
+	pic=wx.StaticBitmap(self.sw)
+	pic.SetBitmap(icons.stock.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
 	titlesizer.Add(pic)
 	titlesizer.AddSpacer((5,-1))	
-	titlesizer.Add(text, 0)	
-        
-        # Selection Button
-	showInstBut = wx.Button(self.sw, -1, 'Show Stock Cultures', (100,100))
-	showInstBut.Bind (wx.EVT_BUTTON, self.OnShowDialog) 
-	fgs.Add(wx.StaticText(self.sw, -1, ''), 0,)
-	fgs.Add(showInstBut, 0, wx.EXPAND)
-	fgs.Add(wx.StaticText(self.sw, -1, ''), 0)
-	
-	#-- Cell Line selection ---#
-	if meta.get_field('Transfer|Seed|HarvestInstance|%s'%self.page_counter) is not None:
-	    celllineselcTAG = 'Transfer|Seed|HarvestInstance|'+str(self.page_counter)
-	    self.settings_controls[celllineselcTAG] = wx.TextCtrl(self.sw, value=meta.get_field(celllineselcTAG, default=''), style=wx.TE_PROCESS_ENTER)
-	    self.settings_controls[celllineselcTAG].Disable()
-	    showInstBut.Hide()
-	    fgs.Add(wx.StaticText(self.sw, -1, 'Harvest Instance'), 0)
-	    fgs.Add(self.settings_controls[celllineselcTAG], 0, wx.EXPAND) 
-	    fgs.Add(wx.StaticText(self.sw, -1, ''), 0)	
-	else:
-	    celllineselcTAG = 'Transfer|Seed|CellLineInstance|'+str(self.page_counter)
-	    self.settings_controls[celllineselcTAG] = wx.TextCtrl(self.sw, value=meta.get_field(celllineselcTAG, default=''), style=wx.TE_PROCESS_ENTER)
-	    self.settings_controls[celllineselcTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
-	    self.settings_controls[celllineselcTAG].SetToolTipString('Stock culture from where cells were transferred')
-	    fgs.Add(wx.StaticText(self.sw, -1, 'Stock Culture Instance'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	    fgs.Add(self.settings_controls[celllineselcTAG], 0, wx.EXPAND)
-	    fgs.Add(wx.StaticText(self.sw, -1, ''), 0)
+	#------- Heading ---#	    
+	celllineselcTAG = 'Transfer|Seed|CellLineInstance|'+str(self.page_counter)
+	if meta.get_field(celllineselcTAG) is not None:
+	    header = wx.StaticText(self.sw, -1, '%s Cell Line (from Stock Instance %s)' %(str(meta.get_field('Sample|CellLine|Name|%s'%str(meta.get_field(celllineselcTAG)))), str(meta.get_field(celllineselcTAG))))	
+	    header.SetFont(font)	
+	    titlesizer.Add(header, 0)    
+        else:	   	
+	    self.showInstBut = wx.Button(self.sw, -1, 'Select Cell Line', (100,100))
+	    self.showInstBut.Bind (wx.EVT_BUTTON, self.OnShowDialog) 
+	    titlesizer.Add(self.showInstBut, 0, wx.EXPAND)
 
-        # Seeding Density
+
+       # Seeding Density
        	seeddensityTAG = 'Transfer|Seed|SeedingDensity|'+str(self.page_counter)
 	seeddensity = meta.get_field(seeddensityTAG, [])
 	self.settings_controls[seeddensityTAG+'|0'] = wx.lib.masked.NumCtrl(self.sw, size=(20,-1), style=wx.TE_PROCESS_ENTER)
@@ -3478,10 +3457,9 @@ class CellSeedPanel(wx.Panel):
         dia = InstanceListDialog(self, 'Sample|CellLine', selection_mode = False)
         if dia.ShowModal() == wx.ID_OK:
             if dia.listctrl.get_selected_instances() != []:
+		self.showInstBut.Destroy()
                 instance = dia.listctrl.get_selected_instances()[0]
-                celllineselcTAG = 'Transfer|Seed|CellLineInstance|'+str(self.page_counter)
-                self.settings_controls[celllineselcTAG].SetValue(str(instance))
-        dia.Destroy()
+		meta.set_field('Transfer|Seed|CellLineInstance|'+str(self.page_counter), instance)
 
     def OnSavingData(self, event):
 	ctrl = event.GetEventObject()
@@ -3978,7 +3956,7 @@ class ImmunoSettingPanel(wx.Panel):
         self.settings_controls = {}
         meta = ExperimentSettings.getInstance()
 		
-	self.protocol = 'Staining|Immuno'	
+	self.protocol = 'Labelling|Immuno'	
 
         self.notebook = fnb.FlatNotebook(self, -1, style=fnb.FNB_NO_X_BUTTON | fnb.FNB_VC8)
 	self.notebook.Bind(fnb.EVT_FLATNOTEBOOK_PAGE_CLOSING, meta.onTabClosing)
@@ -4053,7 +4031,7 @@ class ImmunoPanel(wx.Panel):
 
         self.page_counter = page_counter
 	
-	self.protocol = 'Staining|Immuno|%s'%str(self.page_counter)
+	self.protocol = 'Labelling|Immuno|%s'%str(self.page_counter)
 
         # Top panel for static information and bottom pannel for adding steps
 	self.top_panel = wx.Panel(self)	
@@ -4064,7 +4042,7 @@ class ImmunoPanel(wx.Panel):
 	#------- Heading ---#
 	pic=wx.StaticBitmap(self.top_panel)
 	pic.SetBitmap(icons.antibody.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
-	text = wx.StaticText(self.top_panel, -1, 'Immunofluorscence Staining Protocol')
+	text = wx.StaticText(self.top_panel, -1, 'Immunofluorscence Labelling Protocol')
 	font = wx.Font(9, wx.SWISS, wx.NORMAL, wx.BOLD)
 	text.SetFont(font)
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -4072,7 +4050,7 @@ class ImmunoPanel(wx.Panel):
 	titlesizer.AddSpacer((5,-1))	
 	titlesizer.Add(text, 0)	
 
-        protnameTAG = 'Staining|Immuno|ProtocolName|'+str(self.page_counter)
+        protnameTAG = 'Labelling|Immuno|ProtocolName|'+str(self.page_counter)
         self.settings_controls[protnameTAG] = wx.TextCtrl(self.top_panel, value=meta.get_field(protnameTAG, default=''))
         self.settings_controls[protnameTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
         self.settings_controls[protnameTAG].SetInitialSize((250,20))
@@ -4094,7 +4072,7 @@ class ImmunoPanel(wx.Panel):
 	fgs.Add(wx.StaticText(self.top_panel, -1, 'Tag'), 0, wx.ALIGN_CENTER|wx.ALIGN_CENTER_VERTICAL)
         # Primary source and associated attributes
 	fgs.Add(wx.StaticText(self.top_panel, -1, 'Primary Antibody'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-        primaryantiTAG = 'Staining|Immuno|Primary|'+str(self.page_counter)
+        primaryantiTAG = 'Labelling|Immuno|Primary|'+str(self.page_counter)
 	primaryanti = meta.get_field(primaryantiTAG, [])	
 	self.settings_controls[primaryantiTAG+'|0'] = wx.TextCtrl(self.top_panel, value='') 
 	if len(primaryanti)> 0:
@@ -4131,7 +4109,7 @@ class ImmunoPanel(wx.Panel):
 	
 	# Secondary source and associated attributes
 	fgs.Add(wx.StaticText(self.top_panel, -1, 'Secondary Antibody'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	secondaryantiTAG = 'Staining|Immuno|Secondary|'+str(self.page_counter)
+	secondaryantiTAG = 'Labelling|Immuno|Secondary|'+str(self.page_counter)
 	secondaryanti = meta.get_field(secondaryantiTAG, [])	
 	self.settings_controls[secondaryantiTAG+'|0'] = wx.TextCtrl(self.top_panel, value='') 
 	if len(secondaryanti)> 0:
@@ -4167,7 +4145,7 @@ class ImmunoPanel(wx.Panel):
 	fgs.Add(self.settings_controls[secondaryantiTAG+'|4'], 0, wx.EXPAND)			
 	# Tertiary source and associated attributes
 	fgs.Add(wx.StaticText(self.top_panel, -1, 'Tertiary Antibody'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-        tertiaryantiTAG = 'Staining|Immuno|Tertiary|'+str(self.page_counter)
+        tertiaryantiTAG = 'Labelling|Immuno|Tertiary|'+str(self.page_counter)
 	tertiaryanti = meta.get_field(tertiaryantiTAG, [])	
 	self.settings_controls[tertiaryantiTAG+'|0'] = wx.TextCtrl(self.top_panel, value='') 
 	if len(tertiaryanti)> 0:
@@ -4221,12 +4199,12 @@ class ImmunoPanel(wx.Panel):
 
 
     def onSaveSettings(self, event):
-	if not meta.get_field('Staining|Immuno|ProtocolName|%s'%str(self.page_counter)):
+	if not meta.get_field('Labelling|Immuno|ProtocolName|%s'%str(self.page_counter)):
 	    dial = wx.MessageDialog(None, 'Please provide a protocol name', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()  
 	    return
 				
-	filename = meta.get_field('Staining|Immuno|ProtocolName|%s'%str(self.page_counter))+'.txt'
+	filename = meta.get_field('Labelling|Immuno|ProtocolName|%s'%str(self.page_counter))+'.txt'
 	
 	dlg = wx.FileDialog(None, message='Saving Settings...', 
                             defaultDir=os.getcwd(), defaultFile=filename, 
@@ -4256,7 +4234,7 @@ class GeneticSettingPanel(wx.Panel):
         self.settings_controls = {}
         meta = ExperimentSettings.getInstance()
 		
-	self.protocol = 'Staining|Genetic'	
+	self.protocol = 'Labelling|Genetic'	
 
         self.notebook = fnb.FlatNotebook(self, -1, style=fnb.FNB_NO_X_BUTTON | fnb.FNB_VC8)
 	self.notebook.Bind(fnb.EVT_FLATNOTEBOOK_PAGE_CLOSING, meta.onTabClosing)
@@ -4331,7 +4309,7 @@ class GeneticPanel(wx.Panel):
 	self.page_counter = page_counter
 	self.step_list = []
 	
-	self.protocol = 'Staining|Genetic|%s'%str(self.page_counter)
+	self.protocol = 'Labelling|Genetic|%s'%str(self.page_counter)
 	
 	# Top panel for static information and bottom pannel for adding steps
 	self.top_panel = wx.Panel(self)	
@@ -4342,7 +4320,7 @@ class GeneticPanel(wx.Panel):
 	#------- Heading ---#
 	pic=wx.StaticBitmap(self.top_panel)
 	pic.SetBitmap(icons.primer.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
-	text = wx.StaticText(self.top_panel, -1, 'Genetic (Primer) Staining Protocol')
+	text = wx.StaticText(self.top_panel, -1, 'Genetic (Primer) Labelling Protocol')
 	font = wx.Font(9, wx.SWISS, wx.NORMAL, wx.BOLD)
 	text.SetFont(font)
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -4350,7 +4328,7 @@ class GeneticPanel(wx.Panel):
 	titlesizer.AddSpacer((5,-1))	
 	titlesizer.Add(text, 0)		
 
-	protnameTAG = 'Staining|Genetic|ProtocolName|'+str(self.page_counter)
+	protnameTAG = 'Labelling|Genetic|ProtocolName|'+str(self.page_counter)
 	self.settings_controls[protnameTAG] = wx.TextCtrl(self.top_panel, value=meta.get_field(protnameTAG, default=''))
 	self.settings_controls[protnameTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
 	self.settings_controls[protnameTAG].SetInitialSize((250,20))
@@ -4365,7 +4343,7 @@ class GeneticPanel(wx.Panel):
 	fgs = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
 
 	#--Target Sequence--#
-	targseqTAG = 'Staining|Genetic|Target|'+str(self.page_counter)
+	targseqTAG = 'Labelling|Genetic|Target|'+str(self.page_counter)
 	self.settings_controls[targseqTAG] = wx.TextCtrl(self.top_panel, value=meta.get_field(targseqTAG, default=''))
 	self.settings_controls[targseqTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
 	self.settings_controls[targseqTAG].SetInitialSize((100, 20))
@@ -4374,7 +4352,7 @@ class GeneticPanel(wx.Panel):
 	fgs.Add(self.settings_controls[targseqTAG], 0)
 	fgs.Add(wx.StaticText(self.top_panel, -1, ''), 0)
 	#--Primer Sequence--#
-	primseqTAG = 'Staining|Genetic|Primer|'+str(self.page_counter)
+	primseqTAG = 'Labelling|Genetic|Primer|'+str(self.page_counter)
 	self.settings_controls[primseqTAG] = wx.TextCtrl(self.top_panel, value=meta.get_field(primseqTAG, default=''))
 	self.settings_controls[primseqTAG].Bind(wx.EVT_TEXT,self.OnSavingData)
 	self.settings_controls[primseqTAG].SetToolTipString(meta.get_field(primseqTAG, default=''))
@@ -4382,7 +4360,7 @@ class GeneticPanel(wx.Panel):
 	fgs.Add(self.settings_controls[primseqTAG], 0)
 	fgs.Add(wx.StaticText(self.top_panel, -1, ''), 0)	
         #--Temperature--#
-        tempTAG = 'Staining|Genetic|Temp|'+str(self.page_counter)
+        tempTAG = 'Labelling|Genetic|Temp|'+str(self.page_counter)
         self.settings_controls[tempTAG] = wx.TextCtrl(self.top_panel, value=meta.get_field(tempTAG, default=''))
         self.settings_controls[tempTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
         self.settings_controls[tempTAG].SetToolTipString('Temperature')
@@ -4390,7 +4368,7 @@ class GeneticPanel(wx.Panel):
 	fgs.Add(self.settings_controls[tempTAG], 0)
 	fgs.Add(wx.StaticText(self.top_panel, -1, ''), 0)
         #--Carbondioxide--#
-        gcTAG = 'Staining|Genetic|GC|'+str(self.page_counter)
+        gcTAG = 'Labelling|Genetic|GC|'+str(self.page_counter)
         self.settings_controls[gcTAG] = wx.TextCtrl(self.top_panel, value=meta.get_field(gcTAG, default=''))
         self.settings_controls[gcTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
         self.settings_controls[gcTAG].SetToolTipString('GC Percentages')
@@ -4416,12 +4394,12 @@ class GeneticPanel(wx.Panel):
 	self.Show()       
 
     def onSaveSettings(self, event):
-	if not meta.get_field('Staining|Genetic|ProtocolName|%s'%str(self.page_counter)):
+	if not meta.get_field('Labelling|Genetic|ProtocolName|%s'%str(self.page_counter)):
 	    dial = wx.MessageDialog(None, 'Please provide a protocol name', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()  
 	    return
 				
-	filename = meta.get_field('Staining|Genetic|ProtocolName|%s'%str(self.page_counter))+'.txt'
+	filename = meta.get_field('Labelling|Genetic|ProtocolName|%s'%str(self.page_counter))+'.txt'
 	
 	dlg = wx.FileDialog(None, message='Saving Settings...', 
                             defaultDir=os.getcwd(), defaultFile=filename, 
@@ -4451,7 +4429,7 @@ class DyeSettingPanel(wx.Panel):
         self.settings_controls = {}
         meta = ExperimentSettings.getInstance()
 		
-	self.protocol = 'Staining|Dye'	
+	self.protocol = 'Labelling|Dye'	
 
         self.notebook = fnb.FlatNotebook(self, -1, style=fnb.FNB_NO_X_BUTTON | fnb.FNB_VC8)
 	self.notebook.Bind(fnb.EVT_FLATNOTEBOOK_PAGE_CLOSING, meta.onTabClosing)
@@ -4527,7 +4505,7 @@ class DyePanel(wx.Panel):
         self.page_counter = page_counter
         self.step_list = []
 	
-	self.protocol = 'Staining|Dye|%s'%str(self.page_counter)
+	self.protocol = 'Labelling|Dye|%s'%str(self.page_counter)
 	
         # Top panel for static information and bottom pannel for adding steps
 	self.top_panel = wx.Panel(self)	
@@ -4538,7 +4516,7 @@ class DyePanel(wx.Panel):
 	#------- Heading ---#
 	pic=wx.StaticBitmap(self.top_panel)
 	pic.SetBitmap(icons.stain.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
-	text = wx.StaticText(self.top_panel, -1, 'Dye (Chemical) Staining Protocol')
+	text = wx.StaticText(self.top_panel, -1, 'Dye (Chemical) Labelling Protocol')
 	font = wx.Font(9, wx.SWISS, wx.NORMAL, wx.BOLD)
 	text.SetFont(font)
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -4546,7 +4524,7 @@ class DyePanel(wx.Panel):
 	titlesizer.AddSpacer((5,-1))	
 	titlesizer.Add(text, 0)		
 
-        protnameTAG = 'Staining|Dye|ProtocolName|'+str(self.page_counter)
+        protnameTAG = 'Labelling|Dye|ProtocolName|'+str(self.page_counter)
         self.settings_controls[protnameTAG] = wx.TextCtrl(self.top_panel, value=meta.get_field(protnameTAG, default=''))
         self.settings_controls[protnameTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
         self.settings_controls[protnameTAG].SetInitialSize((250,20))
@@ -4560,7 +4538,7 @@ class DyePanel(wx.Panel):
 	
 	fgs = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
         #  Chem Agent Name
-        chemnamTAG = 'Staining|Dye|DyeName|'+str(self.page_counter)
+        chemnamTAG = 'Labelling|Dye|DyeName|'+str(self.page_counter)
         self.settings_controls[chemnamTAG] = wx.TextCtrl(self.top_panel, value=meta.get_field(chemnamTAG, default=''), style=wx.TE_PROCESS_ENTER)
         self.settings_controls[chemnamTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
         self.settings_controls[chemnamTAG].SetToolTipString('Name of the Chemical agent used')
@@ -4568,7 +4546,7 @@ class DyePanel(wx.Panel):
         fgs.Add(self.settings_controls[chemnamTAG], 0, wx.EXPAND)
         fgs.Add(wx.StaticText(self.top_panel, -1, ''), 0)
         #Concentration and Unit
-	concTAG = 'Staining|Dye|Conc|'+str(self.page_counter)
+	concTAG = 'Labelling|Dye|Conc|'+str(self.page_counter)
 	conc = meta.get_field(concTAG, [])
 	self.settings_controls[concTAG+'|0'] = wx.TextCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)
 	if len(conc) > 0:
@@ -4584,7 +4562,7 @@ class DyePanel(wx.Panel):
 	self.settings_controls[concTAG+'|1'].Bind(wx.EVT_LISTBOX, self.OnSavingData)
 	fgs.Add(self.settings_controls[concTAG+'|1'], 0, wx.EXPAND)	
          #  Manufacturer
-        chemmfgTAG = 'Staining|Dye|Manufacturer|'+str(self.page_counter)
+        chemmfgTAG = 'Labelling|Dye|Manufacturer|'+str(self.page_counter)
         self.settings_controls[chemmfgTAG] = wx.TextCtrl(self.top_panel, value=meta.get_field(chemmfgTAG, default=''), style=wx.TE_PROCESS_ENTER)
         self.settings_controls[chemmfgTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
         self.settings_controls[chemmfgTAG].SetToolTipString('Name of the Chemical agent Manufacturer')
@@ -4592,7 +4570,7 @@ class DyePanel(wx.Panel):
         fgs.Add(self.settings_controls[chemmfgTAG], 0, wx.EXPAND)
         fgs.Add(wx.StaticText(self.top_panel, -1, ''), 0)
         #  Catalogue Number
-        chemcatTAG = 'Staining|Dye|CatNum|'+str(self.page_counter)
+        chemcatTAG = 'Labelling|Dye|CatNum|'+str(self.page_counter)
         self.settings_controls[chemcatTAG] = wx.TextCtrl(self.top_panel, value=meta.get_field(chemcatTAG, default=''))
         self.settings_controls[chemcatTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
         self.settings_controls[chemcatTAG].SetToolTipString('Name of the Chemical agent Catalogue Number')
@@ -4600,7 +4578,7 @@ class DyePanel(wx.Panel):
         fgs.Add(self.settings_controls[chemcatTAG], 0, wx.EXPAND)
         fgs.Add(wx.StaticText(self.top_panel, -1, ''), 0)
          #  Additives
-        chemaddTAG = 'Staining|Dye|Additives|'+str(self.page_counter)
+        chemaddTAG = 'Labelling|Dye|Additives|'+str(self.page_counter)
         self.settings_controls[chemaddTAG] = wx.TextCtrl(self.top_panel, value=meta.get_field(chemaddTAG, default=''), style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER)
         self.settings_controls[chemaddTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
         self.settings_controls[chemaddTAG].SetToolTipString(meta.get_field(chemaddTAG, default=''))
@@ -4608,7 +4586,7 @@ class DyePanel(wx.Panel):
         fgs.Add(self.settings_controls[chemaddTAG], 0, wx.EXPAND)
         fgs.Add(wx.StaticText(self.top_panel, -1, ''), 0)
          #  Other informaiton
-        chemothTAG = 'Staining|Dye|Other|'+str(self.page_counter)
+        chemothTAG = 'Labelling|Dye|Other|'+str(self.page_counter)
         self.settings_controls[chemothTAG] = wx.TextCtrl(self.top_panel, value=meta.get_field(chemothTAG, default=''), style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER)
         self.settings_controls[chemothTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
         self.settings_controls[chemothTAG].SetToolTipString(meta.get_field(chemothTAG, default=''))
@@ -4634,12 +4612,12 @@ class DyePanel(wx.Panel):
 	self.Show() 	
 	
     def onSaveSettings(self, event):
-	if not meta.get_field('Staining|Dye|ProtocolName|%s'%str(self.page_counter)):
+	if not meta.get_field('Labelling|Dye|ProtocolName|%s'%str(self.page_counter)):
 	    dial = wx.MessageDialog(None, 'Please provide a protocol name', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()  
 	    return
 				
-	filename = meta.get_field('Staining|Dye|ProtocolName|%s'%str(self.page_counter))+'.txt'
+	filename = meta.get_field('Labelling|Dye|ProtocolName|%s'%str(self.page_counter))+'.txt'
 	
 	dlg = wx.FileDialog(None, message='Saving Settings...', 
                             defaultDir=os.getcwd(), defaultFile=filename, 
@@ -5676,7 +5654,7 @@ class TLMPanel(wx.Panel):
             if dia.listctrl.get_selected_instances() != []:
                 instance = dia.listctrl.get_selected_instances()[0]
                 tlmselctTAG = 'DataAcquis|TLM|MicroscopeInstance|'+str(self.page_counter)
-                self.settings_controls[tlmselctTAG].SetValue(meta.get_field('Instrument|Microscope|ChannelName|%s'%str(instance)))
+                self.settings_controls[tlmselctTAG].SetValue(str(instance))
         dia.Destroy()
 
     def OnSavingData(self, event):
@@ -5758,14 +5736,15 @@ class HCSPanel(wx.Panel):
         
         #-- Microscope selection ---#
         hcsselctTAG = 'DataAcquis|HCS|MicroscopeInstance|'+str(self.page_counter)
-        self.settings_controls[hcsselctTAG] = wx.TextCtrl(self.sw, value=meta.get_field(hcsselctTAG, default=''))
+	self.settings_controls[hcsselctTAG] = wx.TextCtrl(self.sw, value=meta.get_field(hcsselctTAG, default=''))
         showInstBut = wx.Button(self.sw, -1, 'Show Channels', (100,100))
         showInstBut.Bind (wx.EVT_BUTTON, self.OnShowDialog) 
         self.settings_controls[hcsselctTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
         self.settings_controls[hcsselctTAG].SetToolTipString('Microscope used for data acquisition')
         fgs.Add(wx.StaticText(self.sw, -1, 'Select Channel'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         fgs.Add(self.settings_controls[hcsselctTAG], 0, wx.EXPAND)
-        fgs.Add(showInstBut, 0, wx.EXPAND)	
+        fgs.Add(showInstBut, 0, wx.EXPAND)
+   
         #-- Image Format ---#
 	hcsfrmtTAG = 'DataAcquis|HCS|Format|'+str(self.page_counter)
 	organism_choices =['tiff', 'jpeg', 'stk', 'Other']
@@ -5830,7 +5809,7 @@ class HCSPanel(wx.Panel):
 		if dia.listctrl.get_selected_instances() != []:
 		    instance = dia.listctrl.get_selected_instances()[0]
 		    hcsselctTAG = 'DataAcquis|HCS|MicroscopeInstance|'+str(self.page_counter)
-		    self.settings_controls[hcsselctTAG].SetValue(meta.get_field('Instrument|Microscope|ChannelName|%s'%str(instance)))
+		    self.settings_controls[hcsselctTAG].SetValue(str(instance))
 	    dia.Destroy()    
 
     def OnSavingData(self, event):

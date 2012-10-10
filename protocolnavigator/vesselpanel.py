@@ -100,10 +100,12 @@ class VesselPanel(wx.Panel):
     def OnPopupItemSelected(self, event):
 	harvest_from_well = self.get_platewell_id_at_xy(self.rclick_pos.x,self.rclick_pos.y)
         sample_instances = [meta.get_sampleInstance(instance) for instance in meta.get_seeded_sample(harvest_from_well)]
-        # TO DO: only take the last seeding cell line instance, however if it is co-culture (with multiple cell line seeded in different time points
+	if not sample_instances:
+	    dlg = wx.MessageDialog(None, 'No cells in vessel\nPlease seed cells in vessel', 'Harvesting..', wx.OK| wx.ICON_ERROR)
+	    dlg.ShowModal()
+	    return	
+	# TO DO: only take the last seeding cell line instance, however if it is co-culture (with multiple cell line seeded in different time points
         # then we need to think of multiple cell line specific GUI for a given well
-	
-	# TO DO check the validity of the well - i.e. it has cell lines in it. not harvested before etc.
         sample_inst = str(sample_instances.pop())
         new_harvest_inst = meta.get_new_protocol_id('Transfer|Harvest')
         new_seed_inst = meta.get_new_protocol_id('Transfer|Seed')

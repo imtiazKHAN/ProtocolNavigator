@@ -190,7 +190,7 @@ class PrintProtocol(wx.Frame):
 		    
                 if exp.get_tag_event(protocol) == 'Dye': 
                     self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
-		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Chemical Dye Staining</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
+		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Chemical Dye Labelling</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
 		    self.printfile.write('<code><font size="1">'+protocol_info[0]+'</font></code>')
 		    for element in protocol_info[1]:  # step description
 			description = element[0]
@@ -205,7 +205,7 @@ class PrintProtocol(wx.Frame):
 		    
                 if exp.get_tag_event(protocol) == 'Immuno': 
                     self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
-		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Immunofluorescence Staining</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
+		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Immunofluorescence Labelling</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
 		    self.printfile.write('<code><font size="1">'+protocol_info[0]+'</font></code>') # header part
 		    for element in protocol_info[1]:  # step description
 			description = element[0]
@@ -220,7 +220,7 @@ class PrintProtocol(wx.Frame):
 		    
                 if exp.get_tag_event(protocol) == 'Genetic': 
                     self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
-		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Genetic Material Staining</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
+		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Genetic Material Labelling</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
 		    self.printfile.write('<code><font size="1">'+protocol_info[0]+'</font></code>') # header part
 		    for element in protocol_info[1]:  # step description
 			description = element[0]
@@ -588,65 +588,65 @@ class PrintProtocol(wx.Frame):
             return (header, info)
 	
 	if exp.get_tag_event(protocol) == 'Dye':
-	    header += meta.get_field('Staining|Dye|ProtocolName|%s'%instance)+' staining protocol was applied.  '
-	    header += meta.get_field('Staining|Dye|DyeName|%s'%instance)+' (Catalogue No.: %s; Manufacturer: %s) was used with a concentration of %s %s.<br />'%(
-	        meta.get_field('Staining|Dye|CatNum|%s'%instance), 
-	        meta.get_field('Staining|Dye|Manufacturer|%s'%instance), 
-	        meta.get_field('Staining|Dye|Conc|%s'%instance)[0], 
-	        meta.get_field('Staining|Dye|Conc|%s'%instance)[1])
-	    if meta.get_field('Staining|Dye|Additives|%s'%instance) is not None:
-		header += 'Additives used: %s<br />'%meta.get_field('Staining|Dye|Additives|%s'%instance) 
-	    if meta.get_field('Staining|Dye|Other|%s'%instance) is not None:
-		header += 'Other information: %s'%meta.get_field('Staining|Dye|Other|%s'%instance)  
+	    header += meta.get_field('Labelling|Dye|ProtocolName|%s'%instance)+' staining protocol was applied.  '
+	    header += meta.get_field('Labelling|Dye|DyeName|%s'%instance)+' (Catalogue No.: %s; Manufacturer: %s) was used with a concentration of %s %s.<br />'%(
+	        meta.get_field('Labelling|Dye|CatNum|%s'%instance), 
+	        meta.get_field('Labelling|Dye|Manufacturer|%s'%instance), 
+	        meta.get_field('Labelling|Dye|Conc|%s'%instance)[0], 
+	        meta.get_field('Labelling|Dye|Conc|%s'%instance)[1])
+	    if meta.get_field('Labelling|Dye|Additives|%s'%instance) is not None:
+		header += 'Additives used: %s<br />'%meta.get_field('Labelling|Dye|Additives|%s'%instance) 
+	    if meta.get_field('Labelling|Dye|Other|%s'%instance) is not None:
+		header += 'Other information: %s'%meta.get_field('Labelling|Dye|Other|%s'%instance)  
 	    header += '<br /><b>Protocol details:</b><br />'	    
-	    steps = sorted(meta.get_attribute_list_by_instance('Staining|Dye|Step', str(instance)), key = meta.stringSplitByNumbers)
+	    steps = sorted(meta.get_attribute_list_by_instance('Labelling|Dye|Step', str(instance)), key = meta.stringSplitByNumbers)
 	    for step in steps:
-		info.append(meta.get_field('Staining|Dye|%s|%s'%(step,instance)))
+		info.append(meta.get_field('Labelling|Dye|%s|%s'%(step,instance)))
 		
 	    return (header, info)
 	
 	if exp.get_tag_event(protocol) == 'Immuno':
-	    header += meta.get_field('Staining|Immuno|ProtocolName|%s'%instance)+' staining protocol was applied.  '
-	    if meta.get_field('Staining|Immuno|Primary|%s'%instance) is not None:
+	    header += meta.get_field('Labelling|Immuno|ProtocolName|%s'%instance)+' staining protocol was applied.  '
+	    if meta.get_field('Labelling|Immuno|Primary|%s'%instance) is not None:
 		header += '  Primary antibody (Species: %s, Catalogue No.: %s, Manufacturer: %s) was used with a target antigen %s and flurescent tag %s.'%(
-		    meta.get_field('Staining|Immuno|Primary|%s'%instance)[2],
-		    meta.get_field('Staining|Immuno|Primary|%s'%instance)[1],
-		    meta.get_field('Staining|Immuno|Primary|%s'%instance)[0],
-		    meta.get_field('Staining|Immuno|Primary|%s'%instance)[3],
-		    meta.get_field('Staining|Immuno|Primary|%s'%instance)[4])
-	    if meta.get_field('Staining|Immuno|Secondary|%s'%instance) is not None:
+		    meta.get_field('Labelling|Immuno|Primary|%s'%instance)[2],
+		    meta.get_field('Labelling|Immuno|Primary|%s'%instance)[1],
+		    meta.get_field('Labelling|Immuno|Primary|%s'%instance)[0],
+		    meta.get_field('Labelling|Immuno|Primary|%s'%instance)[3],
+		    meta.get_field('Labelling|Immuno|Primary|%s'%instance)[4])
+	    if meta.get_field('Labelling|Immuno|Secondary|%s'%instance) is not None:
 		header += '  Secondary antibody (Species: %s, Catalogue No.: %s, Manufacturer: %s) was used with a target antigen %s and flurescent tag %s.'%(
-	            meta.get_field('Staining|Immuno|Secondary|%s'%instance)[2],
-	            meta.get_field('Staining|Immuno|Secondary|%s'%instance)[1],
-	            meta.get_field('Staining|Immuno|Secondary|%s'%instance)[0],
-	            meta.get_field('Staining|Immuno|Secondary|%s'%instance)[3],
-	            meta.get_field('Staining|Immuno|Secondary|%s'%instance)[4])
-	    if meta.get_field('Staining|Immuno|Tertiary|%s'%instance) is not None:
+	            meta.get_field('Labelling|Immuno|Secondary|%s'%instance)[2],
+	            meta.get_field('Labelling|Immuno|Secondary|%s'%instance)[1],
+	            meta.get_field('Labelling|Immuno|Secondary|%s'%instance)[0],
+	            meta.get_field('Labelling|Immuno|Secondary|%s'%instance)[3],
+	            meta.get_field('Labelling|Immuno|Secondary|%s'%instance)[4])
+	    if meta.get_field('Labelling|Immuno|Tertiary|%s'%instance) is not None:
 		    header += '  Tertiary antibody (Species: %s, Catalogue No.: %s, Manufacturer: %s) was used with a target antigen %s and flurescent tag %s.'%(
-		    meta.get_field('Staining|Immuno|Tertiary|%s'%instance)[2],
-		    meta.get_field('Staining|Immuno|Tertiary|%s'%instance)[1],
-		    meta.get_field('Staining|Immuno|Tertiary|%s'%instance)[0],
-		    meta.get_field('Staining|Immuno|Tertiary|%s'%instance)[3],
-		    meta.get_field('Staining|Immuno|Tertiary|%s'%instance)[4])
+		    meta.get_field('Labelling|Immuno|Tertiary|%s'%instance)[2],
+		    meta.get_field('Labelling|Immuno|Tertiary|%s'%instance)[1],
+		    meta.get_field('Labelling|Immuno|Tertiary|%s'%instance)[0],
+		    meta.get_field('Labelling|Immuno|Tertiary|%s'%instance)[3],
+		    meta.get_field('Labelling|Immuno|Tertiary|%s'%instance)[4])
 	    header += '<br /><br /><b>Protocol details:</b><br />'
-	    steps = sorted(meta.get_attribute_list_by_instance('Staining|Immuno|Step', str(instance)), key = meta.stringSplitByNumbers)
+	    steps = sorted(meta.get_attribute_list_by_instance('Labelling|Immuno|Step', str(instance)), key = meta.stringSplitByNumbers)
 	    for step in steps:
-		info.append(meta.get_field('Staining|Immuno|%s|%s'%(step,instance)))	    
+		info.append(meta.get_field('Labelling|Immuno|%s|%s'%(step,instance)))	    
 		
 	    return (header, info)  
 	
 	if exp.get_tag_event(protocol) == 'Genetic':
-	    header += meta.get_field('Staining|Genetic|ProtocolName|%s'%instance)+' staining protocol was applied.  '
-	    header += 'Target sequence was: %s<br />'%meta.get_field('Staining|Genetic|Target|%s'%instance)
-	    header += 'Primer sequence was: %s<br />'%meta.get_field('Staining|Genetic|Primer|%s'%instance)
-	    if meta.get_field('Staining|Genetic|Temp|%s'%instance) is not None:
-		header += 'Temperature was %s C'%meta.get_field('Staining|Genetic|Temp|%s'%instance)
-	    if meta.get_field('Staining|Genetic|GC|%s'%instance) is not None:
-		header += '  and the GC percentage was %s %s' %(meta.get_field('Staining|Genetic|GC|%s'%instance), '%')
+	    header += meta.get_field('Labelling|Genetic|ProtocolName|%s'%instance)+' staining protocol was applied.  '
+	    header += 'Target sequence was: %s<br />'%meta.get_field('Labelling|Genetic|Target|%s'%instance)
+	    header += 'Primer sequence was: %s<br />'%meta.get_field('Labelling|Genetic|Primer|%s'%instance)
+	    if meta.get_field('Labelling|Genetic|Temp|%s'%instance) is not None:
+		header += 'Temperature was %s C'%meta.get_field('Labelling|Genetic|Temp|%s'%instance)
+	    if meta.get_field('Labelling|Genetic|GC|%s'%instance) is not None:
+		header += '  and the GC percentage was %s %s' %(meta.get_field('Labelling|Genetic|GC|%s'%instance), '%')
 	    header += '<br /><br /><b>Protocol details:</b><br />'	    
-	    steps = sorted(meta.get_attribute_list_by_instance('Staining|Genetic|Step', str(instance)), key = meta.stringSplitByNumbers)
+	    steps = sorted(meta.get_attribute_list_by_instance('Labelling|Genetic|Step', str(instance)), key = meta.stringSplitByNumbers)
 	    for step in steps:
-		info.append(meta.get_field('Staining|Genetic|%s|%s'%(step,instance)))
+		info.append(meta.get_field('Labelling|Genetic|%s|%s'%(step,instance)))
 		
 	    return (header, info)	
         

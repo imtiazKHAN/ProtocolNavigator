@@ -25,7 +25,8 @@ class Bench(wx.Panel):
         self.splitter = wx.SplitterWindow(self, style=wx.NO_BORDER|wx.SP_3DSASH)
         self.top_panel = wx.Panel(self.splitter)
         self.bot_panel = wx.Panel(self.splitter)
-        self.splitter.SplitHorizontally(self.top_panel, self.bot_panel, -200)
+        self.splitter.SplitHorizontally(self.top_panel, self.bot_panel)
+	self.splitter.SetSashGravity(0.4)
         
         # --- CREATE WIDGETS ---
         # TOP
