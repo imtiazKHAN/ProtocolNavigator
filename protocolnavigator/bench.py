@@ -62,9 +62,7 @@ class Bench(wx.Panel):
         self.group_checklist.GetCheckList().Bind(wx.EVT_CHECKLISTBOX, self.update_plate_groups)
 
         # --- LAY OUT THE FRAME ---
-        menu_sizer = wx.BoxSizer(wx.HORIZONTAL)
-	menu_sizer.Add(wx.StaticText(self.top_panel, -1, 'Add 24h'), 0, wx.CENTER)
-	menu_sizer.Add(self.add24_button, 0)	
+        menu_sizer = wx.BoxSizer(wx.HORIZONTAL)	
 	menu_sizer.AddSpacer((10,-1))
 	menu_sizer.Add(wx.StaticText(self.top_panel, -1, 'Add Note'), 0, wx.CENTER)
 	menu_sizer.Add(self.add_note_button, 0)
@@ -72,23 +70,29 @@ class Bench(wx.Panel):
 	menu_sizer.Add(wx.StaticText(self.top_panel, -1, 'Undo Event'), 0, wx.CENTER)
 	menu_sizer.Add(self.del_evt_button, 0)
 
-	time_staticbox = wx.StaticBox(self.top_panel, -1, "Time")
 	time_sizer = wx.BoxSizer(wx.HORIZONTAL)
         time_sizer.Add(self.time_slider, 1, wx.EXPAND|wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
         time_sizer.Add(self.time_text_box, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
         time_sizer.Add(self.time_spin, 0, wx.ALL, 5)
-	time_sizerBox = wx.StaticBoxSizer(time_staticbox, wx.HORIZONTAL)
-	time_sizerBox.Add(time_sizer, 1, wx.EXPAND|wx.ALL)
-
+	
+	tadd_sizer = wx.BoxSizer(wx.VERTICAL)
+	tadd_sizer.Add(wx.StaticText(self.top_panel, -1, 'Add 24h'), 0, wx.ALIGN_CENTER_VERTICAL)
+	tadd_sizer.Add(self.add24_button, 0, wx.ALIGN_CENTER)
+	
+	time_staticbox = wx.StaticBox(self.top_panel, -1, "Time")
+	timeSizer = wx.StaticBoxSizer(time_staticbox, wx.HORIZONTAL)
+	timeSizer.Add(time_sizer, 1, wx.EXPAND|wx.ALL, 5)
+	timeSizer.Add(tadd_sizer)
+	
         stack_sizer = wx.BoxSizer(wx.HORIZONTAL)
         stack_sizer.Add(wx.StaticText(self.bot_panel, -1, 'Select Vessel Stack(s)'), 0, wx.LEFT|wx.CENTER, 3)
         stack_sizer.Add(self.group_checklist, 1, wx.LEFT|wx.CENTER, 5)
 	      
         self.top_panel.Sizer = wx.BoxSizer(wx.VERTICAL)
 	self.top_panel.Sizer.Add((-1, 5))
-	self.top_panel.Sizer.Add(menu_sizer, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
+	self.top_panel.Sizer.Add(menu_sizer, 0, wx.EXPAND|wx.RIGHT|wx.ALIGN_RIGHT, 10)
 	self.top_panel.Sizer.Add((-1, 5))
-        self.top_panel.Sizer.Add(time_sizerBox, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
+        self.top_panel.Sizer.Add(timeSizer, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
 	self.top_panel.Sizer.Add((-1, 5))
         self.top_panel.Sizer.Add(self.taglistctrl, 1, wx.EXPAND)
         

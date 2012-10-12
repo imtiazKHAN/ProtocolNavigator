@@ -33,7 +33,7 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
     def __init__(self, parent, id=-1, **kwargs):
         wx.SplitterWindow.__init__(self, parent, id, **kwargs)
         
-        self.tree = wx.TreeCtrl(self, 1, wx.DefaultPosition, (-1,-1), wx.TR_HAS_BUTTONS)
+        self.tree = wx.TreeCtrl(self, 1, wx.DefaultPosition, (-1,-1), wx.TR_HAS_BUTTONS|wx.NO_BORDER)
 
         root = self.tree.AddRoot('Experiment')
 
@@ -80,9 +80,9 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
         #self.openBenchBut = wx.Button(self, id=-1, label='Open Wrok Bench', pos=(20, 60), size=(175, 28))
         #self.openBenchBut.Bind(wx.EVT_BUTTON, self.onOpenWrokBench)
 
-        self.settings_container = wx.Panel(self)
+        self.settings_container = wx.Panel(self, wx.NO_BORDER)
         self.settings_container.SetSizer(wx.BoxSizer())
-        self.settings_panel = wx.Panel(self)
+        self.settings_panel = wx.Panel(self, wx.NO_BORDER)
 
         self.SplitVertically(self.tree, self.settings_container)
 	self.SetSashGravity(0.3)
@@ -783,13 +783,15 @@ class CellLinePanel(wx.Panel):
 		self.fpbsizer.Add(passagepane, 0, wx.RIGHT|wx.LEFT|wx.EXPAND, 25)	
     
 	    # Sizers update	
-	    self.splitwindow.SetSashPosition(350)
+	    self.splitwindow.SetSashGravity(0.5)
 	    self.bot_panel.SetSizer(self.fpbsizer)
+	    self.top_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
 	    self.bot_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
 	
 
     def OnPaneChanged(self, evt=None):
-	    self.bot_panel.Layout()
+	    self.top_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
+	    self.bot_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
 	
     def passagePane(self, pane, passage):
 	''' This pane makes the microscope stand (backbone of the microscope)'''	
@@ -978,14 +980,15 @@ class MicroscopePanel(wx.Panel):
         self.opticsPane(self.illumpane.GetPane())
 
 	#---------------Layout with sizers---------------
-	swsizer = wx.BoxSizer(wx.VERTICAL)
-	swsizer.Add(titlesizer)
-	swsizer.Add((-1,10))
-	swsizer.Add(headfgs, 0)
-	swsizer.Add((-1,10))
-	swsizer.Add(self.strucpane, 0, wx.RIGHT|wx.LEFT|wx.EXPAND, 25)
-	swsizer.Add(self.illumpane, 0, wx.RIGHT|wx.LEFT|wx.EXPAND, 25)	
-        self.sw.SetSizer(swsizer)
+	self.swsizer = wx.BoxSizer(wx.VERTICAL)
+	self.swsizer.Add(titlesizer)
+	self.swsizer.Add((-1,10))
+	self.swsizer.Add(headfgs, 0)
+	self.swsizer.Add((-1,10))
+	self.swsizer.Add(self.strucpane, 0, wx.RIGHT|wx.LEFT|wx.EXPAND, 25)
+	self.swsizer.Add(self.illumpane, 0, wx.RIGHT|wx.LEFT|wx.EXPAND, 25)
+	
+        self.sw.SetSizer(self.swsizer)
         self.sw.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
 
         self.Sizer = wx.BoxSizer(wx.VERTICAL)
@@ -994,8 +997,9 @@ class MicroscopePanel(wx.Panel):
 	self.updateProgressBar()
 
     def OnPaneChanged(self, evt=None):
-        self.sw.Layout()
-    
+        self.sw.SetSizer(self.swsizer)
+        self.sw.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
+
     def hardwarePane(self, pane):
 	''' This pane makes the microscope stand (backbone of the microscope)'''	
 	
