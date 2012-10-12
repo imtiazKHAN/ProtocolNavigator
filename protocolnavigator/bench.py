@@ -26,30 +26,29 @@ class Bench(wx.Panel):
         self.top_panel = wx.Panel(self.splitter)
         self.bot_panel = wx.Panel(self.splitter)
         self.splitter.SplitHorizontally(self.top_panel, self.bot_panel)
-	self.splitter.SetSashGravity(0.4)
+	self.splitter.SetSashGravity(0.6)
         
         # --- CREATE WIDGETS ---
-        # TOP
-        self.tlabel1 = wx.StaticText(self.top_panel, -1, "Time:")
+        # TOP PANEL
         self.time_text_box = wx.TextCtrl(self.top_panel, -1, '0:00', size=(50, -1))
         self.time_spin = wx.SpinButton(self.top_panel, -1, style=wx.SP_VERTICAL)
         self.time_spin.Max = 1000000
         self.time_slider = wx.Slider(self.top_panel, -1)        
         self.time_slider.SetRange(0, 1440)
-        self.add24_button = wx.Button(self.top_panel, -1, "Add 24h")
         self.taglistctrl = TemporalTagListCtrl(self.top_panel)
-        # BOTTOM
+        clock_bmp = icons.clock.Scale(24.0, 24.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 
+	self.add24_button = wx.BitmapButton(self.top_panel, -1, clock_bmp, style=0)
 	undo_bmp = icons.undo.Scale(24.0, 24.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 
-        self.del_evt_button = wx.BitmapButton(self.bot_panel, -1, undo_bmp, style=0)
+        self.del_evt_button = wx.BitmapButton(self.top_panel, -1, undo_bmp, style=0)
 	note_bmp = icons.note.Scale(24.0, 24.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 
-	self.add_note_button = wx.BitmapButton(self.bot_panel, -1, note_bmp, style=0)
-        self.group_checklist = VesselGroupSelector(self.bot_panel)
+	self.add_note_button = wx.BitmapButton(self.top_panel, -1, note_bmp, style=0)
+        # BOTTOM PANEL
+	self.group_checklist = VesselGroupSelector(self.bot_panel)
         self.group_checklist.update_choices(self.bot_panel)
         self.vesselscroller = VesselScroller(self.bot_panel)
         self.vesselscroller.SetBackgroundColour('WHITE')
         
         # --- BIND CONTROL EVENTS ---
-        
         self.time_slider.Bind(wx.EVT_SLIDER, self.on_adjust_timepoint)
         self.time_spin.Bind(wx.EVT_SPIN_UP, self.on_increment_time)
         self.time_spin.Bind(wx.EVT_SPIN_DOWN, self.on_decrement_time)
@@ -63,33 +62,34 @@ class Bench(wx.Panel):
         self.group_checklist.GetCheckList().Bind(wx.EVT_CHECKLISTBOX, self.update_plate_groups)
 
         # --- LAY OUT THE FRAME ---
-                
-        time_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        time_sizer.Add(self.tlabel1,0, wx.EXPAND|wx.ALL, 5)
-        time_sizer.Add(self.time_slider, 1, wx.EXPAND|wx.ALL, 5)
-        time_sizer.Add(self.time_text_box, 0, wx.ALL, 5)
+        menu_sizer = wx.BoxSizer(wx.HORIZONTAL)
+	menu_sizer.Add(wx.StaticText(self.top_panel, -1, 'Add 24h'), 0, wx.CENTER)
+	menu_sizer.Add(self.add24_button, 0)	
+	menu_sizer.AddSpacer((10,-1))
+	menu_sizer.Add(wx.StaticText(self.top_panel, -1, 'Add Note'), 0, wx.CENTER)
+	menu_sizer.Add(self.add_note_button, 0)
+	menu_sizer.AddSpacer((10,-1))
+	menu_sizer.Add(wx.StaticText(self.top_panel, -1, 'Undo Event'), 0, wx.CENTER)
+	menu_sizer.Add(self.del_evt_button, 0)
+
+	time_staticbox = wx.StaticBox(self.top_panel, -1, "Time")
+	time_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        time_sizer.Add(self.time_slider, 1, wx.EXPAND|wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
+        time_sizer.Add(self.time_text_box, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5)
         time_sizer.Add(self.time_spin, 0, wx.ALL, 5)
-        time_sizer.Add(self.add24_button, 0, wx.ALL, 5)
-	
-	#menu_sizer = wx.BoxSizer(wx.HORIZONTAL)
-	edit_staticbox = wx.StaticBox(self.bot_panel, -1, "Edit")
-	edit_flex = wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
-	edit_flex.Add(wx.StaticText(self.bot_panel, -1, 'Undo Event'), 0, wx.CENTER)
-	edit_flex.Add(self.del_evt_button, 0)
-	edit_flex.Add(wx.StaticText(self.bot_panel, -1, 'Add Note'), 0, wx.CENTER)
-	edit_flex.Add(self.add_note_button, 0)
-	
-	editSizer = wx.StaticBoxSizer(edit_staticbox, wx.VERTICAL)
-	editSizer.Add(edit_flex,  1, wx.EXPAND|wx.ALL, 2)
+	time_sizerBox = wx.StaticBoxSizer(time_staticbox, wx.HORIZONTAL)
+	time_sizerBox.Add(time_sizer, 1, wx.EXPAND|wx.ALL)
 
         stack_sizer = wx.BoxSizer(wx.HORIZONTAL)
         stack_sizer.Add(wx.StaticText(self.bot_panel, -1, 'Select Vessel Stack(s)'), 0, wx.LEFT|wx.CENTER, 3)
         stack_sizer.Add(self.group_checklist, 1, wx.LEFT|wx.CENTER, 5)
-	stack_sizer.AddSpacer((10,-1))
-	stack_sizer.Add(editSizer, 0, wx.RIGHT|wx.CENTER)
-                
+	      
         self.top_panel.Sizer = wx.BoxSizer(wx.VERTICAL)
-        self.top_panel.Sizer.Add(time_sizer, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
+	self.top_panel.Sizer.Add((-1, 5))
+	self.top_panel.Sizer.Add(menu_sizer, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
+	self.top_panel.Sizer.Add((-1, 5))
+        self.top_panel.Sizer.Add(time_sizerBox, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
+	self.top_panel.Sizer.Add((-1, 5))
         self.top_panel.Sizer.Add(self.taglistctrl, 1, wx.EXPAND)
         
         self.bot_panel.Sizer = wx.BoxSizer(wx.VERTICAL)
@@ -177,8 +177,12 @@ class Bench(wx.Panel):
     
     def on_add_note(self, evt):
 	# check whether any event occured at this timepoint
-	timeline = meta.get_timeline()
+	timeline = meta.get_timeline()	
 	self.events_by_timepoint = timeline.get_events_by_timepoint()	
+	if not self.events_by_timepoint:
+	    dial = wx.MessageDialog(None, 'No Timeline found!!', 'Error', wx.OK | wx.ICON_ERROR)
+	    dial.ShowModal()              
+	    return	
 	prefixes = set([get_tag_stump(ev.get_welltag(), 2) for ev in self.events_by_timepoint[self.get_selected_timepoint()]])	    
 		
 	if not prefixes:
