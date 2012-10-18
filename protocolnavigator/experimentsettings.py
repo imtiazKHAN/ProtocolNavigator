@@ -623,6 +623,8 @@ class ExperimentSettings(Singleton):
 	    icon = icons.medium.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
 	elif act =='Incubator':
 	    icon = icons.incubator.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 
+	elif act =='Rheometer':
+	    icon = icons.incubator.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 	
 	    
 	elif act =='HCS':
 	    icon = icons.staticimage.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
