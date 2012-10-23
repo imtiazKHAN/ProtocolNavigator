@@ -12,6 +12,7 @@ from temporaltaglist import TemporalTagListCtrl
 from notepad import NotePad
 from wx.lib.embeddedimage import PyEmbeddedImage
 from wx.lib.masked import TimeCtrl
+from wx.lib.buttons import GenBitmapButton
 
 meta = ExperimentSettings.getInstance()
 

@@ -512,7 +512,7 @@ class ExperimentSettings(Singleton):
 	return sorted(list(set(dyeList)))  
     
     def saveData(self, ctrl, tag, settings_controls):
-		
+
 	if isinstance(ctrl, wx.ListBox) and ctrl.GetStringSelection() == 'Other':
 	    other = wx.GetTextFromUser('Insert Other', 'Other')
 	    ctrl.Append(other)
@@ -646,7 +646,15 @@ class ExperimentSettings(Singleton):
 	    
 	return icon
     
+    #----------------------------------------------------------------------
+    def get_Row_Numbers(self, protocol, token):
+	"""This method returs TAGS with similar elements 
+	eg. 'AddProcess|Rheometer|Gas1|1' 'AddProcess|Rheometer|Gas2|1'  etc"""
 	
+	tag_stump = get_tag_stump(protocol, 2)
+	instance = get_tag_attribute(protocol)	
+	
+	return sorted(self.get_attribute_list_by_instance(tag_stump+'|%s'%token, instance), key = self.stringSplitByNumbers)
 	
 	
         

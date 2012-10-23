@@ -1,6 +1,7 @@
 import wx
 import re
 import experimentsettings as exp
+import icons
 from experimentsettings import ExperimentSettings
 from wx.lib.masked import NumCtrl
 
@@ -14,9 +15,10 @@ class RheometerStepBuilder(wx.ScrolledWindow):
 	
         wx.ScrolledWindow.__init__(self, parent, **kwargs)
 	self.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
-	
-	self.tag_stump = exp.get_tag_stump(protocol, 2)
-	self.instance = exp.get_tag_attribute(protocol)
+
+	self.protocol = protocol
+	self.tag_stump = exp.get_tag_stump(self.protocol, 2)
+	self.instance = exp.get_tag_attribute(self.protocol)
 	
 
 	# Attach a flexi sizer for the text controler and labels
@@ -29,10 +31,7 @@ class RheometerStepBuilder(wx.ScrolledWindow):
 	self.showSteps()
 
 	  
-    def showSteps(self):
-	
-	steps = sorted(meta.get_attribute_list_by_instance(self.tag_stump+'|Step', self.instance), key = meta.stringSplitByNumbers)
-	
+    def showSteps(self):	
 	#-- Header --#		
 	desp_header = wx.StaticText(self, -1, 'Description')
 	dur_header = wx.StaticText(self, -1, 'Duration\n(min)')
@@ -49,7 +48,8 @@ class RheometerStepBuilder(wx.ScrolledWindow):
 	self.fgs.Add(temp_header, 0, wx.ALIGN_CENTRE)
 	self.fgs.Add(wx.StaticText(self, -1, ''))
 	self.fgs.Add(wx.StaticText(self, -1, ''))
-
+	
+	steps = meta.get_Row_Numbers(self.protocol, 'Step')
 	for step in steps:
 	    stepNo = int(step.split('Step')[1])
 	    stepTAG = self.tag_stump+'|%s|%s' %(step, self.instance)
@@ -69,6 +69,9 @@ class RheometerStepBuilder(wx.ScrolledWindow):
 	    self.GrandParent.settings_controls[stepTAG+'|2'] = wx.TextCtrl(self, size=(30,-1), value=step_info[2], style=wx.TE_PROCESS_ENTER)	    
 	    self.del_btn = wx.Button(self, id=stepNo, label='Del -')
 	    self.add_btn = wx.Button(self, id=stepNo, label='Add +')
+	    
+	    #add_bmp = icons.add.Scale(24.0, 24.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 
+	    #self.add_btn = wx.BitmapButton(self, id=stepNo, bitmap=add_bmp, style=wx.BORDER_DEFAULT)	    
 	    #--- Tooltips --#
 	    self.GrandParent.settings_controls[stepTAG+'|0'].SetToolTipString(step_info[0])    
 	    #-- Binding ---#
@@ -102,7 +105,7 @@ class RheometerStepBuilder(wx.ScrolledWindow):
 	    #dial.ShowModal()  
 	    #return
 	# also check whether the description field has been filled by users
-	steps = sorted(meta.get_attribute_list_by_instance(self.tag_stump+'|Step', self.instance), key = meta.stringSplitByNumbers)
+	steps = meta.get_Row_Numbers(self.protocol, 'Step')
 	
 	for step in steps:
 	    step_info = meta.get_field(self.tag_stump+'|%s|%s' %(step, self.instance))
@@ -145,7 +148,8 @@ class RheometerStepBuilder(wx.ScrolledWindow):
 	meta.remove_field(self.tag_stump+'|%s|%s' %(self.del_btn.step_to_delete,  self.instance))
 	
 	# Rearrange the steps numbers in the experimental settings
-	steps = sorted(meta.get_attribute_list_by_instance(self.tag_stump+'|Step', self.instance), key = meta.stringSplitByNumbers)
+	steps = meta.get_Row_Numbers(self.protocol, 'Step')
+	
 	temp_steps = {}
 	for stepNo in range(len(steps)):
 	    temp_steps[stepNo+1] = meta.get_field(self.tag_stump+'|%s|%s' %(steps[stepNo],  self.instance))

@@ -25,7 +25,10 @@ from utils import *
 from makechannel import ChannelBuilder
 from stepbuilder import StepBuilder
 from rheometerstepbuilder import RheometerStepBuilder
+from addrow import RowBuilder
 from passagestepwriter import *
+from collections import OrderedDict
+from draganddrop import FileListDialog
 
 ICON_SIZE = 22.0
 
@@ -5578,25 +5581,24 @@ class RheometerPanel(wx.Panel):
 	
 	wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
 
-	self.page_counter = page_counter
-	self.step_list = []
-	self.sb_w = 100
-	self.sb_h = 50
-	
+	self.page_counter = page_counter	
 	self.protocol = 'AddProcess|Rheometer|%s'%str(self.page_counter)
+	
 	
 	# Set the panels
 	self.splitwindow = wx.SplitterWindow(self)
 	self.top_panel = wx.ScrolledWindow(self.splitwindow)
-	self.bot_panel = RheometerStepBuilder(self.splitwindow, self.protocol)
+	self.bot_panel = wx.ScrolledWindow(self.splitwindow)
 	self.splitwindow.SplitHorizontally(self.top_panel, self.bot_panel)
-	self.splitwindow.SetSashGravity(0.5)	
+	self.splitwindow.SetSashGravity(0.5)
+	
+	#--- Top Panel  ----	
 	
 	top_fgs = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
-	#------- Heading ---#
+	# Heading
 	pic=wx.StaticBitmap(self.top_panel)
 	pic.SetBitmap(icons.incubator.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
-	text = wx.StaticText(self.top_panel, -1, 'Rheological Protocol')
+	text = wx.StaticText(self.top_panel, -1, 'Rheometer')
 	font = wx.Font(9, wx.SWISS, wx.NORMAL, wx.BOLD)
 	text.SetFont(font)
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -5616,9 +5618,9 @@ class RheometerPanel(wx.Panel):
 	top_fgs.Add(self.settings_controls[protnameTAG], 0, wx.EXPAND|wx.ALL, 5) 
 	top_fgs.Add(self.save_btn, 0, wx.ALL, 5)
 	
-	
+	# Components
 	fgs = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
-	#--Manufacture--#
+	
 	incbmfgTAG = 'AddProcess|Rheometer|Manufacter|'+str(self.page_counter)
 	self.settings_controls[incbmfgTAG] = wx.TextCtrl(self.top_panel, name='Manufacter' ,  value=meta.get_field(incbmfgTAG, default=''))
 	self.settings_controls[incbmfgTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
@@ -5627,7 +5629,7 @@ class RheometerPanel(wx.Panel):
 	fgs.Add(wx.StaticText(self.top_panel, -1, 'Manufacturer'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.settings_controls[incbmfgTAG], 0)
 	fgs.Add(wx.StaticText(self.top_panel, -1, ''), 0)
-	#--Model--#
+
 	incbmdlTAG = 'AddProcess|Rheometer|Model|'+str(self.page_counter)
 	self.settings_controls[incbmdlTAG] = wx.TextCtrl(self.top_panel, value=meta.get_field(incbmdlTAG, default=''))
 	self.settings_controls[incbmdlTAG].Bind(wx.EVT_TEXT,self.OnSavingData)
@@ -5635,105 +5637,107 @@ class RheometerPanel(wx.Panel):
 	fgs.Add(wx.StaticText(self.top_panel, -1, 'Model'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.settings_controls[incbmdlTAG], 0)
 	fgs.Add(wx.StaticText(self.top_panel, -1, ''), 0)
-		
-	#--- Upper Plate---#
-	staticbox = wx.StaticBox(self.top_panel, -1, "Rotating Cone (Upper Plate)", size=(self.sb_w, self.sb_h))
+	
+	
+	showInstBut = wx.Button(self.top_panel, -1, 'Attach Files', (100,100))
+	showInstBut.Bind (wx.EVT_BUTTON, self.OnShowDialog)	
+	fgs.Add(showInstBut, 0)
+	self.filenumber = wx.StaticText(self.top_panel, -1, '0 files attached')
+	fgs.Add(self.filenumber, 0)
+	fgs.Add(wx.StaticText(self.top_panel, -1, ''), 0)
+	
+
+	staticbox = wx.StaticBox(self.top_panel, -1, "Rotating Cone (Upper Plate)")
 	multctrlSizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
 
-	upplateTAG = 'AddProcess|Rheometer|UpperPlate|%s'%str(self.page_counter)
-	upplate = meta.get_field(upplateTAG, [])
-	
-	self.settings_controls[upplateTAG+'|0']= wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER) 
+	uposcilTAG = 'AddProcess|Rheometer|UpOscillation|%s'%str(self.page_counter)
+	upplate = meta.get_field(uposcilTAG, [])
+	self.settings_controls[uposcilTAG+'|0']= wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER) 
 	if len(upplate) > 0:
-	    self.settings_controls[upplateTAG+'|0'].SetValue(upplate[0])
-	self.settings_controls[upplateTAG+'|0'].Bind(wx.EVT_TEXT, self.OnSavingData)   
-	self.settings_controls[upplateTAG+'|0'].SetToolTipString('Oscillation') 
-	
+	    self.settings_controls[uposcilTAG+'|0'].SetValue(upplate[0])
+	self.settings_controls[uposcilTAG+'|0'].Bind(wx.EVT_TEXT, self.OnSavingData)   
+	self.settings_controls[uposcilTAG+'|0'].SetToolTipString('Oscillation') 
 	unit_choices=['Hz','Radient/Sec','Other']
-	self.settings_controls[upplateTAG+'|1']= wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (-1,20), unit_choices, wx.LB_SINGLE)
+	self.settings_controls[uposcilTAG+'|1']= wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (-1,20), unit_choices, wx.LB_SINGLE)
 	if len(upplate) > 1:
-	    self.settings_controls[upplateTAG+'|1'].Append(upplate[1])
-	    self.settings_controls[upplateTAG+'|1'].SetStringSelection(upplate[1])
-	self.settings_controls[upplateTAG+'|1'].Bind(wx.EVT_LISTBOX, self.OnSavingData)   
-	self.settings_controls[upplateTAG+'|1'].SetToolTipString('Oscillation Unit')
+	    self.settings_controls[uposcilTAG+'|1'].Append(upplate[1])
+	    self.settings_controls[uposcilTAG+'|1'].SetStringSelection(upplate[1])
+	self.settings_controls[uposcilTAG+'|1'].Bind(wx.EVT_LISTBOX, self.OnSavingData)   
+	self.settings_controls[uposcilTAG+'|1'].SetToolTipString('Oscillation Unit')
 	multctrlSizer.Add(wx.StaticText(self.top_panel, -1, 'Oscillation'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	multctrlSizer.Add(self.settings_controls[upplateTAG+'|0'], 0, wx.EXPAND)		
-	multctrlSizer.Add(self.settings_controls[upplateTAG+'|1'], 0, wx.EXPAND)
+	multctrlSizer.Add(self.settings_controls[uposcilTAG+'|0'], 0, wx.EXPAND)		
+	multctrlSizer.Add(self.settings_controls[uposcilTAG+'|1'], 0, wx.EXPAND)
 	
-	self.settings_controls[upplateTAG+'|2']= wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)  
-	if len(upplate) > 2:
-	    self.settings_controls[upplateTAG+'|2'].SetValue(upplate[2])
-	self.settings_controls[upplateTAG+'|2'].Bind(wx.EVT_TEXT, self.OnSavingData)   
-	self.settings_controls[upplateTAG+'|2'].SetToolTipString('Oscillation') 
+	uptemTAG = 'AddProcess|Rheometer|UpTemp|%s'%str(self.page_counter)
+	self.settings_controls[uptemTAG]= wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER, value=meta.get_field(uptemTAG, 0))  
+	self.settings_controls[uptemTAG].Bind(wx.EVT_TEXT, self.OnSavingData)   
+	self.settings_controls[uptemTAG].SetToolTipString('Temperature') 
 	multctrlSizer.Add(wx.StaticText(self.top_panel, -1, 'Temperature'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	multctrlSizer.Add(self.settings_controls[upplateTAG+'|2'], 0, wx.EXPAND)
+	multctrlSizer.Add(self.settings_controls[uptemTAG], 0, wx.EXPAND)
 	multctrlSizer.Add(wx.StaticText(self.top_panel, -1, 'C'), 0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)
 		
 	upplateSizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
-	upplateSizer.Add(multctrlSizer, 0, wx.ALL|wx.CENTER, 5)
-	
-	#--- Stage ---#
-	staticbox = wx.StaticBox(self.top_panel, -1, "Stage", size=(self.sb_w, self.sb_h))
+	upplateSizer.Add(multctrlSizer, 0, wx.ALL, 5)
+    
+	staticbox = wx.StaticBox(self.top_panel, -1, "Stage")
 	multctrlSizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
 
 	stageTAG = 'AddProcess|Rheometer|Stage|%s'%str(self.page_counter)
 	stage = meta.get_field(stageTAG, [])
 	
-	self.settings_controls[stageTAG+'|0']= wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER) 
-	if len(stage) > 0:
-	    self.settings_controls[stageTAG+'|0'].SetValue(stage[0])
-	self.settings_controls[stageTAG+'|0'].Bind(wx.EVT_TEXT, self.OnSavingData)   
-	self.settings_controls[stageTAG+'|0'].SetToolTipString('Gap between two plates') 
-	
-	unit_choices=['mm','nm','Other']
-	self.settings_controls[stageTAG+'|1']= wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (-1,20), unit_choices, wx.LB_SINGLE)
-	if len(stage) > 1:
-	    self.settings_controls[stageTAG+'|1'].Append(stage[1])
-	    self.settings_controls[stageTAG+'|1'].SetStringSelection(stage[1])
-	self.settings_controls[stageTAG+'|1'].Bind(wx.EVT_LISTBOX, self.OnSavingData)   
-	self.settings_controls[stageTAG+'|1'].SetToolTipString('Oscillation Unit')
-	multctrlSizer.Add(wx.StaticText(self.top_panel, -1, 'Oscillation'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	multctrlSizer.Add(self.settings_controls[stageTAG+'|0'], 0, wx.EXPAND)		
-	multctrlSizer.Add(self.settings_controls[stageTAG+'|1'], 0, wx.EXPAND)
-	
-	self.settings_controls[stageTAG+'|2']= wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)  
-	if len(stage) > 2:
-	    self.settings_controls[stageTAG+'|2'].SetValue(stage[2])
-	self.settings_controls[stageTAG+'|2'].Bind(wx.EVT_TEXT, self.OnSavingData)   
-	self.settings_controls[stageTAG+'|2'].SetToolTipString('Oscillation') 
+	stgtempTAG = 'AddProcess|Rheometer|StgTemp|%s'%str(self.page_counter)
+	self.settings_controls[stgtempTAG]= wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), value=meta.get_field(stgtempTAG, 0),style=wx.TE_PROCESS_ENTER)  
+	self.settings_controls[stgtempTAG].Bind(wx.EVT_TEXT, self.OnSavingData)   
+	self.settings_controls[stgtempTAG].SetToolTipString('Oscillation') 
 	multctrlSizer.Add(wx.StaticText(self.top_panel, -1, 'Temperature'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	multctrlSizer.Add(self.settings_controls[stageTAG+'|2'], 0, wx.EXPAND)
+	multctrlSizer.Add(self.settings_controls[stgtempTAG], 0, wx.EXPAND)
 	multctrlSizer.Add(wx.StaticText(self.top_panel, -1, 'C'), 0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)
 	
-	self.settings_controls[stageTAG+'|3']= wx.TextCtrl(self.top_panel, size=(20,-1), value='', style=wx.TE_PROCESS_ENTER)  
-	if len(stage) > 2:
-	    self.settings_controls[stageTAG+'|3'].SetValue(stage[2])
-	self.settings_controls[stageTAG+'|3'].Bind(wx.EVT_TEXT, self.OnSavingData)   
-	self.settings_controls[stageTAG+'|3'].SetToolTipString('Composition of the gel') 
+	stggelTAG = 'AddProcess|Rheometer|StgGel|%s'%str(self.page_counter)
+	self.settings_controls[stggelTAG]= wx.TextCtrl(self.top_panel, size=(20,-1), value=meta.get_field(stggelTAG, ''), style=wx.TE_PROCESS_ENTER)  
+	self.settings_controls[stggelTAG].Bind(wx.EVT_TEXT, self.OnSavingData)   
+	self.settings_controls[stggelTAG].SetToolTipString('Composition of the gel') 
 	multctrlSizer.Add(wx.StaticText(self.top_panel, -1, 'Gel Composition'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	multctrlSizer.Add(self.settings_controls[stageTAG+'|3'], 0, wx.EXPAND)
-	multctrlSizer.Add(wx.StaticText(self.top_panel, -1, ''), 0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)	
+	multctrlSizer.Add(self.settings_controls[stggelTAG], 0, wx.EXPAND)
+	multctrlSizer.Add(wx.StaticText(self.top_panel, -1, ''), 0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)
 		
 	stageSizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
 	stageSizer.Add(multctrlSizer, 1, wx.EXPAND|wx.ALL, 5)	
-			
-        #---------------Layout with sizers---------------
-	swsizer = wx.BoxSizer(wx.VERTICAL)
-	swsizer.Add(titlesizer,0,wx.ALL, 5)
-	swsizer.Add((-1,10))
-	swsizer.Add(top_fgs,0,wx.ALL, 5)
-	swsizer.Add((-1,10))
-	swsizer.Add(wx.StaticLine(self.top_panel), 0, wx.EXPAND|wx.ALL, 5)
-	swsizer.Add(fgs,0,wx.ALL, 5)
-	swsizer.Add((-1,10))
-	swsizer.Add(upplateSizer,0,wx.ALL, 5)
-	swsizer.Add(stageSizer,0,wx.ALL, 5)
-	self.top_panel.SetSizer(swsizer)
-	self.top_panel.SetScrollbars(20, 20, self.Size[0]+10, self.Size[1]+10, 0, 0)
-	self.Sizer = wx.BoxSizer(wx.VERTICAL)
-	self.Sizer.Add(self.splitwindow, 1, wx.EXPAND)
-	self.SetSizer(self.Sizer)      
+	
+	COLUMN_DETAILS = OrderedDict([('Name', ['TextCtrl', 100, -1, '']), 
+	                            ('Composition', ['TextCtrl', 200, -1, ''])
+	                            ])	
+	self.gas_panel = RowBuilder(self.top_panel, self.protocol, 'Gas Supply', 'Gas', COLUMN_DETAILS)	
 
+	#--- Bottom Panel  ----
+	COLUMN_DETAILS = OrderedDict([('Name', ['TextCtrl', 100, -1, '']), 
+	                              ('Description', ['TextCtrl', 200, -1, '']), 
+	                              ('Duration\n(min)', ['TextCtrl', 20, -1, ''])
+	                              ])
+	self.steps_panel = RowBuilder(self.bot_panel, self.protocol, 'Application', 'Step', COLUMN_DETAILS)
+	
+        #--- Layout ----
+	tswsizer = wx.BoxSizer(wx.VERTICAL)
+	tswsizer.Add(titlesizer,0,wx.ALL, 5)
+	tswsizer.Add((-1,10))
+	tswsizer.Add(top_fgs,0,wx.ALL, 5)
+	tswsizer.Add((-1,10))
+	tswsizer.Add(fgs,0,wx.ALL, 5)
+	tswsizer.Add((-1,10))
+	tswsizer.Add(upplateSizer,1,wx.EXPAND|wx.ALL, 5)
+	tswsizer.Add(stageSizer,1, wx.EXPAND|wx.ALL, 5)
+	tswsizer.Add(self.gas_panel,0, wx.EXPAND|wx.ALL, 5)
+	self.top_panel.SetSizer(tswsizer)
+	self.top_panel.SetScrollbars(20, 20, self.Size[0]+10, self.Size[1]+10, 0, 0)
+	
+	bswsizer = wx.BoxSizer(wx.VERTICAL)
+	bswsizer.Add(self.steps_panel, 0, wx.EXPAND|wx.ALL, 5)
+	self.bot_panel.SetSizer(bswsizer)
+	self.bot_panel.SetScrollbars(20, 20, self.Size[0]+10, self.Size[1]+10, 0, 0)
+	self.Sizer = wx.BoxSizer(wx.VERTICAL)
+
+	self.Sizer.Add(self.splitwindow, 1, wx.EXPAND)
+	self.SetSizer(self.Sizer) 
 
     def onSaveSettings(self, event):
 	if not meta.get_field('AddProcess|Rheometer|ProtocolName|%s'%str(self.page_counter)):
@@ -5752,6 +5756,11 @@ class RheometerPanel(wx.Panel):
 	    filename=dlg.GetFilename()
 	    self.file_path = os.path.join(dirname, filename)
 	    meta.save_settings(self.file_path, self.protocol) 
+	    
+    def OnShowDialog(self, event):
+	dia = FileListDialog(self, 'Instrument|Microscope', selection_mode = False)
+	if dia.ShowModal()== wx.ID_OK:
+	    self.filenumber.SetLabel('%s files attached'%str(len(dia.drop_target.filelist)))
 		    
      
     def OnSavingData(self, event):
