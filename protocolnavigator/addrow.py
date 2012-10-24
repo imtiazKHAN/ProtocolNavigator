@@ -10,15 +10,13 @@ meta = exp.ExperimentSettings.getInstance()
 class RowBuilder(wx.Panel):
     '''Panel that shows the rows or components which can be added or deleted as required 
     '''
-    # panel, 'AddProcess|Rheometer|1', 'Gas Supply', 'Gas', [ctrl type, w, h, value]
-    def __init__(self, parent, protocol, title, token, col_details, **kwargs):
+    # panel, 'AddProcess|Rheometer|1', 'Gas', [ColumnHeader, [CtrlType, w, h, value/choices]]
+    def __init__(self, parent, protocol, token, col_details, **kwargs):
         wx.Panel.__init__(self, parent, **kwargs)
 	
 	self.protocol = protocol
-	self.title = title
 	self.token = token
 	self.col_details = col_details
-	
 	self.col_headers = self.col_details.keys()
 	
 	self.tag_stump = exp.get_tag_stump(self.protocol, 2)
@@ -29,7 +27,6 @@ class RowBuilder(wx.Panel):
 
 	  
     def showRows(self):
-	self.staticbox = wx.StaticBox(self, -1, self.title)
 	# Attach a flexi sizer for the text controler and labels
 	self.fgs = wx.FlexGridSizer(rows=15000, cols=len(self.col_headers)+3, hgap=5, vgap=5)    
 	#-- Header --#	
@@ -97,9 +94,7 @@ class RowBuilder(wx.Panel):
 	    self.fgs.Add(self.add_btn, 0, wx.ALIGN_CENTRE)
 	    self.fgs.Add(wx.StaticText(self, -1, ''), 0, wx.ALIGN_CENTRE)
 
-	self.staticbox_sizer = wx.StaticBoxSizer(self.staticbox, wx.VERTICAL)
-	self.staticbox_sizer.Add(self.fgs, 1, wx.ALL, 5)
-	self.SetSizer(self.staticbox_sizer, wx.EXPAND)
+	self.SetSizer(self.fgs, wx.EXPAND)
 	self.Layout()	
 	self.Parent.FitInside()
 	
@@ -134,7 +129,7 @@ class RowBuilder(wx.Panel):
 	    meta.set_field(self.tag_stump+'|%s|%s' %(self.token+'%s'%str(rowNo),  self.instance),  temp_rows[rowNo])	
 	
 	#clear the sizer
-	self.staticbox_sizer.Clear(deleteWindows=True)
+	self.fgs.Clear(deleteWindows=True)
 	#redraw the panel
 	self.showRows()
 	   
@@ -157,7 +152,7 @@ class RowBuilder(wx.Panel):
 	    meta.set_field(self.tag_stump+'|%s|%s' %(self.token+'%s'%str(rowNo),  self.instance),  temp_rows[rowNo])
 	
 	#clear the sizer
-	self.staticbox_sizer.Clear(deleteWindows=True)
+	self.fgs.Clear(deleteWindows=True)
 	#redraw the panel
 	self.showRows()
 	

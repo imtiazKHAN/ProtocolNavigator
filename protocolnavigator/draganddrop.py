@@ -10,7 +10,7 @@ class FileListDialog(wx.Dialog):
         wx.Dialog.__init__(self, parent, -1, size=(550,500), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         
         self.label = wx.StaticText(self, -1, "Drop some files here:")
-        self.text_box = wx.TextCtrl(self, -1, "",style=wx.TE_MULTILINE|wx.HSCROLL)
+        self.text_box = wx.TextCtrl(self, -1, "",style=wx.TE_MULTILINE|wx.HSCROLL|wx.TE_READONLY)
         
         self.drop_target = MyFileDropTarget(self.text_box)
         self.text_box.SetDropTarget(self.drop_target)        

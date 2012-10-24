@@ -5643,7 +5643,7 @@ class RheometerPanel(wx.Panel):
 	showInstBut.Bind (wx.EVT_BUTTON, self.OnShowDialog)	
 	fgs.Add(showInstBut, 0)
 	self.filenumber = wx.StaticText(self.top_panel, -1, '0 files attached')
-	fgs.Add(self.filenumber, 0)
+	fgs.Add(self.filenumber, wx.ALIGN_CENTER_HORIZONTAL, 0)
 	fgs.Add(wx.StaticText(self.top_panel, -1, ''), 0)
 	
 
@@ -5679,42 +5679,43 @@ class RheometerPanel(wx.Panel):
 	upplateSizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
 	upplateSizer.Add(multctrlSizer, 0, wx.ALL, 5)
     
-	staticbox = wx.StaticBox(self.top_panel, -1, "Stage")
-	multctrlSizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
-
-	stageTAG = 'AddProcess|Rheometer|Stage|%s'%str(self.page_counter)
-	stage = meta.get_field(stageTAG, [])
+	#Gel
+	staticbox = wx.StaticBox(self.top_panel, -1, "Gel")
+	COLUMN_DETAILS = OrderedDict([('Component', ['TextCtrl', 100, -1, '']), 
+	                            ('Volume', ['TextCtrl', 50, -1, '']),
+	                            ('Concentration', ['TextCtrl', 50, -1, ''])
+	                            ])	
+	gel_compose = RowBuilder(self.top_panel, self.protocol, 'GelComposition', COLUMN_DETAILS)
 	
-	stgtempTAG = 'AddProcess|Rheometer|StgTemp|%s'%str(self.page_counter)
-	self.settings_controls[stgtempTAG]= wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), value=meta.get_field(stgtempTAG, 0),style=wx.TE_PROCESS_ENTER)  
-	self.settings_controls[stgtempTAG].Bind(wx.EVT_TEXT, self.OnSavingData)   
-	self.settings_controls[stgtempTAG].SetToolTipString('Oscillation') 
-	multctrlSizer.Add(wx.StaticText(self.top_panel, -1, 'Temperature'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	multctrlSizer.Add(self.settings_controls[stgtempTAG], 0, wx.EXPAND)
-	multctrlSizer.Add(wx.StaticText(self.top_panel, -1, 'C'), 0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)
+	COLUMN_DETAILS = OrderedDict([('Temp\n(C)', ['TextCtrl', 50, -1, '']), 
+	                            ('Duration\n(Min)', ['TextCtrl', 50, -1, '']),
+	                            ])	
+	gel_profile = RowBuilder(self.top_panel, self.protocol, 'GelProfile', COLUMN_DETAILS)	
 	
-	stggelTAG = 'AddProcess|Rheometer|StgGel|%s'%str(self.page_counter)
-	self.settings_controls[stggelTAG]= wx.TextCtrl(self.top_panel, size=(20,-1), value=meta.get_field(stggelTAG, ''), style=wx.TE_PROCESS_ENTER)  
-	self.settings_controls[stggelTAG].Bind(wx.EVT_TEXT, self.OnSavingData)   
-	self.settings_controls[stggelTAG].SetToolTipString('Composition of the gel') 
-	multctrlSizer.Add(wx.StaticText(self.top_panel, -1, 'Gel Composition'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	multctrlSizer.Add(self.settings_controls[stggelTAG], 0, wx.EXPAND)
-	multctrlSizer.Add(wx.StaticText(self.top_panel, -1, ''), 0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)
-		
-	stageSizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
-	stageSizer.Add(multctrlSizer, 1, wx.EXPAND|wx.ALL, 5)	
+	gelSizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
+	gelSizer.Add(gel_compose, 0, wx.ALL, 5)
+	gelSizer.Add(gel_profile, 0, wx.ALL, 5)
 	
+	#Gas	
+	staticbox = wx.StaticBox(self.top_panel, -1, "Gas")
 	COLUMN_DETAILS = OrderedDict([('Name', ['TextCtrl', 100, -1, '']), 
 	                            ('Composition', ['TextCtrl', 200, -1, ''])
 	                            ])	
-	self.gas_panel = RowBuilder(self.top_panel, self.protocol, 'Gas Supply', 'Gas', COLUMN_DETAILS)	
+	gas_supply = RowBuilder(self.top_panel, self.protocol, 'Gas', COLUMN_DETAILS)
+	gasSizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
+	gasSizer.Add(gas_supply, 0, wx.ALL, 5)
 
 	#--- Bottom Panel  ----
+	staticbox = wx.StaticBox(self.bot_panel, -1, "Procedure")
 	COLUMN_DETAILS = OrderedDict([('Name', ['TextCtrl', 100, -1, '']), 
-	                              ('Description', ['TextCtrl', 200, -1, '']), 
-	                              ('Duration\n(min)', ['TextCtrl', 20, -1, ''])
-	                              ])
-	self.steps_panel = RowBuilder(self.bot_panel, self.protocol, 'Application', 'Step', COLUMN_DETAILS)
+	                            ('Description', ['TextCtrl', 200, -1, '']),
+	                            ('Duration\n(Min)', ['TextCtrl', 30, -1, '']),
+	                            ('Oscillation\nAmplitude\n(%)', ['TextCtrl', 30, -1, '']),
+	                            ('Oscillation\nFrequency\n(Hz)', ['TextCtrl', 30, -1, ''])
+	                            ])		
+	procedure = RowBuilder(self.bot_panel, self.protocol, 'Step', COLUMN_DETAILS)
+	bot_panel_sizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
+	bot_panel_sizer.Add(procedure, 0, wx.ALL, 5)
 	
         #--- Layout ----
 	tswsizer = wx.BoxSizer(wx.VERTICAL)
@@ -5725,17 +5726,17 @@ class RheometerPanel(wx.Panel):
 	tswsizer.Add(fgs,0,wx.ALL, 5)
 	tswsizer.Add((-1,10))
 	tswsizer.Add(upplateSizer,1,wx.EXPAND|wx.ALL, 5)
-	tswsizer.Add(stageSizer,1, wx.EXPAND|wx.ALL, 5)
-	tswsizer.Add(self.gas_panel,0, wx.EXPAND|wx.ALL, 5)
+	tswsizer.Add(gelSizer,1, wx.EXPAND|wx.ALL, 5)
+	tswsizer.Add(gasSizer,0, wx.EXPAND|wx.ALL, 5)
 	self.top_panel.SetSizer(tswsizer)
 	self.top_panel.SetScrollbars(20, 20, self.Size[0]+10, self.Size[1]+10, 0, 0)
 	
 	bswsizer = wx.BoxSizer(wx.VERTICAL)
-	bswsizer.Add(self.steps_panel, 0, wx.EXPAND|wx.ALL, 5)
+	bswsizer.Add(bot_panel_sizer, 0, wx.EXPAND|wx.ALL, 5)
 	self.bot_panel.SetSizer(bswsizer)
 	self.bot_panel.SetScrollbars(20, 20, self.Size[0]+10, self.Size[1]+10, 0, 0)
+	
 	self.Sizer = wx.BoxSizer(wx.VERTICAL)
-
 	self.Sizer.Add(self.splitwindow, 1, wx.EXPAND)
 	self.SetSizer(self.Sizer) 
 
@@ -5760,7 +5761,9 @@ class RheometerPanel(wx.Panel):
     def OnShowDialog(self, event):
 	dia = FileListDialog(self, 'Instrument|Microscope', selection_mode = False)
 	if dia.ShowModal()== wx.ID_OK:
-	    self.filenumber.SetLabel('%s files attached'%str(len(dia.drop_target.filelist)))
+	    f_list = dia.drop_target.filelist
+	    self.filenumber.SetLabel('%s files attached'%str(len(f_list)))
+	    #self.filenumber.Bind(wx.EVT_TEXT, self.showFiles) 
 		    
      
     def OnSavingData(self, event):
