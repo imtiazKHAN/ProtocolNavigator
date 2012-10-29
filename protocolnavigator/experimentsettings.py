@@ -624,7 +624,7 @@ class ExperimentSettings(Singleton):
 	elif act =='Incubator':
 	    icon = icons.incubator.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 
 	elif act =='Rheometer':
-	    icon = icons.incubator.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 	
+	    icon = icons.rheometer.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 	
 	    
 	elif act =='HCS':
 	    icon = icons.staticimage.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
@@ -669,6 +669,7 @@ EVENT_RGB ={
     'Genetic': (27,224,181,100),
     'Spin': (224,27,198,100),
     'Incubator': (224,27,224,100),
+    'Rheometer': (224, 27, 244, 100),
     'Wash': (175,27,224,100),
     'Dry': (168,27224,100),
     'Medium': (122,27,224,100),
