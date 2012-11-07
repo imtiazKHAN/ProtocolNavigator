@@ -23,6 +23,7 @@ class TemporalTagListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):#, listmi
         meta.add_subscriber(self.update, 'Perturbation.*')
         meta.add_subscriber(self.update, 'Labelling.*')
         meta.add_subscriber(self.update, 'AddProcess.*')
+        meta.add_subscriber(self.update, 'InstProcess.*')
         meta.add_subscriber(self.update, 'DataAcquis.*')
         #meta.add_subscriber(self.update, 'Notes.*')
         

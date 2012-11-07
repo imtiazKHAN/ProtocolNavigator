@@ -9,10 +9,7 @@ from wx.html import HtmlEasyPrinting, HtmlWindow
 import snapshotPrinter
 import wx
 import os
-# test comment
-# test comment #2
-#test comment 3
-# test comment 4
+
 
 class ProtocolNavigator(wx.App):
     '''The ProtocolNavigator Application

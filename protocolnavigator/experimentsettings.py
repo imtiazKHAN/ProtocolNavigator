@@ -90,7 +90,7 @@ class ExperimentSettings(Singleton):
         '''returns all existing TEMPORAL tags as list'''
         return [tag for tag in self.global_settings 
                 if tag.split('|')[0] in ('Transfer', 'Perturbation', 
-                                    'Labelling', 'AddProcess', 'DataAcquis', 'Notes')]
+                                    'Labelling', 'AddProcess', 'DataAcquis', 'InstProcess', 'Notes')]
 
     def get_field_instances(self, tag_prefix):
         '''returns a list of unique instance ids for each tag beginning with 
@@ -613,7 +613,7 @@ class ExperimentSettings(Singleton):
 	elif act =='Genetic':
 	    icon = icons.primer.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 
 	    
-	elif act =='Spin':
+	elif act =='Centrifugation':
 	    icon = icons.spin.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 
 	elif act =='Wash':
 	    icon = icons.wash.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
@@ -623,7 +623,7 @@ class ExperimentSettings(Singleton):
 	    icon = icons.medium.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
 	elif act =='Incubator':
 	    icon = icons.incubator.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 
-	elif act =='Rheometer':
+	elif act =='Rheology':
 	    icon = icons.rheometer.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 	
 	    
 	elif act =='HCS':
@@ -649,7 +649,7 @@ class ExperimentSettings(Singleton):
     #----------------------------------------------------------------------
     def get_Row_Numbers(self, protocol, token):
 	"""This method returs TAGS with similar elements 
-	eg. 'AddProcess|Rheometer|Gas1|1' 'AddProcess|Rheometer|Gas2|1'  etc"""
+	eg. 'AddProcess|Rheology|Gas1|1' 'AddProcess|Rheology|Gas2|1'  etc"""
 	
 	tag_stump = get_tag_stump(protocol, 2)
 	instance = get_tag_attribute(protocol)	
@@ -667,9 +667,9 @@ EVENT_RGB ={
     'Dye': (27,188,224,100),
     'Immuno': (27,224,43,100),
     'Genetic': (27,224,181,100),
-    'Spin': (224,27,198,100),
+    'Centrifugation': (224,27,198,100),
     'Incubator': (224,27,224,100),
-    'Rheometer': (224, 27, 244, 100),
+    'Rheology': (224, 27, 244, 100),
     'Wash': (175,27,224,100),
     'Dry': (168,27224,100),
     'Medium': (122,27,224,100),
