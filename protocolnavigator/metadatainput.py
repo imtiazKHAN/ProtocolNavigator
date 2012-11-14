@@ -74,7 +74,7 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
 	self.tree.AppendItem(inp, 'Drying')
 	self.tree.AppendItem(inp, 'Incubation')
 	self.tree.AppendItem(inp, 'Mixing')
-	self.tree.AppendItem(inp, 'Rheology')	
+	self.tree.AppendItem(inp, 'Rheological Manipulation')	
         adp = self.tree.AppendItem(stc, 'Additional Processes')        
         self.tree.AppendItem(adp, 'Wash')
         self.tree.AppendItem(adp, 'Add Medium')
@@ -82,6 +82,7 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
         self.tree.AppendItem(dta, 'Timelapse Image')
         self.tree.AppendItem(dta, 'Static Image')
         self.tree.AppendItem(dta, 'Flow Cytometer Files')
+	self.tree.AppendItem(dta, 'Rheological Measurement')
 	#nte = self.tree.AppendItem(stc, 'Notes')
             
         self.tree.Expand(root)
@@ -127,7 +128,7 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
 	    self.settings_panel = GeneticSettingPanel(self.settings_container)
 	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)
 	    
-	if get_tag_type(tag) == 'InstProcess' and get_tag_event(tag) == 'Rheology':
+	if get_tag_type(tag) == 'InstProcess' and get_tag_event(tag) == 'RheoManipulation':
 	    self.settings_panel = RheometerSettingPanel(self.settings_container)
 	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)    
 	if get_tag_type(tag) == 'InstProcess' and get_tag_event(tag) == 'Drying':
@@ -157,6 +158,9 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
 	if get_tag_type(tag) == 'DataAcquis' and get_tag_event(tag) == 'FCS':  # may link with flowcytometer settings??
 	    self.settings_panel = FlowcytometerSettingPanel(self.settings_container)
 	    self.settings_panel.notebook.SetSelection(int(meta.get_field('DataAcquis|FCS|FlowcytInstance|%s'%get_tag_instance(tag)))-1)
+	if get_tag_type(tag) == 'DataAcquis' and get_tag_event(tag) == 'RHE':
+	    self.settings_panel = RHESettingPanel(self.settings_container)
+	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)	    
 
 	    
 	self.settings_container.Sizer.Add(self.settings_panel, 1, wx.EXPAND)        
@@ -220,9 +224,9 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
             self.settings_panel =  MediumSettingPanel(self.settings_container)
         elif self.tree.GetItemText(item) == 'Incubation':
             self.settings_panel = IncubatorSettingPanel(self.settings_container)   
-	elif self.tree.GetItemText(item) == 'Rheology':
-	    self.settings_panel = RheologySettingPanel(self.settings_container)    
-		    
+	elif self.tree.GetItemText(item) == 'Rheological Manipulation':
+	    self.settings_panel = RheoManipulationSettingPanel(self.settings_container)   
+	    
         elif self.tree.GetItemText(item) == 'Dye':
             self.settings_panel = DyeSettingPanel(self.settings_container)        
         elif self.tree.GetItemText(item) == 'Immunofluorescence':
@@ -236,6 +240,8 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
             self.settings_panel = HCSSettingPanel(self.settings_container)
         elif self.tree.GetItemText(item) == 'Flow Cytometer Files':
             self.settings_panel = FCSSettingPanel(self.settings_container)
+	elif self.tree.GetItemText(item) == 'Rheological Measurement':
+	    self.settings_panel = RHESettingPanel(self.settings_container)   
             
         elif self.tree.GetItemText(item) == 'Notes':
                     self.settings_panel = NoteSettingPanel(self.settings_container)
@@ -499,7 +505,7 @@ class CellLinePanel(wx.Panel):
 	self.fpbsizer = wx.FlexGridSizer(cols=1, vgap=5)
 	
 	#------- Heading ---#
-	text = wx.StaticText(self.top_panel, -1, 'Stock Culture')
+	text = wx.StaticText(self.top_panel, -1, 'Cell Line')
 	font = wx.Font(9, wx.SWISS, wx.NORMAL, wx.BOLD)
 	text.SetFont(font)
 	titlesizer = wx.BoxSizer(wx.VERTICAL)
@@ -975,7 +981,7 @@ class MicroscopePanel(wx.Panel):
 	titlesizer.Add(text, 0)	
 	
 	#  Protocol Name
-	chnameTAG = 'Instrument|Microscope|Microscope|SettingName|'+str(self.page_counter)
+	chnameTAG = 'Instrument|Microscope|SettingName|'+str(self.page_counter)
 	self.settings_controls[chnameTAG] = wx.TextCtrl(self.sw, value=meta.get_field(chnameTAG, default=''))
 	self.settings_controls[chnameTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
 	self.settings_controls[chnameTAG].SetInitialSize((250,20))
@@ -5364,13 +5370,13 @@ class RheometerSettingPanel(wx.Panel):
         self.settings_controls = {}
         meta = ExperimentSettings.getInstance()
 		
-	self.protocol = 'Instrument|Rheometer'	
+	self.tag = 'Instrument|Rheometer'	
 
         self.notebook = fnb.FlatNotebook(self, -1, style=fnb.FNB_NO_X_BUTTON | fnb.FNB_VC8)
 	self.notebook.Bind(fnb.EVT_FLATNOTEBOOK_PAGE_CLOSING, meta.onTabClosing)
 
-	for instance_id in sorted(meta.get_field_instances(self.protocol)):
-	    panel = RheometerPanel(self.notebook, int(instance_id))
+	for instance_id in sorted(meta.get_field_instances(self.tag)):
+	    panel = RheometerPanel(self.notebook, self.tag, int(instance_id))
 	    self.notebook.AddPage(panel, 'Instance No: %s'%(instance_id), True)
 		
 	# Buttons
@@ -5390,12 +5396,12 @@ class RheometerSettingPanel(wx.Panel):
 	self.Layout()
 	
     def onCreateTab(self, event):
-	next_tab_num = meta.get_new_protocol_id(self.protocol)
-	panel = RheometerPanel(self.notebook, next_tab_num)
+	next_tab_num = meta.get_new_protocol_id(self.tag)
+	panel = RheometerPanel(self.notebook, self.tag, next_tab_num)
 	self.notebook.AddPage(panel, 'Instance No: %s'%next_tab_num, True)
     
     def onLoadTab(self, event):
-	next_tab_num = meta.get_new_protocol_id(self.protocol)	
+	next_tab_num = meta.get_new_protocol_id(self.tag)	
 	if self.notebook.GetPageCount()+1 != int(next_tab_num):
 	    dlg = wx.MessageDialog(None, 'Can not load the next instance\nPlease fill information in Instance No: %s'%next_tab_num, 'Creating Instance..', wx.OK| wx.ICON_STOP)
 	    dlg.ShowModal()
@@ -5414,84 +5420,81 @@ class RheometerSettingPanel(wx.Panel):
 		dial.ShowModal()  
 		return	
 	    #Check for Settings Type:	
-	    if open(file_path).readline().rstrip() != exp.get_tag_event(self.protocol):
-		dial = wx.MessageDialog(None, 'The file is not %s settings!!'%exp.get_tag_event(self.protocol), 'Error', wx.OK | wx.ICON_ERROR)
+	    if open(file_path).readline().rstrip() != exp.get_tag_event(self.tag):
+		dial = wx.MessageDialog(None, 'The file is not %s settings!!'%exp.get_tag_event(self.tag), 'Error', wx.OK | wx.ICON_ERROR)
 		dial.ShowModal()  
 		return		    
 	    
-	    meta.load_settings(file_path, self.protocol+'|%s'%str(next_tab_num))  
-	    panel = RheometerPanel(self.notebook, next_tab_num)
+	    meta.load_settings(file_path, self.tag+'|%s'%str(next_tab_num))  
+	    panel = RheometerPanel(self.notebook, self.tag, next_tab_num)
 	    self.notebook.AddPage(panel, 'Instance No: %s'%str(next_tab_num), True) 
 	
         
 class RheometerPanel(wx.Panel):
-    def __init__(self, parent, page_counter):
+    def __init__(self, parent, tag, tab_number):
 
 	self.settings_controls = {}
 	meta = ExperimentSettings.getInstance()
 	
 	wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
-
-	self.page_counter = page_counter	
-	self.protocol = 'Instrument|Rheometer|%s'%str(self.page_counter)
-
+	
+	# TAG
+	self.tab_number = tab_number	
+	self.tag = tag
+	self.protocol = self.tag+'|'+str(self.tab_number)
+	
+	# Panel
 	self.sw = wx.ScrolledWindow(self)
+	self.swsizer = wx.BoxSizer(wx.VERTICAL)
 	
-	
-	#--- Top Panel  ----	
-	self.tswsizer = wx.BoxSizer(wx.VERTICAL)
-	name_fgs = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
-	# Heading
+	# Title
 	text = wx.StaticText(self.sw, -1, 'Rheometer')
-	font = wx.Font(9, wx.SWISS, wx.NORMAL, wx.BOLD)
+	font = wx.Font(12, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
 	text.SetFont(font)
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)
 	titlesizer.AddSpacer((5,-1))	
 	titlesizer.Add(text, 0)	
-	# Setting Name
-	protnameTAG = 'Instrument|Rheometer|SettingName|'+str(self.page_counter)
+	# Settings/Protocol Name	
+	attributesizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
+	protnameTAG = self.tag+'|SettingName|'+str(self.tab_number)
 	self.settings_controls[protnameTAG] = wx.TextCtrl(self.sw, value=meta.get_field(protnameTAG, default=''))
 	self.settings_controls[protnameTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
 	self.settings_controls[protnameTAG].SetInitialSize((250,20))
 	self.settings_controls[protnameTAG].SetToolTipString('Type a unique name for identifying the setting')
 	self.save_btn = wx.Button(self.sw, -1, "Save Settings")
 	self.save_btn.Bind(wx.EVT_BUTTON, self.onSaveSettings)
-	
-	name_fgs.Add(wx.StaticText(self.sw, -1, 'Settings Name'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	name_fgs.Add(self.settings_controls[protnameTAG], 0, wx.EXPAND|wx.ALL, 5) 
-	name_fgs.Add(self.save_btn, 0, wx.ALL, 5)
-	
+	attributesizer.Add(wx.StaticText(self.sw, -1, 'Settings Name'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	attributesizer.Add(self.settings_controls[protnameTAG], 0, wx.EXPAND|wx.ALL, 5) 
+	attributesizer.Add(self.save_btn, 0, wx.ALL, 5)
 	# Make
-	incbmfgTAG = 'Instrument|Rheometer|Manufacter|'+str(self.page_counter)
+	incbmfgTAG = self.tag+'|Manufacter|'+str(self.tab_number)
 	self.settings_controls[incbmfgTAG] = wx.TextCtrl(self.sw, name='Manufacter' ,  value=meta.get_field(incbmfgTAG, default=''))
 	self.settings_controls[incbmfgTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
 	self.settings_controls[incbmfgTAG].SetInitialSize((100, 20))
 	self.settings_controls[incbmfgTAG].SetToolTipString('Manufacturer name')
-	name_fgs.Add(wx.StaticText(self.sw, -1, 'Manufacturer'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	name_fgs.Add(self.settings_controls[incbmfgTAG], 0)
-	name_fgs.Add(wx.StaticText(self.sw, -1, ''), 0)
-
-	incbmdlTAG = 'Instrument|Rheometer|Model|'+str(self.page_counter)
+	attributesizer.Add(wx.StaticText(self.sw, -1, 'Manufacturer'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	attributesizer.Add(self.settings_controls[incbmfgTAG], 0)
+	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)
+	# Model
+	incbmdlTAG = self.tag+'|Model|'+str(self.tab_number)
 	self.settings_controls[incbmdlTAG] = wx.TextCtrl(self.sw, value=meta.get_field(incbmdlTAG, default=''))
 	self.settings_controls[incbmdlTAG].Bind(wx.EVT_TEXT,self.OnSavingData)
 	self.settings_controls[incbmdlTAG].SetToolTipString('Model number of the Incubator')
-	name_fgs.Add(wx.StaticText(self.sw, -1, 'Model'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	name_fgs.Add(self.settings_controls[incbmdlTAG], 0)
-	name_fgs.Add(wx.StaticText(self.sw, -1, ''), 0)
-    
-	self.propfileTAG = 'Instrument|Rheometer|ProprietaryFiles|%s'%str(self.page_counter)	
+	attributesizer.Add(wx.StaticText(self.sw, -1, 'Model'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	attributesizer.Add(self.settings_controls[incbmdlTAG], 0)
+	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)
+	# Attach Files
+	self.propfileTAG = self.tag+'|ProprietaryFiles|%s'%str(self.tab_number)	
 	showInstBut = wx.Button(self.sw, -1, 'Attach Files', (100,100))
-	showInstBut.Bind (wx.EVT_BUTTON, self.OnShowDialog)
+	showInstBut.Bind (wx.EVT_BUTTON, self.OnShowFileContainer)
 	self.propfiles = gizmos.EditableListBox(self.sw, -1, 'Proprietary Files', wx.DefaultPosition, (100,30), style=gizmos.EL_ALLOW_EDIT)
 	self.propfiles.SetStrings(meta.get_field(self.propfileTAG, []))
-	name_fgs.Add(wx.StaticText(self.sw, -1, ''), 0)
-	name_fgs.Add(self.propfiles, 1, wx.EXPAND)
-	name_fgs.Add(showInstBut, 0, wx.ALIGN_CENTER_VERTICAL)
-    
-
-	#Upper plate	
-	self.upplate_staticbox = wx.StaticBox(self.sw, -1, "Upper Plate")
-	self.upplateSizer = wx.StaticBoxSizer(self.upplate_staticbox, wx.VERTICAL)
+	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)
+	attributesizer.Add(self.propfiles, 1, wx.EXPAND)
+	attributesizer.Add(showInstBut, 0, wx.ALIGN_CENTER_VERTICAL)
+	#Geometry	
+	self.geometry_staticbox = wx.StaticBox(self.sw, -1, "Geometry")
+	self.geometrysizer = wx.StaticBoxSizer(self.geometry_staticbox, wx.VERTICAL)
 	
 	self.ctypeSizer = wx.FlexGridSizer(cols=3, hgap=15, vgap=5)
 	self.par_plate = wx.RadioButton(self.sw, -1, "Parallel", style = wx.RB_GROUP )
@@ -5501,59 +5504,39 @@ class RheometerPanel(wx.Panel):
 	self.ctypeSizer.Add(self.par_plate, 0)
 	self.ctypeSizer.Add(self.cone_plate, 0)
 	self.ctypeSizer.Add(wx.StaticText(self.sw, -1, ''), 0)
-	self.upplateSizer.Add(self.ctypeSizer, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-	self.upplateSizer.Add((-1,10))
+	self.geometrysizer.Add(self.ctypeSizer, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+	self.geometrysizer.Add((-1,10))
     
-	if meta.get_field('Instrument|Rheometer|Type|'+str(self.page_counter)) is not None: 	
-	    self.onShowUPPlate(event=meta.get_field('Instrument|Rheometer|Type|'+str(self.page_counter)))
+	if meta.get_field(self.tag+'|GeometryType|'+str(self.tab_number)) is not None: 	
+	    self.onShowGeometry(event=meta.get_field(self.tag+'|GeometryType|'+str(self.tab_number)))
 	else:	    
-	    self.par_plate.Bind(wx.EVT_RADIOBUTTON, self.onShowUPPlate)
-	    self.cone_plate.Bind(wx.EVT_RADIOBUTTON, self.onShowUPPlate)	
-	
-	#Gel
-	staticbox = wx.StaticBox(self.sw, -1, "Gel")
-	COLUMN_DETAILS = OrderedDict([('Component', ['TextCtrl', 100, -1, '']), 
-	                            ('Volume', ['TextCtrl', 50, -1, '']),
-	                            ('Concentration', ['TextCtrl', 50, -1, ''])
-	                            ])	
-	gel_compose = RowBuilder(self.sw, self.protocol, 'GelComposition', COLUMN_DETAILS)
-	
-	COLUMN_DETAILS = OrderedDict([('Temp\n(C)', ['TextCtrl', 50, -1, '']), 
-	                            ('Duration\n(Min)', ['TextCtrl', 50, -1, '']),
-	                            ])	
-	gel_profile = RowBuilder(self.sw, self.protocol, 'GelProfile', COLUMN_DETAILS)	
-	
-	gelSizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
-	gelSizer.Add(gel_compose, 0, wx.ALL, 5)
-	gelSizer.Add(gel_profile, 0, wx.ALL, 5)
-	
+	    self.par_plate.Bind(wx.EVT_RADIOBUTTON, self.onShowGeometry)
+	    self.cone_plate.Bind(wx.EVT_RADIOBUTTON, self.onShowGeometry)	
+	    
 	#Gas	
 	staticbox = wx.StaticBox(self.sw, -1, "Gas")
+	self.gassizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
 	COLUMN_DETAILS = OrderedDict([('Name', ['TextCtrl', 100, -1, '']), 
 	                            ('Composition', ['TextCtrl', 200, -1, ''])
 	                            ])	
 	gas_supply = RowBuilder(self.sw, self.protocol, 'Gas', COLUMN_DETAILS)
-	gasSizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
-	gasSizer.Add(gas_supply, 0, wx.ALL, 5)
+	self.gassizer.Add(gas_supply, 1, wx.EXPAND|wx.ALL, 5)
 
 	
         #--- Layout ----
-	self.tswsizer.Add(titlesizer,0,wx.ALL, 5)
-	self.tswsizer.Add((-1,10))
-	self.tswsizer.Add(name_fgs, 1, wx.EXPAND|wx.ALL, 5)
-	self.tswsizer.Add((-1,10))
-	self.tswsizer.Add(self.upplateSizer,0,wx.EXPAND|wx.ALL, 5)
-	self.tswsizer.Add(gelSizer,0, wx.EXPAND|wx.ALL, 5)
-	self.tswsizer.Add(gasSizer,0, wx.EXPAND|wx.ALL, 5)
-	self.sw.SetSizer(self.tswsizer)
+	self.swsizer.Add(titlesizer,0,wx.ALL, 5)
+	self.swsizer.Add((-1,10))
+	self.swsizer.Add(attributesizer, 0, wx.EXPAND|wx.ALL, 5)
+	self.swsizer.Add(self.geometrysizer,0,wx.EXPAND|wx.ALL, 5)
+	self.swsizer.Add(self.gassizer,0, wx.EXPAND|wx.ALL, 5)
+	self.sw.SetSizer(self.swsizer)
 	self.sw.SetScrollbars(20, 20, self.Size[0]+10, self.Size[1]+10, 0, 0)
 
-	
 	self.Sizer = wx.BoxSizer(wx.VERTICAL)
 	self.Sizer.Add(self.sw, 1, wx.EXPAND)
 	self.SetSizer(self.Sizer) 
 	
-    def onShowUPPlate(self, event):
+    def onShowGeometry(self, event):
 	if isinstance(event, str):
 	    plate_type = event
 	else:
@@ -5562,9 +5545,9 @@ class RheometerPanel(wx.Panel):
 	    
 	fgs = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
 	    
-	diaTAG = 'Instrument|Rheometer|UPPlateDiameter|'+str(self.page_counter)
+	diaTAG = self.tag+'|GeometryDiameter|'+str(self.tab_number)
 	dia = meta.get_field(diaTAG, [])
-	self.settings_controls[diaTAG+'|0'] = wx.lib.masked.NumCtrl(self.sw, size=(20,-1), value=0, style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[diaTAG+'|0'] = wx.TextCtrl(self.sw, size=(20,-1), style=wx.TE_PROCESS_ENTER|wx.TE_RIGHT)
 	if len(dia) > 0:
 	    self.settings_controls[diaTAG+'|0'].SetValue(dia[0])
 	self.settings_controls[diaTAG+'|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
@@ -5578,7 +5561,7 @@ class RheometerPanel(wx.Panel):
 	fgs.Add(self.settings_controls[diaTAG+'|0'], 0, wx.EXPAND)	    
 	fgs.Add(self.settings_controls[diaTAG+'|1'], 0, wx.EXPAND)	
 	
-	materialTAG = 'Instrument|Rheometer|UPPlateMaterial|'+str(self.page_counter)
+	materialTAG = self.tag+'|GeometryMaterial|'+str(self.tab_number)
 	material_choices =['Aluminium', 'Stainless Steel', 'Acrylic', 'Other']
 	self.settings_controls[materialTAG]= wx.ListBox(self.sw, -1, wx.DefaultPosition, (-1,30), material_choices, wx.LB_SINGLE)
 	if meta.get_field(materialTAG) is not None:
@@ -5592,15 +5575,15 @@ class RheometerPanel(wx.Panel):
 	
 	if plate_type == 'Parallel':
 	    self.par_plate.SetValue(1)
-	    meta.set_field('Instrument|Rheometer|Type|'+str(self.page_counter), 'Parallel')	
+	    meta.set_field(self.tag+'|GeometryType|'+str(self.tab_number), 'Parallel')	
 
-	    gapTAG = 'Instrument|Rheometer|UPPlateGap|'+str(self.page_counter)
+	    gapTAG = self.tag+'|GeometryGap|'+str(self.tab_number)
 	    gap = meta.get_field(gapTAG, [])
-	    self.settings_controls[gapTAG+'|0'] = wx.lib.masked.NumCtrl(self.sw, size=(20,-1), style=wx.TE_PROCESS_ENTER)
+	    self.settings_controls[gapTAG+'|0'] = wx.TextCtrl(self.sw, size=(20,-1), style=wx.TE_PROCESS_ENTER|wx.TE_RIGHT)
 	    if len(gap) > 0:
 		self.settings_controls[gapTAG+'|0'].SetValue(gap[0])
 	    self.settings_controls[gapTAG+'|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
-	    unit_choices =['radiant', 'degree', 'Other']
+	    unit_choices =['radians', 'degree', 'Other']
 	    self.settings_controls[gapTAG+'|1'] = wx.ListBox(self.sw, -1, wx.DefaultPosition, (-1,20), unit_choices, wx.LB_SINGLE)
 	    if len(gap) > 1:
 		self.settings_controls[gapTAG+'|1'].Append(gap[1])
@@ -5612,11 +5595,11 @@ class RheometerPanel(wx.Panel):
 	    
 	if plate_type == 'Cone':
 	    self.cone_plate.SetValue(1)
-	    meta.set_field('Instrument|Rheometer|Type|'+str(self.page_counter), 'Cone')	
+	    meta.set_field(self.tag+'|GeometryType|'+str(self.tab_number), 'Cone')	
 	    
-	    angelTAG = 'Instrument|Rheometer|UPPlateAngel|'+str(self.page_counter)
+	    angelTAG = self.tag+'|GeometryAngel|'+str(self.tab_number)
 	    angel = meta.get_field(angelTAG, [])
-	    self.settings_controls[angelTAG+'|0'] = wx.lib.masked.NumCtrl(self.sw, size=(20,-1), style=wx.TE_PROCESS_ENTER)
+	    self.settings_controls[angelTAG+'|0'] = wx.TextCtrl(self.sw, size=(20,-1), style=wx.TE_PROCESS_ENTER|wx.TE_RIGHT)
 	    if len(angel) > 0:
 		self.settings_controls[angelTAG+'|0'].SetValue(angel[0])
 	    self.settings_controls[angelTAG+'|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
@@ -5630,9 +5613,9 @@ class RheometerPanel(wx.Panel):
 	    fgs.Add(self.settings_controls[angelTAG+'|0'], 0, wx.EXPAND)	    
 	    fgs.Add(self.settings_controls[angelTAG+'|1'], 0, wx.EXPAND)	 
 	    
-	    trctTAG = 'Instrument|Rheometer|UPPlateTurncate|'+str(self.page_counter)
+	    trctTAG = self.tag+'|GeometryTurncate|'+str(self.tab_number)
 	    trct = meta.get_field(trctTAG, [])
-	    self.settings_controls[trctTAG+'|0'] = wx.lib.masked.NumCtrl(self.sw, size=(20,-1), style=wx.TE_PROCESS_ENTER)
+	    self.settings_controls[trctTAG+'|0'] = wx.TextCtrl(self.sw, size=(20,-1), style=wx.TE_PROCESS_ENTER|wx.TE_RIGHT)
 	    if len(trct) > 0:
 		self.settings_controls[trctTAG+'|0'].SetValue(trct[0])
 	    self.settings_controls[trctTAG+'|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
@@ -5650,26 +5633,18 @@ class RheometerPanel(wx.Panel):
 	self.cone_plate.Enable(0)	
 	    
 	#--- Sizers -------
-	self.upplateSizer.Add(fgs, 0, wx.ALIGN_LEFT|wx.ALL, 5)
-	self.sw.SetSizer(self.tswsizer)
-	self.sw.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0) 
+	self.geometrysizer.Add(fgs, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+	self.sw.SetSizer(self.swsizer)
+	self.sw.SetScrollbars(20, 20, self.Size[0]+10, self.Size[1]+10, 0, 0) 
 	self.sw.FitInside()
 
-	
-	
-		#self.SetSizer(self.fgs, wx.EXPAND)
-		#self.Layout()	
-		#self.Parent.FitInside()	
-
-	    
-
     def onSaveSettings(self, event):
-	if not meta.get_field('Instrument|Rheometer|ProtocolName|%s'%str(self.page_counter)):
-	    dial = wx.MessageDialog(None, 'Please provide a protocol name', 'Error', wx.OK | wx.ICON_ERROR)
+	if not meta.get_field(self.tag+'|SettingName|%s'%str(self.tab_number)):
+	    dial = wx.MessageDialog(None, 'Please provide a settings/protocol name', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()  
 	    return
 				
-	filename = meta.get_field('AddProcess|Rheometer|ProtocolName|%s'%str(self.page_counter))+'.txt'
+	filename = meta.get_field(self.tag+'|SettingName|%s'%str(self.tab_number))+'.txt'
 	
 	dlg = wx.FileDialog(None, message='Saving Settings...', 
                             defaultDir=os.getcwd(), defaultFile=filename, 
@@ -5681,8 +5656,8 @@ class RheometerPanel(wx.Panel):
 	    self.file_path = os.path.join(dirname, filename)
 	    meta.save_settings(self.file_path, self.protocol) 
 	    
-    def OnShowDialog(self, event):
-	dia = FileListDialog(self, 'AddProcess|Rheometer', selection_mode = False)
+    def OnShowFileContainer(self, event):
+	dia = FileListDialog(self, self.tag, selection_mode = False)
 	if dia.ShowModal()== wx.ID_OK:
 	    f_list = dia.drop_target.filelist
 	    if f_list:
@@ -5697,9 +5672,9 @@ class RheometerPanel(wx.Panel):
 
 
 ########################################################################        
-################## RHEOLOGY SETTING PANEL    ###########################
+#### RHEOLOGICAL MANIPULATION SETTING PANEL     ########################
 ########################################################################            
-class RheologySettingPanel(wx.Panel):
+class RheoManipulationSettingPanel(wx.Panel):
     """
     Panel that holds parameter input panel and the buttons for more additional panel
     """
@@ -5709,13 +5684,13 @@ class RheologySettingPanel(wx.Panel):
         self.settings_controls = {}
         meta = ExperimentSettings.getInstance()
 		
-	self.protocol = 'InstProcess|Rheology'	
+	self.tag = 'InstProcess|RheoManipulation'	
 
         self.notebook = fnb.FlatNotebook(self, -1, style=fnb.FNB_NO_X_BUTTON | fnb.FNB_VC8)
 	self.notebook.Bind(fnb.EVT_FLATNOTEBOOK_PAGE_CLOSING, meta.onTabClosing)
 
-	for instance_id in sorted(meta.get_field_instances(self.protocol)):
-	    panel = RheologyPanel(self.notebook, int(instance_id))
+	for instance_id in sorted(meta.get_field_instances(self.tag)):
+	    panel = RheoManipulationPanel(self.notebook, self.tag, int(instance_id))
 	    self.notebook.AddPage(panel, 'Instance No: %s'%(instance_id), True)
 		
 	# Buttons
@@ -5732,87 +5707,109 @@ class RheologySettingPanel(wx.Panel):
 	self.Layout()
 	
     def onCreateTab(self, event):
-	next_tab_num = meta.get_new_protocol_id(self.protocol)
-	panel = RheologyPanel(self.notebook, next_tab_num)
+	next_tab_num = meta.get_new_protocol_id(self.tag)
+	panel = RheoManipulationPanel(self.notebook, self.tag, next_tab_num)
 	self.notebook.AddPage(panel, 'Instance No: %s'%next_tab_num, True)
 
-class RheologyPanel(wx.Panel):
-    def __init__(self, parent, page_counter):
+class RheoManipulationPanel(wx.Panel):
+    def __init__(self, parent, tag, tab_number):
 
         self.settings_controls = {}
         meta = ExperimentSettings.getInstance()
 
         wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
 
-        self.page_counter = page_counter
-	self.protocol = 'InstProcess|Rheology|%s'%str(self.page_counter)	
+        self.tab_number = tab_number
+	self.tag = tag
+	self.protocol = self.tag+'|'+str(self.tab_number)
+	self.instrument_used = 'Rheometer'
 	
-	# Top panel for static information and bottom pannel for adding steps
-	self.top_panel = wx.Panel(self)	
-	self.bot_panel  = wx.ScrolledWindow(self)	
+	# Panel
+	self.sw = wx.ScrolledWindow(self)
+	self.swsizer = wx.BoxSizer(wx.VERTICAL)
 	
-	#------- Heading ---#
-	pic=wx.StaticBitmap(self.top_panel)
-	pic.SetBitmap(icons.rheometer.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
-	text = wx.StaticText(self.top_panel, -1, 'Rheology')
-	font = wx.Font(9, wx.SWISS, wx.NORMAL, wx.BOLD)
+	# Title
+	text = wx.StaticText(self.sw, -1, 'Rheological Manipulation')
+	font = wx.Font(12, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
 	text.SetFont(font)
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)
-	titlesizer.Add(pic)
 	titlesizer.AddSpacer((5,-1))	
 	titlesizer.Add(text, 0)	
 	
 	
-	fgs = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)	
+	attributesizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)	
         #-- Instance selection ---#
-        self.selectinstTAG = 'InstProcess|Rheology|RheometerInstance|'+str(self.page_counter)
-        self.settings_controls[self.selectinstTAG] = wx.TextCtrl(self.top_panel, value=meta.get_field(self.selectinstTAG, default=''), style=wx.TE_READONLY)        
-        showInstBut = wx.Button(self.top_panel, -1, 'Show Choices', (100,100))
-        showInstBut.Bind (wx.EVT_BUTTON, self.OnShowDialog)
+        self.selectinstTAG = self.tag+'|%sInstance|%s'%(self.instrument_used, str(self.tab_number))
+        self.settings_controls[self.selectinstTAG] = wx.TextCtrl(self.sw, value=meta.get_field(self.selectinstTAG, default=''), style=wx.TE_READONLY)        
+        showInstBut = wx.Button(self.sw, -1, 'Show Choices', (100,100))
+        showInstBut.Bind (wx.EVT_BUTTON, self.ShowInstrumentInstances)
         self.settings_controls[self.selectinstTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
         self.settings_controls[self.selectinstTAG].SetToolTipString('Rheometer used for data acquisition')
-        fgs.Add(wx.StaticText(self.top_panel, -1, 'Select Rheometer'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-        fgs.Add(self.settings_controls[self.selectinstTAG], 0, wx.EXPAND)
-        fgs.Add(showInstBut, 0, wx.EXPAND)
+        attributesizer.Add(wx.StaticText(self.sw, -1, 'Select Rheometer'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+        attributesizer.Add(self.settings_controls[self.selectinstTAG], 0, wx.EXPAND)
+        attributesizer.Add(showInstBut, 0, wx.EXPAND)
 	
-	swsizer = wx.BoxSizer(wx.VERTICAL)
-	swsizer.Add(titlesizer)
-	swsizer.Add((-1,10))
-	swsizer.Add(fgs)
-	self.top_panel.SetSizer(swsizer)	
+	# Attach Files
+	self.propfileTAG = self.tag+'|ProprietaryFiles|%s'%str(self.tab_number)	
+	showInstBut = wx.Button(self.sw, -1, 'Attach Files', (100,100))
+	showInstBut.Bind (wx.EVT_BUTTON, self.OnShowFileContainer)
+	self.propfiles = gizmos.EditableListBox(self.sw, -1, 'Result Files', wx.DefaultPosition, (100,30), style=gizmos.EL_ALLOW_EDIT)
+	self.propfiles.SetStrings(meta.get_field(self.propfileTAG, []))
+	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)
+	attributesizer.Add(self.propfiles, 1, wx.EXPAND)
+	attributesizer.Add(showInstBut, 0, wx.ALIGN_CENTER_VERTICAL)	
 	
-	#--- Bottom Panel  ----
-	staticbox = wx.StaticBox(self.bot_panel, -1, "Procedure")
-	bot_panel_sizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
+	#Gel Composition
+	staticbox = wx.StaticBox(self.sw, -1, "Gel Composition")
+	gelcompsizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
+	COLUMN_DETAILS = OrderedDict([('Component', ['TextCtrl', 100, -1, '']), 
+                                    ('Volume', ['TextCtrl', 50, -1, '']),
+                                    ('Concentration', ['TextCtrl', 50, -1, ''])
+                                    ])	
+	gel_compose = RowBuilder(self.sw, self.protocol, 'GelComposition', COLUMN_DETAILS)
+	gelcompsizer.Add(gel_compose, 0, wx.ALL, 5)
+	
+	# Gel Profile
+	staticbox = wx.StaticBox(self.sw, -1, "Gel Profile")
+	gelprofilesizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)	
+	COLUMN_DETAILS = OrderedDict([('Temp\n(C)', ['TextCtrl', 50, -1, '']), 
+                                    ('Duration\n(Min)', ['TextCtrl', 50, -1, '']),
+                                    ])	
+	gel_profile = RowBuilder(self.sw, self.protocol, 'GelProfile', COLUMN_DETAILS)	
+	gelprofilesizer.Add(gel_profile, 0, wx.ALL, 5)	
+		
+	# Procedure
+	staticbox = wx.StaticBox(self.sw, -1, "Procedure")
+	proceduresizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
 	COLUMN_DETAILS = OrderedDict([('Name', ['TextCtrl', 100, -1, '']), 
                                     ('Description', ['TextCtrl', 200, -1, '']),
                                     ('Duration\n(Min)', ['TextCtrl', 30, -1, '']),
                                     ('Oscillation\nAmplitude\n(%)', ['TextCtrl', 30, -1, '']),
                                     ('Oscillation\nFrequency\n(Hz)', ['TextCtrl', 30, -1, ''])
                                     ])		
-	procedure = RowBuilder(self.bot_panel, self.protocol, 'Step', COLUMN_DETAILS)
+	procedure = RowBuilder(self.sw, self.protocol, 'Step', COLUMN_DETAILS)
+	proceduresizer.Add(procedure, 0, wx.ALL, 5)	
 	
-	bot_panel_sizer.Add(procedure, 0, wx.ALL, 5)	
-	self.bot_panel.SetSizer(bot_panel_sizer)
-        self.bot_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
-	
-	
-        #---------------Layout with sizers---------------
-        self.Sizer = wx.BoxSizer(wx.VERTICAL)
-        self.Sizer.Add(self.top_panel, 0, wx.EXPAND|wx.ALL, 5)
-	self.Sizer.Add(self.bot_panel, 1, wx.EXPAND|wx.ALL, 5)
+        #--- Layout ----
+	self.swsizer.Add(titlesizer,0,wx.ALL, 5)
+	self.swsizer.Add((-1,10))
+	self.swsizer.Add(attributesizer, 0, wx.EXPAND|wx.ALL, 5)
+	self.swsizer.Add(gelcompsizer,1,wx.EXPAND|wx.ALL, 5)
+	self.swsizer.Add(gelprofilesizer,1,wx.EXPAND|wx.ALL, 5)
+	self.swsizer.Add(proceduresizer,1,wx.EXPAND|wx.ALL, 5)
+	self.sw.SetSizer(self.swsizer)
+	self.sw.SetScrollbars(20, 20, self.Size[0]+10, self.Size[1]+10, 0, 0)
+
+	self.Sizer = wx.BoxSizer(wx.VERTICAL)
+	self.Sizer.Add(self.sw, 1, wx.EXPAND)
 	self.SetSizer(self.Sizer)
-	self.Layout()
     
-    def OnShowDialog(self, event):     
-        # link with the dynamic experiment settings
-        meta = ExperimentSettings.getInstance()
-	instrumentTAG = 'Instrument|Rheometer'
+    def ShowInstrumentInstances(self, event): 
+	instrumentTAG = 'Instrument|%s'%self.instrument_used
         attributes = meta.get_attribute_list(instrumentTAG) 
-        
         #check whether there is at least one attributes
         if not attributes:
-            dial = wx.MessageDialog(None, 'No %s instance exists!!'%exp.get_tag_event(instrumentTAG), 'Error', wx.OK | wx.ICON_ERROR)
+            dial = wx.MessageDialog(None, 'No %s instance exists!!'%self.instrument_used, 'Error', wx.OK | wx.ICON_ERROR)
             dial.ShowModal()  
             return
         #show the popup table 
@@ -5822,6 +5819,146 @@ class RheologyPanel(wx.Panel):
                 instance = dia.listctrl.get_selected_instances()[0]
                 self.settings_controls[self.selectinstTAG].SetValue(str(instance))
         dia.Destroy()
+	
+    def OnShowFileContainer(self, event):
+	    dia = FileListDialog(self, self.tag, selection_mode = False)
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.drop_target.filelist
+		if f_list:
+		    meta.set_field(self.propfileTAG, f_list)
+		    self.propfiles.SetStrings(f_list)    
+
+    def OnSavingData(self, event):
+        ctrl = event.GetEventObject()
+	tag = [t for t, c in self.settings_controls.items() if c==ctrl][0]
+	meta.saveData(ctrl, tag, self.settings_controls)
+
+
+########################################################################        
+################## RHEOLOGY SETTING PANEL    ###########################
+########################################################################            
+class RHESettingPanel(wx.Panel):
+    """
+    Panel that holds parameter input panel and the buttons for more additional panel
+    """
+    def __init__(self, parent, id=-1):
+        wx.Panel.__init__(self, parent, id)
+
+        self.settings_controls = {}
+        meta = ExperimentSettings.getInstance()
+		
+	self.tag = 'DataAcquis|RHE'	
+
+        self.notebook = fnb.FlatNotebook(self, -1, style=fnb.FNB_NO_X_BUTTON | fnb.FNB_VC8)
+	self.notebook.Bind(fnb.EVT_FLATNOTEBOOK_PAGE_CLOSING, meta.onTabClosing)
+
+	for instance_id in sorted(meta.get_field_instances(self.tag)):
+	    panel = RHEPanel(self.notebook, self.tag, int(instance_id))
+	    self.notebook.AddPage(panel, 'Instance No: %s'%(instance_id), True)
+		
+	# Buttons
+	createTabBtn = wx.Button(self, label="Create Instance")
+	createTabBtn.Bind(wx.EVT_BUTTON, self.onCreateTab)       
+
+	# Sizers
+	mainsizer = wx.BoxSizer(wx.VERTICAL)
+	btnSizer = wx.BoxSizer(wx.HORIZONTAL)
+	mainsizer.Add(self.notebook, 1, wx.ALL|wx.EXPAND, 5)
+	btnSizer.Add(createTabBtn  , 0, wx.ALL, 5)
+	mainsizer.Add(btnSizer)
+	self.SetSizer(mainsizer)
+	self.Layout()
+	
+    def onCreateTab(self, event):
+	next_tab_num = meta.get_new_protocol_id(self.tag)
+	panel = RHEPanel(self.notebook, self.tag, next_tab_num)
+	self.notebook.AddPage(panel, 'Instance No: %s'%next_tab_num, True)
+
+class RHEPanel(wx.Panel):
+    def __init__(self, parent, tag, tab_number):
+
+        self.settings_controls = {}
+        meta = ExperimentSettings.getInstance()
+
+        wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
+
+        self.tab_number = tab_number
+	self.tag = tag
+	self.protocol = self.tag+'|'+str(self.tab_number)
+	self.instrument_used = 'Rheometer'
+	
+	# Panel
+	self.sw = wx.ScrolledWindow(self)
+	self.swsizer = wx.BoxSizer(wx.VERTICAL)
+	
+	# Title
+	text = wx.StaticText(self.sw, -1, 'Rheological Measurement')
+	font = wx.Font(12, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
+	text.SetFont(font)
+	titlesizer = wx.BoxSizer(wx.HORIZONTAL)
+	titlesizer.AddSpacer((5,-1))	
+	titlesizer.Add(text, 0)	
+	
+	
+	attributesizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)	
+        #-- Instance selection ---#
+        self.selectinstTAG = self.tag+'|%sInstance|%s' %(self.instrument_used, str(self.tab_number))
+        self.settings_controls[self.selectinstTAG] = wx.TextCtrl(self.sw, value=meta.get_field(self.selectinstTAG, default=''), style=wx.TE_READONLY)        
+        showInstBut = wx.Button(self.sw, -1, 'Show Choices', (100,100))
+        showInstBut.Bind (wx.EVT_BUTTON, self.ShowInstrumentInstances)
+        self.settings_controls[self.selectinstTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+        self.settings_controls[self.selectinstTAG].SetToolTipString('Rheometer used for data acquisition')
+        attributesizer.Add(wx.StaticText(self.sw, -1, 'Select Rheometer'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+        attributesizer.Add(self.settings_controls[self.selectinstTAG], 0, wx.EXPAND)
+        attributesizer.Add(showInstBut, 0, wx.EXPAND)
+	
+	# Procedure
+	staticbox = wx.StaticBox(self.sw, -1, "Procedure")
+	proceduresizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
+	COLUMN_DETAILS = OrderedDict([('Name', ['TextCtrl', 100, -1, '']), 
+                                    ('Description', ['TextCtrl', 200, -1, '']),
+                                    ('Duration\n(Min)', ['TextCtrl', 30, -1, '']),
+                                    ('Oscillation\nAmplitude\n(%)', ['TextCtrl', 30, -1, '']),
+                                    ('Oscillation\nFrequency\n(Hz)', ['TextCtrl', 30, -1, ''])
+                                    ])		
+	procedure = RowBuilder(self.sw, self.protocol, 'Step', COLUMN_DETAILS)
+	proceduresizer.Add(procedure, 0, wx.ALL, 5)	
+	
+        #--- Layout ----
+	self.swsizer.Add(titlesizer,0,wx.ALL, 5)
+	self.swsizer.Add((-1,10))
+	self.swsizer.Add(attributesizer, 0, wx.EXPAND|wx.ALL, 5)
+	self.swsizer.Add(proceduresizer,1,wx.EXPAND|wx.ALL, 5)
+	self.sw.SetSizer(self.swsizer)
+	self.sw.SetScrollbars(20, 20, self.Size[0]+10, self.Size[1]+10, 0, 0)
+
+	self.Sizer = wx.BoxSizer(wx.VERTICAL)
+	self.Sizer.Add(self.sw, 1, wx.EXPAND)
+	self.SetSizer(self.Sizer)
+    
+    def ShowInstrumentInstances(self, event): 
+	instrumentTAG = 'Instrument|%s'%self.instrument_used
+        attributes = meta.get_attribute_list(instrumentTAG) 
+        #check whether there is at least one attributes
+        if not attributes:
+            dial = wx.MessageDialog(None, 'No %s instance exists!!'%self.instrument_used, 'Error', wx.OK | wx.ICON_ERROR)
+            dial.ShowModal()  
+            return
+        #show the popup table 
+        dia = InstanceListDialog(self, instrumentTAG, selection_mode = False)
+        if dia.ShowModal() == wx.ID_OK:
+            if dia.listctrl.get_selected_instances() != []:
+                instance = dia.listctrl.get_selected_instances()[0]
+                self.settings_controls[self.selectinstTAG].SetValue(str(instance))
+        dia.Destroy()
+	
+    def OnShowFileContainer(self, event):
+	    dia = FileListDialog(self, self.tag, selection_mode = False)
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.drop_target.filelist
+		if f_list:
+		    meta.set_field(self.propfileTAG, f_list)
+		    self.propfiles.SetStrings(f_list)    
 
     def OnSavingData(self, event):
         ctrl = event.GetEventObject()
@@ -5984,8 +6121,8 @@ class CentrifugePanel(wx.Panel):
 	self.upplateSizer.Add(self.ctypeSizer, 0, wx.ALIGN_LEFT|wx.ALL, 5)
 	self.upplateSizer.Add((-1,10))
     
-	if meta.get_field('Instrument|Rheometer|Type|'+str(self.page_counter)) is not None: 	
-	    self.onShowUPPlate(event=meta.get_field('Instrument|Rheometer|Type|'+str(self.page_counter)))
+	if meta.get_field('Instrument|Rheometer|GeometryType|'+str(self.page_counter)) is not None: 	
+	    self.onShowUPPlate(event=meta.get_field('Instrument|Rheometer|GeometryType|'+str(self.page_counter)))
 	else:	    
 	    self.par_plate.Bind(wx.EVT_RADIOBUTTON, self.onShowUPPlate)
 	    self.cone_plate.Bind(wx.EVT_RADIOBUTTON, self.onShowUPPlate)	
@@ -6063,7 +6200,7 @@ class CentrifugePanel(wx.Panel):
 	
 	if plate_type == 'Parallel':
 	    self.par_plate.SetValue(1)
-	    meta.set_field('Instrument|Rheometer|Type|'+str(self.page_counter), 'Parallel')	
+	    meta.set_field('Instrument|Rheometer|GeometryType|'+str(self.page_counter), 'Parallel')	
 
 	    gapTAG = 'Instrument|Rheometer|UPPlateGap|'+str(self.page_counter)
 	    gap = meta.get_field(gapTAG, [])
@@ -6083,7 +6220,7 @@ class CentrifugePanel(wx.Panel):
 	    
 	if plate_type == 'Cone':
 	    self.cone_plate.SetValue(1)
-	    meta.set_field('Instrument|Rheometer|Type|'+str(self.page_counter), 'Cone')	
+	    meta.set_field('Instrument|Rheometer|GeometryType|'+str(self.page_counter), 'Cone')	
 	    
 	    angelTAG = 'Instrument|Rheometer|UPPlateAngel|'+str(self.page_counter)
 	    angel = meta.get_field(angelTAG, [])
@@ -6542,7 +6679,7 @@ class HCSPanel(wx.Panel):
 	
 	#------- Heading ---#
 	pic=wx.StaticBitmap(self.sw)
-	pic.SetBitmap(icons.staticimage.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
+	pic.SetBitmap(icons.hcs.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
 	text = wx.StaticText(self.sw, -1, 'Static Image Format')
 	font = wx.Font(9, wx.SWISS, wx.NORMAL, wx.BOLD)
 	text.SetFont(font)

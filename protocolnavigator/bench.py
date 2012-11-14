@@ -91,7 +91,7 @@ class Bench(wx.Panel):
 	      
         self.top_panel.Sizer = wx.BoxSizer(wx.VERTICAL)
 	self.top_panel.Sizer.Add((-1, 5))
-	self.top_panel.Sizer.Add(menu_sizer, 0, wx.EXPAND|wx.RIGHT|wx.ALIGN_RIGHT, 10)
+	self.top_panel.Sizer.Add(menu_sizer, 0, wx.ALIGN_RIGHT|wx.RIGHT, 10)
 	self.top_panel.Sizer.Add((-1, 5))
         self.top_panel.Sizer.Add(timeSizer, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 10)
 	self.top_panel.Sizer.Add((-1, 5))
@@ -353,6 +353,10 @@ class Bench(wx.Panel):
             elif prefix == 'DataAcquis|TLM':
                 dlg = wx.FileDialog(self,message='Select the images files',
                                     defaultDir=os.getcwd(), defaultFile='', style=wx.OPEN|wx.MULTIPLE)
+	    elif prefix == 'DataAcquis|RHE':
+		
+		dlg = wx.FileDialog(self,message='Select the Rheometer files',
+	                            defaultDir=os.getcwd(), defaultFile='', style=wx.OPEN|wx.MULTIPLE)	    
             else:
                 raise Exception('unrecognized tag prefix')
             
@@ -372,7 +376,7 @@ class Bench(wx.Panel):
                 else:
                     raise Exception('Could not find vessel: %s'%(platewell_id[0]))
                 
-                
+	                 
         # NOTE: None of the code needs to use the EventTimepoint tag,
         #       it's redundant with the timepoints encoded in the tags
         #       so we don't set it anymore.

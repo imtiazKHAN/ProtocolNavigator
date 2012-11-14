@@ -99,6 +99,7 @@ class LineageFrame(wx.ScrolledWindow):
                        'DataAcquis|TLM|Wells|0|',
                        'DataAcquis|FCS|Wells|0|',
                        'DataAcquis|HCS|Wells|0|',
+	               'DataAcquis|RHE|Wells|0|',
                        'Transfer|Seed|Wells|0|',
                        'Transfer|Harvest|Wells|0|']
         # GENERATE RANDOM EVENTS ON RANDOM WELLS

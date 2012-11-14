@@ -623,15 +623,17 @@ class ExperimentSettings(Singleton):
 	    icon = icons.medium.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
 	elif act =='Incubator':
 	    icon = icons.incubator.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 
-	elif act =='Rheology':
+	elif act =='RheoManipulation':
 	    icon = icons.rheometer.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 	
 	    
 	elif act =='HCS':
-	    icon = icons.staticimage.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+	    icon = icons.hcs.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
 	elif act =='FCS':
-	    icon = icons.arrow_up.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+	    icon = icons.fcs.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
 	elif act =='TLM':
 	    icon = icons.tlm.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+	elif act =='RHE':
+	    icon = icons.rheometer.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
 	
 	#elif act =='Hint':
 	    #icon = icons.hint.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 
@@ -669,13 +671,14 @@ EVENT_RGB ={
     'Genetic': (27,224,181,100),
     'Centrifugation': (224,27,198,100),
     'Incubator': (224,27,224,100),
-    'Rheology': (224, 27, 244, 100),
+    'RheoManipulation': (224, 27, 244, 100),
     'Wash': (175,27,224,100),
     'Dry': (168,27224,100),
     'Medium': (122,27,224,100),
     'TLM': (224,194,27,100),
     'HCS': (224,178,27,100),
     'FCS': (224,142,27,100),
+    'RHE': (224, 27, 244, 100),
     'CriticalPoint': (224,103,27,100),
     'Hint': (224,86,27,100),
     'Rest': (224,73,27,100),
