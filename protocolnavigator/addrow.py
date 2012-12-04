@@ -51,6 +51,7 @@ class RowBuilder(wx.Panel):
 		    for c, h in enumerate(self.col_headers):
 			if self.col_details[h][0] is 'TextCtrl':
 			    self.settings_controls[rowTAG+'|%s'%str(c)] = wx.TextCtrl(self, size=(self.col_details[h][1], self.col_details[h][2]), value=row_info[c], style=wx.TE_PROCESS_ENTER) 
+			    self.settings_controls[rowTAG+'|%s'%str(c)].SetToolTipString(row_info[c])
 			if self.col_details[h][0] is 'NumCtrl':
 			    self.settings_controls[rowTAG+'|%s'%str(c)] = wx.lib.masked.NumCtrl(self, size=(self.col_details[h][1], self.col_details[h][2]), value=self.col_details[h][3], style=wx.TE_PROCESS_ENTER) 
 			self.settings_controls[rowTAG+'|%s'%str(c)].Bind(wx.EVT_TEXT, self.OnSavingData)
@@ -67,6 +68,7 @@ class RowBuilder(wx.Panel):
 		    for c, h in enumerate(self.col_headers):
 			if self.col_details[h][0] is 'TextCtrl':
 			    self.settings_controls[rowTAG+'|%s'%str(c)] = wx.TextCtrl(self, size=(self.col_details[h][1], self.col_details[h][2]), value=self.col_details[h][3], style=wx.TE_PROCESS_ENTER) 
+			    self.settings_controls[rowTAG+'|%s'%str(c)].SetToolTipString(self.col_details[h][3])
 			if self.col_details[h][0] is 'NumCtrl':
 			    self.settings_controls[rowTAG+'|%s'%str(c)] = wx.lib.masked.NumCtrl(self, size=(self.col_details[h][1], self.col_details[h][2]), value=self.col_details[h][3], style=wx.TE_PROCESS_ENTER) 
 			self.settings_controls[rowTAG+'|%s'%str(c)].Bind(wx.EVT_TEXT, self.OnSavingData)
@@ -84,6 +86,7 @@ class RowBuilder(wx.Panel):
 	    for c, h in enumerate(self.col_headers):
 		if self.col_details[h][0] is 'TextCtrl':
 		    self.settings_controls[rowTAG+'|%s'%str(c)] = wx.TextCtrl(self, size=(self.col_details[h][1], self.col_details[h][2]), value=self.col_details[h][3], style=wx.TE_PROCESS_ENTER) 
+		    self.settings_controls[rowTAG+'|%s'%str(c)].SetToolTipString(self.col_details[h][3])
 		if self.col_details[h][0] is 'NumCtrl':
 		    self.settings_controls[rowTAG+'|%s'%str(c)] = wx.lib.masked.NumCtrl(self, size=(self.col_details[h][1], self.col_details[h][2]), value=self.col_details[h][3], style=wx.TE_PROCESS_ENTER) 
 		self.settings_controls[rowTAG+'|%s'%str(c)].Bind(wx.EVT_TEXT, self.OnSavingData)

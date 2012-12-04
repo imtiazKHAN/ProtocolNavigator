@@ -1,5 +1,6 @@
 import wx
 import icons
+import re
 from experimentsettings import *
 from wx.lib.masked import NumCtrl
 
@@ -537,7 +538,8 @@ class VesselSelectionPopup(wx.Dialog):
         font = wx.Font(12, wx.SWISS, wx.NORMAL, wx.NORMAL)
         label.SetFont(font)
         self.vpanel = VesselScroller(self)
-        for plate_id in PlateDesign.get_plate_ids():
+        #for plate_id in sorted(PlateDesign.get_plate_ids(), key=lambda x: int(re.findall(r'\d+$', x)[0])):
+	for plate_id in sorted(PlateDesign.get_plate_ids()):
             self.vpanel.add_vessel_panel(
                 VesselPanel(self.vpanel, plate_id),
                 plate_id)

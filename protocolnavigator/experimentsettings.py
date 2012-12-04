@@ -657,7 +657,27 @@ class ExperimentSettings(Singleton):
 	instance = get_tag_attribute(protocol)	
 	
 	return sorted(self.get_attribute_list_by_instance(tag_stump+'|%s'%token, instance), key = self.stringSplitByNumbers)
-	
+    #----------------------------------------------------------------------
+    def setLabelColour(self, tags, labels):
+	"""Change mandatory label colour Red-->Green when filled"""
+	for tag in tags:
+	    if self.get_field(tag):
+		labels[tag].SetForegroundColour(('#006600'))
+		labels[tag].Refresh()
+	    else:
+		labels[tag].SetForegroundColour(wx.RED)
+		labels[tag].Refresh()    
+    #----------------------------------------------------------------------
+    def checkMandatoryTags(self, tags):
+	"""Checks whether the mandatory fields/tags being filled"""
+	status = True
+	for tag in tags:
+	    if not self.get_field(tag):
+		status = False		
+		dial = wx.MessageDialog(None, 'Please fill %s mandatory field' %get_tag_attribute(tag), 'Error', wx.OK | wx.ICON_ERROR)
+		dial.ShowModal()   
+		return
+	return status	
 	
         
 	    
