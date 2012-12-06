@@ -751,7 +751,7 @@ class LineagePanel(wx.Panel):
 	# -- show the data url list --- #
         data_acquis = False
 
-        for tag in self.current_node.get_tags():
+	for tag in self.current_node.get_tags():
 	    if tag.startswith('DataAcquis'):
 		data_acquis = True
 		break

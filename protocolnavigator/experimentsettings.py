@@ -678,6 +678,11 @@ class ExperimentSettings(Singleton):
 		dial.ShowModal()   
 		return
 	return status	
+    #----------------------------------------------------------------------
+    def alphanumeric_sort(self, lst):
+	"""sort alphanumeric strings in a list e.g. [Plate1, Plate11, Tube2]"""
+	re_natural = re.compile('[0-9]+|[^0-9]+')
+	return [(1, int(c)) if c.isdigit() else (0, c.lower()) for c in re_natural.findall(lst)] + [lst] 	
 	
         
 	    

@@ -3,6 +3,8 @@ import icons
 import re
 from experimentsettings import *
 from wx.lib.masked import NumCtrl
+from addrow import RowBuilder
+from collections import OrderedDict
 
 #Icon Size
 ICON_SIZE = 22.0
@@ -122,11 +124,14 @@ class VesselPanel(wx.Panel):
         dlg = VesselSelectionPopup(self, sample_inst, cell_line)
         if dlg.ShowModal() == wx.ID_OK:           
             destination_wells = dlg.get_selected_platewell_ids()
-            assert destination_wells
+	    if not destination_wells:
+		dlg = wx.MessageDialog(None, 'No destination vessel was selected', 'Seeding...', wx.OK| wx.ICON_ERROR)
+		dlg.ShowModal()
+		return		
 	    
 	    meta.set_field('Transfer|Harvest|CellLineInstance|%s'%new_harvest_inst, sample_inst)
 	    meta.set_field('Transfer|Harvest|HarvestingDensity|%s'%new_harvest_inst, [dlg.h_cell_density.GetValue(), dlg.h_cell_dunit.GetStringSelection()])
-	    meta.set_field('Transfer|Harvest|MediumAddatives|%s'%new_harvest_inst, dlg.h_medium.GetValue())
+	    #meta.set_field('Transfer|Harvest|MediumAddatives|%s'%new_harvest_inst, dlg.h_medium.GetValue())
 	    meta.set_field('Transfer|Harvest|Wells|%s|%s'%(new_harvest_inst, bench.get_selected_timepoint()), [harvest_from_well])
 	    
 	    meta.set_field('Transfer|Seed|HarvestInstance|%s'%new_seed_inst, new_harvest_inst)
@@ -437,18 +442,24 @@ class VesselSelectionPopup(wx.Dialog):
     #def __init__(self, parent, **kwargs):
 	    #wx.Dialog.__init__(self, parent, style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER, **kwargs)    
     def __init__(self, parent, sample_inst, cell_line):
-	wx.Dialog.__init__(self, parent, -1, size=(600,500), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+	wx.Dialog.__init__(self, parent, -1, size=(650,500), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
 	
 	self.sample_inst = sample_inst
 	self.cell_line = cell_line
 	
+	self.splitwindow = wx.SplitterWindow(self)
+	self.top_panel = wx.ScrolledWindow(self.splitwindow)
+	self.bot_panel = wx.Panel(self.splitwindow)
+	
+	self.splitwindow.SplitHorizontally(self.top_panel, self.bot_panel)
+	self.splitwindow.SetSashGravity(0.3)	
 	
 	#------- Harvesting ---#
 	h_fgs = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
 	
-	pic=wx.StaticBitmap(self)
+	pic=wx.StaticBitmap(self.top_panel)
 	pic.SetBitmap(icons.harvest.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
-	text = wx.StaticText(self, -1, 'Harvest')
+	text = wx.StaticText(self.top_panel, -1, 'Harvest')
 	font = wx.Font(9, wx.SWISS, wx.NORMAL, wx.BOLD)
 	text.SetFont(font)
 	h_titleSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -457,40 +468,52 @@ class VesselSelectionPopup(wx.Dialog):
 	h_titleSizer.Add(text, 0)	
 	h_titleSizer.Add((-1,5))
         # Cell Line 
-	self.h_cell_line = wx.TextCtrl(self, -1, value=self.cell_line, style=wx.TE_PROCESS_ENTER) 
+	self.h_cell_line = wx.TextCtrl(self.top_panel, -1, value=self.cell_line, style=wx.TE_PROCESS_ENTER) 
 	self.h_cell_line.Disable()
-	h_fgs.Add(wx.StaticText(self, -1, 'Cell Line'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	h_fgs.Add(wx.StaticText(self.top_panel, -1, 'Cell Line'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	h_fgs.Add(self.h_cell_line, 0, wx.EXPAND)
-	h_fgs.Add(wx.StaticText(self, -1, ''), 0)
+	h_fgs.Add(wx.StaticText(self.top_panel, -1, ''), 0)
 	# Density - value
 	harvestdensity = meta.get_field('Transfer|Seed|SeedingDensity|%s'%self.sample_inst, [])
-	self.h_cell_density = wx.lib.masked.NumCtrl(self, size=(20,-1), style=wx.TE_PROCESS_ENTER)
+	self.h_cell_density = wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)
 	if len(harvestdensity) > 0:
 	    self.h_cell_density.SetValue(harvestdensity[0])		
 	unit_choices =['nM2', 'uM2', 'mM2','Other']	
-	self.h_cell_dunit = wx.ListBox(self, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
+	self.h_cell_dunit = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
 	if len(harvestdensity) > 1:
 	    self.h_cell_dunit.SetStringSelection(harvestdensity[1])
 	h_fgs.Add(wx.StaticText(self, -1, 'Density'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	h_fgs.Add(self.h_cell_density, 0, wx.EXPAND)	
 	h_fgs.Add(self.h_cell_dunit, 0, wx.EXPAND)
-	# Medium
-	self.h_medium = wx.TextCtrl(self, -1, value=meta.get_field('Transfer|Seed|MediumAddatives|%s'%self.sample_inst, default=''), style=wx.TE_PROCESS_ENTER|wx.TE_MULTILINE) 
-	h_fgs.Add(wx.StaticText(self, -1, 'Medium Additives'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	h_fgs.Add(self.h_medium, 0, wx.EXPAND)
-	h_fgs.Add(wx.StaticText(self, -1, ''), 0) 	
+	## Medium
+	#self.h_medium = wx.TextCtrl(self.top_panel, -1, value=meta.get_field('Transfer|Seed|MediumAddatives|%s'%self.sample_inst, default=''), style=wx.TE_PROCESS_ENTER|wx.TE_MULTILINE) 
+	#h_fgs.Add(wx.StaticText(self.top_panel, -1, 'Medium Additives'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	#h_fgs.Add(self.h_medium, 0, wx.EXPAND)
+	#h_fgs.Add(wx.StaticText(self.top_panel, -1, ''), 0) 
+	# Process
+	staticbox = wx.StaticBox(self.top_panel, -1, "Procedure")
+	proceduresizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
+	COLUMN_DETAILS = OrderedDict([('Name', ['TextCtrl',50, -1, '']),
+                                      ('Description', ['TextCtrl', 100, -1, '']),
+                                      ('Duration\n(Min)', ['TextCtrl', 30, -1, '']),
+                                      ('Temp\n(C)', ['TextCtrl', 30, -1, '']),
+	                              ('Tips', ['TextCtrl', 50, -1, ''])
+                                    ])		
+	self.procedure = RowBuilder(self.top_panel, 'Transfer|Harvest|%s'%self.sample_inst, 'Step', COLUMN_DETAILS)
+	proceduresizer.Add(self.procedure, 0, wx.ALL, 5)	
 	
 	hSizer = wx.BoxSizer(wx.VERTICAL)
 	hSizer.Add(h_titleSizer)
 	hSizer.AddSpacer((-1,10))
 	hSizer.Add(h_fgs)
+	hSizer.Add(proceduresizer)
 	
 	#------- Seeding ---#
 	s_fgs = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
 	
-	pic=wx.StaticBitmap(self)
+	pic=wx.StaticBitmap(self.top_panel)
 	pic.SetBitmap(icons.seed.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
-	text = wx.StaticText(self, -1, 'Seed')
+	text = wx.StaticText(self.top_panel, -1, 'Seed')
 	font = wx.Font(9, wx.SWISS, wx.NORMAL, wx.BOLD)
 	text.SetFont(font)
 	s_titleSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -499,27 +522,27 @@ class VesselSelectionPopup(wx.Dialog):
 	s_titleSizer.Add(text, 0)	
 	s_titleSizer.Add((-1,5))
 	# Cell Line 
-	self.s_cell_line = wx.TextCtrl(self, -1, value=self.cell_line, style=wx.TE_PROCESS_ENTER) 
+	self.s_cell_line = wx.TextCtrl(self.top_panel, -1, value=self.cell_line, style=wx.TE_PROCESS_ENTER) 
 	self.s_cell_line.Disable()
-	s_fgs.Add(wx.StaticText(self, -1, 'Cell Line'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	s_fgs.Add(wx.StaticText(self.top_panel, -1, 'Cell Line'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	s_fgs.Add(self.s_cell_line, 0, wx.EXPAND)
-	s_fgs.Add(wx.StaticText(self, -1, ''), 0)
+	s_fgs.Add(wx.StaticText(self.top_panel, -1, ''), 0)
 	# Density - value
 	seeddensity = meta.get_field('Transfer|Seed|SeedingDensity|%s'%self.sample_inst, [])
-	self.s_cell_density = wx.lib.masked.NumCtrl(self, size=(20,-1), style=wx.TE_PROCESS_ENTER)
+	self.s_cell_density = wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)
 	if len(seeddensity) > 0:
 	    self.s_cell_density.SetValue(seeddensity[0])			
-	self.s_cell_dunit = wx.ListBox(self, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
+	self.s_cell_dunit = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
 	if len(seeddensity) > 1:
 	    self.s_cell_dunit.SetStringSelection(seeddensity[1])
-	s_fgs.Add(wx.StaticText(self, -1, 'Density'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	s_fgs.Add(wx.StaticText(self.top_panel, -1, 'Density'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	s_fgs.Add(self.s_cell_density, 0, wx.EXPAND)	
 	s_fgs.Add(self.s_cell_dunit, 0, wx.EXPAND)	
 	# Medium
-	self.s_medium = wx.TextCtrl(self, -1, value=meta.get_field('Transfer|Seed|MediumAddatives|%s'%self.sample_inst, default=''), style=wx.TE_PROCESS_ENTER|wx.TE_MULTILINE) 
-	s_fgs.Add(wx.StaticText(self, -1, 'Medium Additives'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.s_medium = wx.TextCtrl(self.top_panel, -1, value=meta.get_field('Transfer|Seed|MediumAddatives|%s'%self.sample_inst, default=''), style=wx.TE_PROCESS_ENTER|wx.TE_MULTILINE) 
+	s_fgs.Add(wx.StaticText(self.top_panel, -1, 'Medium Additives'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	s_fgs.Add(self.s_medium, 0, wx.EXPAND)
-	s_fgs.Add(wx.StaticText(self, -1, ''), 0)   
+	s_fgs.Add(wx.StaticText(self.top_panel, -1, ''), 0)   
 	
 	sSizer = wx.BoxSizer(wx.VERTICAL)
 	sSizer.Add(s_titleSizer)
@@ -527,19 +550,16 @@ class VesselSelectionPopup(wx.Dialog):
 	sSizer.Add(s_fgs)	
 	
 	infoSizer = wx.BoxSizer(wx.HORIZONTAL)
-	infoSizer.AddSpacer((10,-1))
-	infoSizer.Add(hSizer)
-	infoSizer.AddSpacer((50,-1))
-	infoSizer.Add(sSizer)
+	infoSizer.Add(hSizer, 1, wx.ALL|wx.EXPAND, 10)
+	infoSizer.Add(sSizer, 1, wx.ALL|wx.EXPAND, 10)
                
         
         # VESSEL Panel 
-        label = wx.StaticText(self, -1, 'Select Destination Vessel(s)')
+        label = wx.StaticText(self.bot_panel, -1, 'Select Destination Vessel(s)')
         font = wx.Font(12, wx.SWISS, wx.NORMAL, wx.NORMAL)
         label.SetFont(font)
-        self.vpanel = VesselScroller(self)
-        #for plate_id in sorted(PlateDesign.get_plate_ids(), key=lambda x: int(re.findall(r'\d+$', x)[0])):
-	for plate_id in sorted(PlateDesign.get_plate_ids()):
+        self.vpanel = VesselScroller(self.bot_panel)
+	for plate_id in sorted(PlateDesign.get_plate_ids(), key=meta.alphanumeric_sort):
             self.vpanel.add_vessel_panel(
                 VesselPanel(self.vpanel, plate_id),
                 plate_id)
@@ -551,19 +571,23 @@ class VesselSelectionPopup(wx.Dialog):
         button_sizer.Add(self.done)
         button_sizer.AddSpacer((10,-1))
         button_sizer.Add(self.cancel)
-        
-        self.Sizer = wx.BoxSizer(wx.VERTICAL)
-	self.Sizer.Add(infoSizer, 0, wx.EXPAND|wx.TOP, 10)
-	self.Sizer.AddSpacer((5,-1))
-	self.Sizer.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.ALL, 5)
-        self.Sizer.Add(label, 0, wx.ALL, 20)
-        self.Sizer.Add(self.vpanel, 1, wx.EXPAND|wx.ALL, 10)
-        self.Sizer.Add(button_sizer, 0, wx.EXPAND|wx.RIGHT|wx.BOTTOM, 10)
+	
+	#---------------Layout with sizers---------------		
+	top_sizer = wx.BoxSizer(wx.VERTICAL)
+	top_sizer.Add(infoSizer, 1, wx.EXPAND|wx.ALL, 10)
+	self.top_panel.SetSizer(top_sizer)
+	self.top_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
+	bot_sizer = wx.BoxSizer(wx.VERTICAL)
+	bot_sizer.Add(label, 0, wx.ALL, 20)
+	bot_sizer.Add(self.vpanel, 1, wx.EXPAND|wx.ALL, 10)
+	self.bot_panel.SetSizer(bot_sizer)
+	self.Sizer = wx.BoxSizer(wx.VERTICAL)
+	self.Sizer.Add(self.splitwindow, 1, wx.EXPAND)
+	self.Sizer.Add(button_sizer, 0, wx.EXPAND|wx.ALL, 10)
+	self.SetSizer(self.Sizer)	
                 
     def get_selected_platewell_ids(self):
-        return self.vpanel.get_selected_platewell_ids()
-            
-        
+        return self.vpanel.get_selected_platewell_ids()      
 
         
 if __name__ == "__main__":
