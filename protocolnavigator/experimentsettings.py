@@ -558,7 +558,7 @@ class ExperimentSettings(Singleton):
 			seeding_instances.append(ev.get_welltag())
 			
 	return seeding_instances
-    
+    #----------------------------------------------------------------------
     def get_sampleInstance(self, seed_tag):
 	'''This method returns the stock culutre or sample instance for a given seeding tag Transfer|Seed|Wells|<instance>
 	'''
@@ -568,7 +568,7 @@ class ExperimentSettings(Singleton):
 	    return self.get_field('Transfer|Seed|CellLineInstance|%s'%instance)
 	elif self.global_settings.has_key('Transfer|Seed|HarvestInstance|%s'%instance):
 	    return self.get_field('Transfer|Harvest|CellLineInstance|%s'
-	                          %str(self.get_field('Transfer|Seed|HarvestInstance|%s'%instance)))	
+	                          %str(self.get_field('Transfer|Seed|HarvestInstance|%s'%instance)))  
 	    
     #----------------------------------------------------------------------
     def getStateRGB(self, trackTags):

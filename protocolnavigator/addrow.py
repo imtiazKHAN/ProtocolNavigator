@@ -38,9 +38,10 @@ class RowBuilder(wx.Panel):
 	    self.fgs.Add(header, 0, wx.ALIGN_CENTRE)
 	self.fgs.Add(wx.StaticText(self, -1, ''))
 	self.fgs.Add(wx.StaticText(self, -1, ''))
-	#-- Number of row --#
+    
 	rows = meta.get_Row_Numbers(self.protocol, self.token)
-	if rows:
+	    
+	if rows:  # fill with previously encoded info about the row
 	    for row in rows:
 		rowNo = int(row.split(self.token)[1])
 		rowTAG = self.tag_stump+'|%s|%s' %(row, self.instance)

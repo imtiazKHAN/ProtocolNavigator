@@ -6,7 +6,7 @@ import icons
 import metadatainput as assay
 import re
 from experimentsettings import *
-from vesselpanel import VesselPanel, VesselScroller, VesselSelectionPopup
+from vesselpanel import VesselPanel, VesselScroller
 from lineagepanel import TimelinePanel
 from temporaltaglist import TemporalTagListCtrl
 from notepad import NotePad
