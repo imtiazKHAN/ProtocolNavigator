@@ -111,23 +111,32 @@ class VesselPanel(wx.Panel):
 	# TO DO: only take the last seeding cell line instance, however if it is co-culture (with multiple cell line seeded in different time points
         # then we need to think of multiple cell line specific GUI for a given well
         sample_inst = str(sample_instances.pop())
-	cell_line = meta.get_field('Sample|CellLine|Name|%s'%meta.get_field('Transfer|Seed|CellLineInstance|%s'%sample_inst))
-        new_h_inst = meta.get_new_protocol_id('Transfer|Harvest')	    
-        new_s_inst = meta.get_new_protocol_id('Transfer|Seed|HarvestInstance')	
-	# ************** TO DO *************
+	cell_line = meta.get_cellLine_Name(sample_inst, 'S')
+	self.token = 'Step'
+        new_h_inst = meta.get_new_protocol_id('Transfer|Harvest')
+	prev_h_inst = str(int(new_h_inst)-1)
+        new_s_inst = meta.get_new_protocol_id('Transfer|Seed')
+	prev_s_inst = meta.last_seed_instance(new_s_inst)
 	# if previous instance ( h & s ) exists and has the same sample (cell line) then copy all attributes to new instances 
-	if int(new_h_inst) > 1:
-	    prev_h_inst = str(int(new_h_inst)-1)
-	    #*** check the cell line is same for pervious instance
-	    #*** if so then copy 
-	#else:
-	    #prev_h_inst = new_h_inst
-	#if int(new_s_inst) > 1:
-	    #prev_s_inst = str(int(new_s_inst)-1)	
-	#else:
-	    #prev_s_inst = new_s_inst	
-	    
-	
+	meta.set_field('Transfer|Harvest|CellLineInstance|%s'%new_h_inst, sample_inst)
+	meta.set_field('Transfer|Harvest|HarvestingDensity|%s'%new_h_inst, meta.get_field('Transfer|Harvest|HarvestingDensity|%s'%prev_h_inst,[]))
+	h_rows = meta.get_Row_Numbers('Transfer|Harvest|%s'%prev_h_inst, self.token)			
+	if h_rows:  # fill with previously encoded info about the row
+	    for row in h_rows:
+		rowNo = int(row.split(self.token)[1])
+		rowTAG = 'Transfer|Harvest|%s|%s' %(row, prev_h_inst)  
+		meta.set_field('Transfer|Harvest|%s|%s' %(row, new_h_inst), meta.get_field(rowTAG))
+		    
+	meta.set_field('Transfer|Seed|HarvestInstance|%s'%new_s_inst, new_h_inst)
+	meta.set_field('Transfer|Seed|SeedingDensity|%s'%new_s_inst, meta.get_field('Transfer|Seed|SeedingDensity|%s'%prev_s_inst,[]))
+	s_rows = meta.get_Row_Numbers('Transfer|Seed|%s'%prev_s_inst, self.token)			    
+	if s_rows:  # fill with previously encoded info about the row
+	    for row in s_rows:
+		rowNo = int(row.split(self.token)[1])
+		rowTAG = 'Transfer|Seed|%s|%s' %(row, prev_s_inst)
+		row_info =  meta.get_field(rowTAG)	  
+		meta.set_field('Transfer|Seed|%s|%s' %(row, new_s_inst), row_info)		
+    
 	
         #establish connection with the Bench panel
         try:
@@ -138,58 +147,45 @@ class VesselPanel(wx.Panel):
     # get the timepoint this harvest event being occuring
     # pop up the dialog to show the available wells to be transferred, including the own, and highlight/disable origin well  
     # All attributes of previous instance are copied to the new instance so that users need to rewrite the attribute values.
-        dlg = SampleTransferDialog(self, cell_line, new_h_inst, new_s_inst, VesselPanel, VesselScroller, PlateDesign)
-	
+        dlg = SampleTransferDialog(self, cell_line, new_h_inst, new_s_inst, self.token, VesselPanel, VesselScroller, PlateDesign)
 	#if Cancel button clicked then DEL all SET fields for the new instance related attributes from the buffer
-	if dlg.ShowModal() == wx.ID_OK: 
-	    print 'i am ready'
-	    # Check whether destination vessel beign selected
-	    
+	if dlg.ShowModal() == wx.ID_OK: 	    
+	    destination_wells = dlg.get_selected_platewell_ids()
+	    if not destination_wells:
+		self.remove_HS_TAGS(new_h_inst, new_s_inst)		
+		dlg = wx.MessageDialog(None, 'No destination vessel was selected', 'Seeding...', wx.OK| wx.ICON_ERROR)
+		dlg.ShowModal()
+		return		
+	    meta.set_field('Transfer|Harvest|Wells|%s|%s'%(new_h_inst, bench.get_selected_timepoint()), [harvest_from_well])
+	    meta.set_field('Transfer|Seed|Wells|%s|%s'%(new_s_inst, bench.get_selected_timepoint() + 1), destination_wells) # For now all reseeding instances are set 1 minute after harvesting
+	    bench.update_well_selections()
+	else:
+	    self.remove_HS_TAGS(new_h_inst, new_s_inst)
+	    return
+	#else:
+	    #self.vesselscroller.get_vessel(platewell_id[0]).deselect_well_id(platewell_id)
+	    ##remove all set fields********
+	    #return	    
 	
-	    
-    
-        #dlg = VesselSelectionPopup(self, sample_inst, cell_line)
-	#if dlg.ShowModal() == wx.ID_CANCEL:
-	    ##remove all tags from the metadata
-	    #protocol = 'Transfer|Seed|%s'%new_harvest_inst
-	    #token = 'Step'
-	    #rows = meta.get_Row_Numbers(protocol, token)
-	    #if rows:
-		#self.remove_RowTAGs(rows, protocol, token)
-    
-	    ## REMOVE OTHER FIELDS....
-        #if dlg.ShowModal() == wx.ID_OK:           
-            #destination_wells = dlg.get_selected_platewell_ids()
-	    #if not destination_wells:
-		##remove all tags from the metadata
-		#dlg = wx.MessageDialog(None, 'No destination vessel was selected', 'Seeding...', wx.OK| wx.ICON_ERROR)
-		#dlg.ShowModal()
-		#return		
-	    
-	    #meta.set_field('Transfer|Harvest|CellLineInstance|%s'%new_harvest_inst, sample_inst)
-	    #meta.set_field('Transfer|Harvest|HarvestingDensity|%s'%new_harvest_inst, [dlg.h_cell_density.GetValue(), dlg.h_cell_dunit.GetStringSelection()])
-	    ##meta.set_field('Transfer|Harvest|MediumAddatives|%s'%new_harvest_inst, dlg.h_medium.GetValue())
-	    #meta.set_field('Transfer|Harvest|Wells|%s|%s'%(new_harvest_inst, bench.get_selected_timepoint()), [harvest_from_well])
-	    
-	    #meta.set_field('Transfer|Seed|HarvestInstance|%s'%new_seed_inst, new_harvest_inst)
-	    #meta.set_field('Transfer|Seed|SeedingDensity|%s'%new_seed_inst, [dlg.s_cell_density.GetValue(), dlg.s_cell_dunit.GetStringSelection()])
-	    ##meta.set_field('Transfer|Seed|MediumAddatives|%s'%new_seed_inst,dlg.s_medium.GetValue())	    
-            #meta.set_field('Transfer|Seed|Wells|%s|%s'%
-                           #(new_seed_inst, bench.get_selected_timepoint() + 1), # For now all reseeding instances are set 1 minute after harvesting
-                           #destination_wells)
-	    #bench.update_well_selections()
-        #else:
-            #self.vesselscroller.get_vessel(platewell_id[0]).deselect_well_id(platewell_id)
-            #return
         
-     
-    def remove_RowTAGs(self, rows, protocol, token):
-	tag_stump = get_tag_stump(protocol, 2)
-	instance = get_tag_attribute(protocol)
-	for row in rows:
-	    rowNo = int(row.split(token)[1])
-	    rowTAG = tag_stump+'|%s|%s' %(row, instance)
-	    meta.remove_field(tag_stump+'|%s|%s' %(row, instance), notify_subscribers =False)
+    def remove_HS_TAGS(self, h_inst, s_inst):
+	#remove all tags from the metadata
+	h_attrs = meta.get_attribute_list_by_instance('Transfer|Harvest', h_inst)
+	if h_attrs:
+	    for h_attr in h_attrs:
+		meta.remove_field('Transfer|Harvest|%s|%s'%(h_attr, h_inst), notify_subscribers =False)
+	s_attrs = meta.get_attribute_list_by_instance('Transfer|Seed', s_inst)
+	if s_attrs:
+	    for s_attr in s_attrs:
+		meta.remove_field('Transfer|Seed|%s|%s'%(s_attr, s_inst), notify_subscribers =False)	
+	
+    #def remove_RowTAGs(self, rows, protocol, token):
+	#tag_stump = get_tag_stump(protocol, 2)
+	#instance = get_tag_attribute(protocol)
+	#for row in rows:
+	    #rowNo = int(row.split(token)[1])
+	    #rowTAG = tag_stump+'|%s|%s' %(row, instance)
+	    #meta.remove_field(tag_stump+'|%s|%s' %(row, instance), notify_subscribers =False)
 
     def get_plate_id(self):
         return self.vessel.vessel_id  

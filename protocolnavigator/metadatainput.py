@@ -3480,14 +3480,16 @@ class CellSeedPanel(wx.Panel):
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)		
 	
 	# Process
-	staticbox = wx.StaticBox(self.sw, -1, "Additives")
+	self.token = 'Step'
+	staticbox = wx.StaticBox(self.sw, -1, self.token)
 	proceduresizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
-	COLUMN_DETAILS = OrderedDict([('Name', ['TextCtrl', 100, -1, '']),
-	                              ('Conc.', ['TextCtrl', 50, -1, '']),
-	                              ('Duration\n(Min)', ['TextCtrl', 30, -1, '']),
-	                              ('Temp\n(C)', ['TextCtrl', 30, -1, ''])
-                                    ])		
-	self.procedure = RowBuilder(self.sw, self.protocol, 'Additive', COLUMN_DETAILS)
+	COLUMN_DETAILS = OrderedDict([('Name', ['TextCtrl',50, -1, '']),
+		                              ('Description', ['TextCtrl', 100, -1, '']),
+		                              ('Duration\n(Min)', ['TextCtrl', 30, -1, '']),
+		                              ('Temp\n(C)', ['TextCtrl', 30, -1, '']),
+		                              ('Tips', ['TextCtrl', 50, -1, ''])
+		                            ])				
+	self.procedure = RowBuilder(self.sw, self.protocol, self.token, COLUMN_DETAILS)
 	self.procedure.Disable()
 	proceduresizer.Add(self.procedure, 0, wx.ALL, 5)	
 	
@@ -3499,7 +3501,7 @@ class CellSeedPanel(wx.Panel):
 	showInstBut = wx.Button(self.sw, -1, 'Show Choices', (100,100))
 	showInstBut.Bind (wx.EVT_BUTTON, self.ShowInstrumentInstances)	
 	if meta.get_field(self.selectinstTAG) is not None: # seeded from the stock flask
-	    self.settings_controls[self.selectinstTAG].SetValue(meta.get_field(self.celllineTAG+'|Name|%s'%meta.get_field(self.selectinstTAG)))
+	    self.settings_controls[self.selectinstTAG].SetValue(meta.get_cellLine_Name(self.tab_number, 'S'))
 	    pic=wx.StaticBitmap(self.sw)
 	    pic.SetBitmap(icons.stock.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
 	    titlesizer.Add(pic)
@@ -3508,7 +3510,7 @@ class CellSeedPanel(wx.Panel):
 	    showInstBut.Enable()
 	    self.procedure.Enable()
 	elif meta.get_field(self.tag_stump+'|HarvestInstance|'+str(self.tab_number)) is not None:  # harvest-seed action
-	    self.settings_controls[self.selectinstTAG].SetValue(meta.get_field(self.celllineTAG+'|Name|%s'%meta.get_field('Transfer|Harvest|CellLineInstance|%s'%meta.get_field(self.tag_stump+'|HarvestInstance|'+str(self.tab_number)))))
+	    self.settings_controls[self.selectinstTAG].SetValue(meta.get_cellLine_Name(str(self.tab_number), 'HS'))
 	    pic=wx.StaticBitmap(self.sw)
 	    pic.SetBitmap(icons.seed.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
 	    titlesizer.Add(pic)

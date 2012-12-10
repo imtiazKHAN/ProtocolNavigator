@@ -10,19 +10,18 @@ meta = ExperimentSettings.getInstance()
 ########       Popup Dialog showing sample transfer activity        ####
 ########################################################################            
 class SampleTransferDialog(wx.Dialog):
-    def __init__(self, parent, cell_line, h_inst, s_inst,  vesselpanel, vesselScroller, platedesign):
-	wx.Dialog.__init__(self, parent, -1, size=(650,500), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+    def __init__(self, parent, cell_line, h_inst, s_inst,  token, vesselpanel, vesselScroller, platedesign):
+	wx.Dialog.__init__(self, parent, -1, size=(750,550), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
 	
 	self.settings_controls = {}
 	
 	self.cell_line = cell_line
 	self.h_inst = h_inst
-	self.s_inst = s_inst	
+	self.s_inst = s_inst
+	self.token = token
 	self.vesselpanel = vesselpanel
 	self.vesselScroller = vesselScroller
 	self.platedesign = platedesign
-	
-	# ****** initiates the ctrls like metadata panel with self.settings_controls  ***********
 	
 	self.splitwindow = wx.SplitterWindow(self)
 	self.top_panel = wx.ScrolledWindow(self.splitwindow)
@@ -30,6 +29,13 @@ class SampleTransferDialog(wx.Dialog):
 	
 	self.splitwindow.SplitHorizontally(self.top_panel, self.bot_panel)
 	self.splitwindow.SetSashGravity(0.3)	
+	
+	COLUMN_DETAILS = OrderedDict([('Name', ['TextCtrl',50, -1, '']),
+		                              ('Description', ['TextCtrl', 100, -1, '']),
+		                              ('Duration\n(Min)', ['TextCtrl', 30, -1, '']),
+		                              ('Temp\n(C)', ['TextCtrl', 30, -1, '']),
+		                              ('Tips', ['TextCtrl', 50, -1, ''])
+		                            ])		
 	
 	#------- Harvesting ---#
 	h_fgs = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
@@ -52,35 +58,30 @@ class SampleTransferDialog(wx.Dialog):
 	h_fgs.Add(wx.StaticText(self.top_panel, -1, ''), 0)
 	# Density - value
 	hdensityTAG = 'Transfer|Harvest|HarvestingDensity|%s'%self.h_inst
-	
 	harvestdensity = meta.get_field(hdensityTAG, [])
-	self.h_cell_density = wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[hdensityTAG+'|0'] = wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)
 	if len(harvestdensity) > 0:
-	    self.h_cell_density.SetValue(harvestdensity[0])		
+	    self.settings_controls[hdensityTAG+'|0'].SetValue(harvestdensity[0])		
+	self.settings_controls[hdensityTAG+'|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
 	unit_choices =['nM2', 'uM2', 'mM2','Other']	
-	self.h_cell_dunit = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
+	self.settings_controls[hdensityTAG+'|1'] = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
 	if len(harvestdensity) > 1:
-	    self.h_cell_dunit.SetStringSelection(harvestdensity[1])
-	h_fgs.Add(wx.StaticText(self, -1, 'Density'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	h_fgs.Add(self.h_cell_density, 0, wx.EXPAND)	
-	h_fgs.Add(self.h_cell_dunit, 0, wx.EXPAND)
+	    self.settings_controls[hdensityTAG+'|1'].SetStringSelection(harvestdensity[1])
+	self.settings_controls[hdensityTAG+'|1'].Bind(wx.EVT_LISTBOX, self.OnSavingData)
+	h_fgs.Add(wx.StaticText(self.top_panel, -1, 'Density'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	h_fgs.Add(self.settings_controls[hdensityTAG+'|0'], 0, wx.EXPAND)	
+	h_fgs.Add(self.settings_controls[hdensityTAG+'|1'], 0, wx.EXPAND)
 	# Process
 	staticbox = wx.StaticBox(self.top_panel, -1, "Procedure")
-	proceduresizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
-	COLUMN_DETAILS = OrderedDict([('Name', ['TextCtrl',50, -1, '']),
-                                      ('Description', ['TextCtrl', 100, -1, '']),
-                                      ('Duration\n(Min)', ['TextCtrl', 30, -1, '']),
-                                      ('Temp\n(C)', ['TextCtrl', 30, -1, '']),
-                                      ('Tips', ['TextCtrl', 50, -1, ''])
-                                    ])		
-	self.procedure = RowBuilder(self.top_panel, 'Transfer|Harvest|%s'%self.sample_inst, 'Step', COLUMN_DETAILS)
-	proceduresizer.Add(self.procedure, 0, wx.ALL, 5)	
+	h_proceduresizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)	
+	h_procedure = RowBuilder(self.top_panel, 'Transfer|Harvest|%s'%self.h_inst, self.token, COLUMN_DETAILS)
+	h_proceduresizer.Add(h_procedure, 0, wx.ALL, 5)	
 	
 	hSizer = wx.BoxSizer(wx.VERTICAL)
 	hSizer.Add(h_titleSizer)
 	hSizer.AddSpacer((-1,10))
 	hSizer.Add(h_fgs)
-	hSizer.Add(proceduresizer)
+	hSizer.Add(h_proceduresizer)
 	
 	#------- Seeding ---#
 	s_fgs = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
@@ -102,33 +103,31 @@ class SampleTransferDialog(wx.Dialog):
 	s_fgs.Add(self.s_cell_line, 0, wx.EXPAND)
 	s_fgs.Add(wx.StaticText(self.top_panel, -1, ''), 0)
 	# Density - value
-	seeddensity = meta.get_field('Transfer|Seed|SeedingDensity|%s'%self.sample_inst, [])
-	self.s_cell_density = wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)
+	seeddensityTAG = 'Transfer|Seed|SeedingDensity|%s'%self.s_inst
+	seeddensity = meta.get_field(seeddensityTAG, [])
+	self.settings_controls[seeddensityTAG+'|0'] = wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)
 	if len(seeddensity) > 0:
-	    self.s_cell_density.SetValue(seeddensity[0])			
-	self.s_cell_dunit = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
+	    self.settings_controls[seeddensityTAG+'|0'].SetValue(seeddensity[0])	
+	self.settings_controls[seeddensityTAG+'|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
+	unit_choices =['nM2', 'uM2', 'mM2','Other']
+	self.settings_controls[seeddensityTAG+'|1'] = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
 	if len(seeddensity) > 1:
-	    self.s_cell_dunit.SetStringSelection(seeddensity[1])
+	    self.settings_controls[seeddensityTAG+'|1'].SetStringSelection(seeddensity[1])
+	self.settings_controls[seeddensityTAG+'|1'].Bind(wx.EVT_LISTBOX, self.OnSavingData)
 	s_fgs.Add(wx.StaticText(self.top_panel, -1, 'Density'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	s_fgs.Add(self.s_cell_density, 0, wx.EXPAND)	
-	s_fgs.Add(self.s_cell_dunit, 0, wx.EXPAND)	
+	s_fgs.Add(self.settings_controls[seeddensityTAG+'|0'], 0, wx.EXPAND)	
+	s_fgs.Add(self.settings_controls[seeddensityTAG+'|1'], 0, wx.EXPAND)	
 	# Process
 	staticbox = wx.StaticBox(self.top_panel, -1, "Procedure")
-	proceduresizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
-	COLUMN_DETAILS = OrderedDict([('Name', ['TextCtrl',50, -1, '']),
-                                      ('Description', ['TextCtrl', 100, -1, '']),
-                                      ('Duration\n(Min)', ['TextCtrl', 30, -1, '']),
-                                      ('Temp\n(C)', ['TextCtrl', 30, -1, '']),
-                                      ('Tips', ['TextCtrl', 50, -1, ''])
-                                    ])		
-	self.procedure = RowBuilder(self.top_panel, 'Transfer|Seed|%s'%self.sample_inst, 'Step', COLUMN_DETAILS)
-	proceduresizer.Add(self.procedure, 0, wx.ALL, 5)   
+	s_proceduresizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)	
+	s_procedure = RowBuilder(self.top_panel, 'Transfer|Seed|%s'%self.s_inst, self.token, COLUMN_DETAILS)
+	s_proceduresizer.Add(s_procedure, 0, wx.ALL, 5)   
 	
 	sSizer = wx.BoxSizer(wx.VERTICAL)
 	sSizer.Add(s_titleSizer)
 	sSizer.AddSpacer((-1,10))
 	sSizer.Add(s_fgs)
-	sSizer.Add(proceduresizer)
+	sSizer.Add(s_proceduresizer)
 	
 	infoSizer = wx.BoxSizer(wx.HORIZONTAL)
 	infoSizer.Add(hSizer, 1, wx.ALL|wx.EXPAND, 10)
@@ -168,4 +167,9 @@ class SampleTransferDialog(wx.Dialog):
 	self.SetSizer(self.Sizer)	
 		
     def get_selected_platewell_ids(self):
-	return self.vpanel.get_selected_platewell_ids()          
+	return self.vpanel.get_selected_platewell_ids()     
+    
+    def OnSavingData(self, event):
+	ctrl = event.GetEventObject()
+	tag = [t for t, c in self.settings_controls.items() if c==ctrl][0]
+	meta.saveData(ctrl, tag, self.settings_controls)    

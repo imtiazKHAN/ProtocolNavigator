@@ -683,8 +683,29 @@ class ExperimentSettings(Singleton):
 	"""sort alphanumeric strings in a list e.g. [Plate1, Plate11, Tube2]"""
 	re_natural = re.compile('[0-9]+|[^0-9]+')
 	return [(1, int(c)) if c.isdigit() else (0, c.lower()) for c in re_natural.findall(lst)] + [lst] 	
+    #----------------------------------------------------------------------
+    def last_seed_instance(self, instance):
+	"""finds the last seeding instance that is associated with a harvest instance"""
+	for inst in list(reversed(range(int(instance)))):
+	    if 'Transfer|Seed|HarvestInstance|%s'%str(inst) is not None:
+		return str(inst)
+	    
+    #----------------------------------------------------------------------
+    def get_cellLine_Name(self, inst, mode):
+	"""returns cell Line name given the seeding/harvesting (mode) instance that is realted with a harvest instance
+	   if mode is None, it refers to Harvest_Seed type of seeding instance"""
+	if mode is 'H':
+	    return self.get_field('Sample|CellLine|Name|%s'
+                        %str(self.get_field('Transfer|Harvest|CellLineInstance|%s'%str(inst))))
+	if mode is 'S':
+	    return self.get_field('Sample|CellLine|Name|%s'
+                        %str(self.get_field('Transfer|Seed|CellLineInstance|%s'%str(inst))))
+	if mode is 'HS':
+	    return self.get_field('Sample|CellLine|Name|%s'
+                        %str(self.get_field('Transfer|Harvest|CellLineInstance|%s'
+                        %str(self.get_field('Transfer|Seed|HarvestInstance|%s'
+                        %str(inst))))))
 	
-        
 	    
 EVENT_RGB ={
     'Seed': (255,255,0,100),
