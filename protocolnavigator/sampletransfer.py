@@ -22,6 +22,7 @@ class SampleTransferDialog(wx.Dialog):
 	self.vesselpanel = vesselpanel
 	self.vesselScroller = vesselScroller
 	self.platedesign = platedesign
+	self.mandatory_tags = []
 	
 	self.splitwindow = wx.SplitterWindow(self)
 	self.top_panel = wx.ScrolledWindow(self.splitwindow)
@@ -74,7 +75,7 @@ class SampleTransferDialog(wx.Dialog):
 	# Process
 	staticbox = wx.StaticBox(self.top_panel, -1, "Procedure")
 	h_proceduresizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)	
-	h_procedure = RowBuilder(self.top_panel, 'Transfer|Harvest|%s'%self.h_inst, self.token, COLUMN_DETAILS)
+	h_procedure = RowBuilder(self.top_panel, 'Transfer|Harvest|%s'%self.h_inst, self.token, COLUMN_DETAILS, self.mandatory_tags)
 	h_proceduresizer.Add(h_procedure, 0, wx.ALL, 5)	
 	
 	hSizer = wx.BoxSizer(wx.VERTICAL)
@@ -120,7 +121,7 @@ class SampleTransferDialog(wx.Dialog):
 	# Process
 	staticbox = wx.StaticBox(self.top_panel, -1, "Procedure")
 	s_proceduresizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)	
-	s_procedure = RowBuilder(self.top_panel, 'Transfer|Seed|%s'%self.s_inst, self.token, COLUMN_DETAILS)
+	s_procedure = RowBuilder(self.top_panel, 'Transfer|Seed|%s'%self.s_inst, self.token, COLUMN_DETAILS, self.mandatory_tags)
 	s_proceduresizer.Add(s_procedure, 0, wx.ALL, 5)   
 	
 	sSizer = wx.BoxSizer(wx.VERTICAL)

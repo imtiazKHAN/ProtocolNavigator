@@ -529,19 +529,24 @@ class ExperimentSettings(Singleton):
 		info.append('')
 	    for st in subtags:
 		if isinstance(settings_controls[st], wx.Choice) or isinstance(settings_controls[st], wx.ListBox):
-		    info[int(st.split('|')[4])]=settings_controls[st].GetStringSelection()		
+		    info[int(st.split('|')[4])]=settings_controls[st].GetStringSelection()	
+		    settings_controls[st].SetToolTipString(settings_controls[st].GetStringSelection())
 		else:
-		    info[int(st.split('|')[4])]=settings_controls[st].GetValue()	
+		    info[int(st.split('|')[4])]=settings_controls[st].GetValue()
+		    settings_controls[st].SetToolTipString(settings_controls[st].GetValue())
 	    self.set_field(get_tag_stump(tag, 4), info)  # get the core tag like AddProcess|Spin|Step|<instance> = [duration, description, temp]
 	else:
 	    if isinstance(ctrl, wx.Choice) or isinstance(ctrl, wx.ListBox):
 		self.set_field(tag, ctrl.GetStringSelection())
+		ctrl.SetToolTipString(ctrl.GetStringSelection())
+		
 	    elif isinstance(ctrl, wx.DatePickerCtrl):
 		date = ctrl.GetValue()
 		self.set_field(tag, '%02d/%02d/%4d'%(date.Day, date.Month+1, date.Year))
 	    else:
 		user_input = ctrl.GetValue()
 		self.set_field(tag, user_input)	
+		ctrl.SetToolTipString(ctrl.GetValue())
 	    
     def get_seeded_sample(self, platewell_id):
 	'''this method returns sample or cell line information for the selected well

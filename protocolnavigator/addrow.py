@@ -11,18 +11,19 @@ class RowBuilder(wx.Panel):
     '''Panel that shows the rows or components which can be added or deleted as required 
     '''
     # panel, 'AddProcess|Rheometer|1', 'Gas', [ColumnHeader, [CtrlType, w, h, value/choices]]
-    def __init__(self, parent, protocol, token, col_details, **kwargs):
+    def __init__(self, parent, protocol, token, col_details, mandatory_tags, **kwargs):
         wx.Panel.__init__(self, parent, **kwargs)
 	
 	self.protocol = protocol
 	self.token = token
 	self.col_details = col_details
 	self.col_headers = self.col_details.keys()
+	self.mandatory_tags = mandatory_tags
 	
 	self.tag_stump = exp.get_tag_stump(self.protocol, 2)
 	self.instance = exp.get_tag_attribute(self.protocol)
 	self.settings_controls = {}
-
+	
 	self.showRows()
 
 	  
@@ -89,7 +90,7 @@ class RowBuilder(wx.Panel):
 		    self.settings_controls[rowTAG+'|%s'%str(c)] = wx.TextCtrl(self, size=(self.col_details[h][1], self.col_details[h][2]), value=self.col_details[h][3], style=wx.TE_PROCESS_ENTER) 
 		    self.settings_controls[rowTAG+'|%s'%str(c)].SetToolTipString(self.col_details[h][3])
 		if self.col_details[h][0] is 'NumCtrl':
-		    self.settings_controls[rowTAG+'|%s'%str(c)] = wx.lib.masked.NumCtrl(self, size=(self.col_details[h][1], self.col_details[h][2]), value=self.col_details[h][3], style=wx.TE_PROCESS_ENTER) 
+		    self.settings_controls[rowTAG+'|%s'%str(c)] = wx.lib.masked.NumCtrl(self, size=(self.col_details[h][1], self.col_details[h][2]), value=self.col_details[h][3], style=wx.TE_PROCESS_ENTER)  
 		self.settings_controls[rowTAG+'|%s'%str(c)].Bind(wx.EVT_TEXT, self.OnSavingData)
 		self.fgs.Add(self.settings_controls[rowTAG+'|%s'%str(c)], 0, wx.EXPAND|wx.ALL, 5) 		
 	    # Buttons at the end of row
@@ -163,4 +164,5 @@ class RowBuilder(wx.Panel):
     def OnSavingData(self, event):
 	ctrl = event.GetEventObject()
 	tag = [t for t, c in self.settings_controls.items() if c==ctrl][0]
-	meta.saveData(ctrl, tag, self.settings_controls)
+	if meta.checkMandatoryTags(self.mandatory_tags):
+	    meta.saveData(ctrl, tag, self.settings_controls)
