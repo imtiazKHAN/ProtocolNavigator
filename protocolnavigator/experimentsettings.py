@@ -675,14 +675,12 @@ class ExperimentSettings(Singleton):
     #----------------------------------------------------------------------
     def checkMandatoryTags(self, tags):
 	"""Checks whether the mandatory fields/tags being filled"""
-	status = True
 	for tag in tags:
-	    if not self.get_field(tag):
-		status = False		
+	    if not self.get_field(tag):	
 		dial = wx.MessageDialog(None, 'Please fill %s mandatory field' %get_tag_attribute(tag), 'Error', wx.OK | wx.ICON_ERROR)
 		dial.ShowModal()   
 		return
-	return status	
+	return True	
     #----------------------------------------------------------------------
     def alphanumeric_sort(self, lst):
 	"""sort alphanumeric strings in a list e.g. [Plate1, Plate11, Tube2]"""

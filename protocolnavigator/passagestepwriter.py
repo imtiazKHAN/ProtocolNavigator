@@ -39,21 +39,20 @@ class PassageStepBuilder(wx.Dialog):
 	
 	if meta.get_field(self.tag_stump+'|Passage%s|%s' %(str(self.currpassageNo-1), self.instance)) is None:
 	    self.curr_protocol = Default_Protocol
+	    today = datetime.date.today()
+	    self.myDate = wx.DateTimeFromDMY(int(today.day), int(today.month)-1, int(today.year))	    
 	else:
-	    #self.curr_protocol = meta.get_field(self.tag_stump+'|Passage%s|%s' %(str(self.currpassageNo-1), self.instance))
 	    d =  meta.get_field(self.tag_stump+'|Passage%s|%s' %(str(self.currpassageNo-1), self.instance))
 	    for k, v in d:
 		self.curr_protocol[k] = v
-	
-	today = datetime.date.today()
-	self.myDate = '%02d/%02d/%4d'%(today.day, today.month, today.year)
-	
-	self.curr_protocol['ADMIN'][1] = self.myDate   # set todays date as current
-	
+		if k == 'ADMIN':
+		    day, month, year = v[1].split('/')
+		    self.myDate = wx.DateTimeFromDMY(int(day), int(month)-1, int(year))		
+		    
 	self.settings_controls['Admin|0'] = wx.TextCtrl(self.top_panel, size=(70,-1), value=self.curr_protocol['ADMIN'][0])
-	self.settings_controls['Admin|1'] = wx.DatePickerCtrl(self.top_panel, style = wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)	
+	self.settings_controls['Admin|1'] = wx.DatePickerCtrl(self.top_panel, style = wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
+	self.settings_controls['Admin|1'].SetValue(self.myDate)
 	self.settings_controls['Admin|2'] = wx.TextCtrl(self.top_panel, size=(20,-1), value=self.curr_protocol['ADMIN'][2])
-	#self.settings_controls['Admin|3'] = wx.TextCtrl(self.top_panel, size=(20,-1), value=self.curr_protocol['ADMIN'][3])
 	self.settings_controls['Admin|3'] = wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)
 	if isinstance(self.curr_protocol['ADMIN'][3], int): #it had value
 	    self.settings_controls['Admin|3'].SetValue(self.curr_protocol['ADMIN'][3])
@@ -247,7 +246,6 @@ class PassageStepBuilder(wx.Dialog):
 	tag = [t for t, c in self.settings_controls.items() if c==ctrl][0]
 	
 	if tag.startswith('Admin'): # if this is an Admin 
-	    myDate = ''
 	    if isinstance(ctrl, wx.DatePickerCtrl):
 		date = ctrl.GetValue()
 		self.myDate = '%02d/%02d/%4d'%(date.Day, date.Month+1, date.Year)

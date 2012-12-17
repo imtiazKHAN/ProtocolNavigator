@@ -54,9 +54,14 @@ class RowBuilder(wx.Panel):
 			if self.col_details[h][0] is 'TextCtrl':
 			    self.settings_controls[rowTAG+'|%s'%str(c)] = wx.TextCtrl(self, size=(self.col_details[h][1], self.col_details[h][2]), value=row_info[c], style=wx.TE_PROCESS_ENTER) 
 			    self.settings_controls[rowTAG+'|%s'%str(c)].SetToolTipString(row_info[c])
+			    self.settings_controls[rowTAG+'|%s'%str(c)].Bind(wx.EVT_TEXT, self.OnSavingData)
 			if self.col_details[h][0] is 'NumCtrl':
 			    self.settings_controls[rowTAG+'|%s'%str(c)] = wx.lib.masked.NumCtrl(self, size=(self.col_details[h][1], self.col_details[h][2]), value=self.col_details[h][3], style=wx.TE_PROCESS_ENTER) 
-			self.settings_controls[rowTAG+'|%s'%str(c)].Bind(wx.EVT_TEXT, self.OnSavingData)
+			    self.settings_controls[rowTAG+'|%s'%str(c)].Bind(wx.EVT_TEXT, self.OnSavingData)
+			if self.col_details[h][0] is 'ListBox':
+			    self.settings_controls[rowTAG+'|%s'%str(c)] = wx.ListBox(self, size=(self.col_details[h][1], self.col_details[h][2]), choices=self.col_details[h][3], style=wx.LB_SINGLE)			    
+			    self.settings_controls[rowTAG+'|%s'%str(c)].SetStringSelection(row_info[c])
+			    self.settings_controls[rowTAG+'|%s'%str(c)].Bind(wx.EVT_LISTBOX, self.OnSavingData)
 			self.fgs.Add(self.settings_controls[rowTAG+'|%s'%str(c)], 0, wx.EXPAND|wx.ALL, 5) 	
 		    # Button
 		    self.add_btn = wx.Button(self, id=rowNo, label='Add +')
@@ -71,9 +76,13 @@ class RowBuilder(wx.Panel):
 			if self.col_details[h][0] is 'TextCtrl':
 			    self.settings_controls[rowTAG+'|%s'%str(c)] = wx.TextCtrl(self, size=(self.col_details[h][1], self.col_details[h][2]), value=self.col_details[h][3], style=wx.TE_PROCESS_ENTER) 
 			    self.settings_controls[rowTAG+'|%s'%str(c)].SetToolTipString(self.col_details[h][3])
+			    self.settings_controls[rowTAG+'|%s'%str(c)].Bind(wx.EVT_TEXT, self.OnSavingData)
 			if self.col_details[h][0] is 'NumCtrl':
 			    self.settings_controls[rowTAG+'|%s'%str(c)] = wx.lib.masked.NumCtrl(self, size=(self.col_details[h][1], self.col_details[h][2]), value=self.col_details[h][3], style=wx.TE_PROCESS_ENTER) 
-			self.settings_controls[rowTAG+'|%s'%str(c)].Bind(wx.EVT_TEXT, self.OnSavingData)
+			    self.settings_controls[rowTAG+'|%s'%str(c)].Bind(wx.EVT_TEXT, self.OnSavingData)
+			if self.col_details[h][0] is 'ListBox':
+			    self.settings_controls[rowTAG+'|%s'%str(c)] = wx.ListBox(self, size=(self.col_details[h][1], self.col_details[h][2]), choices=self.col_details[h][3], style=wx.LB_SINGLE)	
+			    self.settings_controls[rowTAG+'|%s'%str(c)].Bind(wx.EVT_LISTBOX, self.OnSavingData)			
 			self.fgs.Add(self.settings_controls[rowTAG+'|%s'%str(c)], 0, wx.EXPAND|wx.ALL, 5) 	
 		    self.add_btn = wx.Button(self, id=rowNo, label='Add +')		
 		    self.add_btn.Bind(wx.EVT_BUTTON, self.OnAddRow) 
@@ -89,9 +98,13 @@ class RowBuilder(wx.Panel):
 		if self.col_details[h][0] is 'TextCtrl':
 		    self.settings_controls[rowTAG+'|%s'%str(c)] = wx.TextCtrl(self, size=(self.col_details[h][1], self.col_details[h][2]), value=self.col_details[h][3], style=wx.TE_PROCESS_ENTER) 
 		    self.settings_controls[rowTAG+'|%s'%str(c)].SetToolTipString(self.col_details[h][3])
+		    self.settings_controls[rowTAG+'|%s'%str(c)].Bind(wx.EVT_TEXT, self.OnSavingData)
 		if self.col_details[h][0] is 'NumCtrl':
 		    self.settings_controls[rowTAG+'|%s'%str(c)] = wx.lib.masked.NumCtrl(self, size=(self.col_details[h][1], self.col_details[h][2]), value=self.col_details[h][3], style=wx.TE_PROCESS_ENTER)  
-		self.settings_controls[rowTAG+'|%s'%str(c)].Bind(wx.EVT_TEXT, self.OnSavingData)
+		    self.settings_controls[rowTAG+'|%s'%str(c)].Bind(wx.EVT_TEXT, self.OnSavingData)
+		if self.col_details[h][0] is 'ListBox':
+		    self.settings_controls[rowTAG+'|%s'%str(c)] = wx.ListBox(self, size=(self.col_details[h][1], self.col_details[h][2]), choices=self.col_details[h][3], style=wx.LB_SINGLE)	
+		    self.settings_controls[rowTAG+'|%s'%str(c)].Bind(wx.EVT_LISTBOX, self.OnSavingData)			
 		self.fgs.Add(self.settings_controls[rowTAG+'|%s'%str(c)], 0, wx.EXPAND|wx.ALL, 5) 		
 	    # Buttons at the end of row
 	    self.add_btn = wx.Button(self, id=1, label='Add +')		
