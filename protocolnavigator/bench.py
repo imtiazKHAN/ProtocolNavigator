@@ -355,8 +355,8 @@ class Bench(wx.Panel):
                                     defaultDir=os.getcwd(), defaultFile='', style=wx.OPEN|wx.MULTIPLE)
             elif prefix == 'DataAcquis|FCS':
                 #dlg = wx.FileDialog(self,message='Select the FCS files for flask %s'%(platewell_id[0].strip('[]')),
-                dlg = wx.FileDialog(self,message='Select the FCS (pdf) files for flask',
-                                    defaultDir=os.getcwd(), defaultFile='', wildcard = "Adobe PDF files (*.pdf)|*.pdf|", style=wx.OPEN|wx.MULTIPLE)
+                dlg = wx.FileDialog(self,message='Select the FCS files for flask',
+                                    defaultDir=os.getcwd(), defaultFile='', wildcard = "All files (*.*)|*.*|", style=wx.OPEN|wx.MULTIPLE)
             elif prefix == 'DataAcquis|TLM':
                 dlg = wx.FileDialog(self,message='Select the images files',
                                     defaultDir=os.getcwd(), defaultFile='', style=wx.OPEN|wx.MULTIPLE)
@@ -370,7 +370,7 @@ class Bench(wx.Panel):
             if dlg.ShowModal() == wx.ID_OK:
                 meta.set_field(images_tag, dlg.GetPaths())
                 os.chdir(os.path.split(dlg.GetPath())[0])
-                dlg.Destroy()
+                dlg.Destroy()		
             else:
                 dlg.Destroy()
                 meta.remove_field(wells_tag)

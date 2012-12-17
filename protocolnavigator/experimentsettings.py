@@ -623,7 +623,7 @@ class ExperimentSettings(Singleton):
 	elif act =='Wash':
 	    icon = icons.wash.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
 	elif act =='Dry':
-	    icon = icons.dry.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+	    icon = icons.drying.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
 	elif act =='Medium':
 	    icon = icons.medium.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
 	elif act =='Incubator':
