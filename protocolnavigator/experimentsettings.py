@@ -606,9 +606,9 @@ class ExperimentSettings(Singleton):
 	elif act =='Harvest':
 	    icon = icons.harvest.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
 	    
-	elif act =='Chem':
+	elif act =='ChemAgent':
 	    icon = icons.treat.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 
-	elif act =='Bio':
+	elif act =='BioAgent':
 	    icon = icons.dna.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
 	    
 	elif act =='Dye':
@@ -642,13 +642,13 @@ class ExperimentSettings(Singleton):
 	
 	#elif act =='Hint':
 	    #icon = icons.hint.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 
-	#elif act =='CriticalPoint':
+	#elif act =='Text':
 	    #icon = icons.critical.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 
 	#elif act =='Rest':
 	    #icon = icons.rest.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()   
 	#elif act =='URL':
 	    #icon = icons.url.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()   
-	#elif act =='Video':
+	#elif act =='MultiMedia':
 	    #icon = icons.video.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
 	    
 	return icon
@@ -713,8 +713,8 @@ class ExperimentSettings(Singleton):
 EVENT_RGB ={
     'Seed': (255,255,0,100),
     'Harvest': (227,205,41,100),
-    'Chem': (255,51,102,100),
-    'Bio': (102,102,255,100),
+    'ChemAgent': (255,51,102,100),
+    'BioAgent': (102,102,255,100),
     'Dye': (27,188,224,100),
     'Immuno': (27,224,43,100),
     'Genetic': (27,224,181,100),
@@ -728,11 +728,11 @@ EVENT_RGB ={
     'HCS': (224,178,27,100),
     'FCS': (224,142,27,100),
     'RHE': (224, 27, 244, 100),
-    'CriticalPoint': (224,103,27,100),
+    'Text': (224,103,27,100),
     'Hint': (224,86,27,100),
     'Rest': (224,73,27,100),
     'URL': (224,53,27,100),
-    'Video': (224,40,27,100),
+    'MultiMedia': (224,40,27,100),
     
 
 }

@@ -345,8 +345,8 @@ class PrintProtocol(wx.Frame):
 			    #self.printfile.write('<tr><code><td>'+well+':</td><td>'+('<br />'.join(meta.get_field('DataAcquis|FCS|Images|%s|%s|%s'%(instance,timepoint, pw), [])))+'</td></code></tr>')
 			self.printfile.write('</table><br />')
 				
-                if exp.get_tag_event(protocol) == 'CriticalPoint': # to implement if there are events at the same timepoint write those event first then the critical point
-                    self.printfile.write('<font size="2" color="red">Critical point: '+meta.get_field('Notes|CriticalPoint|Description|%s'%instance)+'</font></em><br />')                
+                if exp.get_tag_event(protocol) == 'Text': # to implement if there are events at the same timepoint write those event first then the critical point
+                    self.printfile.write('<font size="2" color="red">Critical point: '+meta.get_field('Notes|Text|Description|%s'%instance)+'</font></em><br />')                
 		
 		if exp.get_tag_event(protocol) == 'Hint': 
 		    self.printfile.write('<font size="2" color="blue">Hint: '+meta.get_field('Notes|Hint|Description|%s'%instance)+'</font></em><br />')                		
@@ -357,8 +357,8 @@ class PrintProtocol(wx.Frame):
 		if exp.get_tag_event(protocol) == 'URL': 
 		    self.printfile.write('<code>To find out more information please visit '+meta.get_field('Notes|URL|Description|%s'%instance)+'</code><br />')
 		    
-		if exp.get_tag_event(protocol) == 'Video': 
-		    self.printfile.write('<code>For more information please watch the media file: '+meta.get_field('Notes|Video|Description|%s'%instance)+'</code><br />')
+		if exp.get_tag_event(protocol) == 'MultiMedia': 
+		    self.printfile.write('<code>For more information please watch the media file: '+meta.get_field('Notes|MultiMedia|Description|%s'%instance)+'</code><br />')
 		
             self.printfile.write('<br />')   
                

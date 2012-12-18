@@ -336,8 +336,8 @@ class PrintProtocol(wx.Frame):
 			self.printfile.write('<code><font size="1">'+element[1]+'</font></code><br />')	
 		    self.printLoacationandURL(spatial_info, instance,timepoint, 'FCS')	
 				
-                if exp.get_tag_event(protocol) == 'CriticalPoint': # to implement if there are events at the same timepoint write those event first then the critical point
-                    self.printfile.write('<code><font size="1" color="#FF0000">Critical point: '+meta.get_field('Notes|CriticalPoint|Description|%s'%instance)+'</font></code><br />')                
+                if exp.get_tag_event(protocol) == 'Text': # to implement if there are events at the same timepoint write those event first then the critical point
+                    self.printfile.write('<code><font size="1" color="#FF0000">Critical point: '+meta.get_field('Notes|Text|Description|%s'%instance)+'</font></code><br />')                
 		
 		if exp.get_tag_event(protocol) == 'Hint': 
 		    self.printfile.write('<code><font size="1" color="#990000">Hint: '+meta.get_field('Notes|Hint|Description|%s'%instance)+'</font></code><br />')                		
@@ -348,8 +348,8 @@ class PrintProtocol(wx.Frame):
 		if exp.get_tag_event(protocol) == 'URL': 
 		    self.printfile.write('<code><font size="1" color="#666600">URL: To find out more information please visit '+meta.get_field('Notes|URL|Description|%s'%instance)+'</font></code><br />')
 		    
-		if exp.get_tag_event(protocol) == 'Video': 
-		    self.printfile.write('<code><font size="1" color="#99CC33">Video: For more information please watch the media file: '+meta.get_field('Notes|Video|Description|%s'%instance)+'</font></code><br />')
+		if exp.get_tag_event(protocol) == 'MultiMedia': 
+		    self.printfile.write('<code><font size="1" color="#99CC33">MultiMedia: For more information please watch the media file: '+meta.get_field('Notes|MultiMedia|Description|%s'%instance)+'</font></code><br />')
 		    
             self.printfile.write('</tr>')
             #self.printfile.write('<br />')   

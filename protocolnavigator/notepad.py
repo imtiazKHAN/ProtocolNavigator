@@ -8,7 +8,17 @@ from experimentsettings import *
 ########################################################################            
 class NotePad(wx.Dialog):
     def __init__(self, parent, noteType, timepoint, page_counter):
-        wx.Dialog.__init__(self, parent, -1, size=(270,320), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        wx.Dialog.__init__(self, parent, -1, size=(470,620), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+	
+	meta = ExperimentSettings.getInstance()
+		
+	self.noteType = noteType
+	self.timepoint = timepoint
+	self.page_counter = page_counter
+	
+	self.sw = wx.ScrolledWindow(self)
+	self.swsizer = wx.BoxSizer(wx.VERTICAL)
+	self.sw.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
 
         self.ok_btn = wx.Button(self, wx.ID_OK)
         self.close_btn = wx.Button(self, wx.ID_CANCEL)
@@ -17,41 +27,28 @@ class NotePad(wx.Dialog):
 	self.butt_sizer.Add(self.ok_btn, 1)
 	self.butt_sizer.AddSpacer((5,-1))
 	self.butt_sizer.Add(self.close_btn, 1)
-
-	meta = ExperimentSettings.getInstance()
-	self.sw = wx.ScrolledWindow(self)
-	self.noteType = noteType
-	self.timepoint = timepoint
-	self.page_counter = page_counter
  
 	self.titlesizer = wx.BoxSizer(wx.HORIZONTAL)
 	self.top_fgs = wx.FlexGridSizer(cols=2, hgap=5, vgap=5)	
 	self.bot_fgs = wx.FlexGridSizer(cols=1, hgap=5, vgap=5)
 		
-	self.noteSelect = wx.Choice(self.sw, -1,  choices=['CriticalPoint', 'Rest', 'Hint', 'URL', 'Video'])
-	self.note_label = wx.StaticText(self.sw, -1, 'Note type')
-	self.noteSelect.SetStringSelection('')
-	self.noteSelect.Bind(wx.EVT_CHOICE, self.onCreateNotepad)
-	self.titlesizer.Add(self.note_label)
-	self.titlesizer.AddSpacer((10,-1))
-	self.titlesizer.Add(self.noteSelect, 0, wx.EXPAND)
+	
+	self.noteSelect = wx.RadioBox(self, -1, "Note Type", wx.DefaultPosition, wx.DefaultSize,
+		        ['Text', 'URL', 'MultiMedia', 'None'], 1, wx.RA_SPECIFY_ROWS
+		        )
+	if self.noteType:
+	    self.noteSelect.SetStringSelection(self.noteType)
+	    self.createNotePad()
+	else:
+	    self.noteSelect.SetStringSelection('None')
+	    self.noteSelect.Bind(wx.EVT_RADIOBOX, self.onCreateNotepad)
+	self.titlesizer.Add(self.noteSelect, 1, wx.ALL|wx.EXPAND, 5)		
 	
 	#---------------Layout with sizers---------------
-	self.mainSizer = wx.BoxSizer(wx.VERTICAL)
-	self.mainSizer.Add(self.titlesizer)
-	self.mainSizer.AddSpacer((-1,5))	
-	self.mainSizer.Add(self.top_fgs)
-	self.mainSizer.AddSpacer((-1,5))
-	self.mainSizer.Add(self.bot_fgs)
-	self.sw.SetSizer(self.mainSizer)
-	self.sw.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
-	if self.page_counter is not None:
-	    self.createNotePad()
 	self.Sizer = wx.BoxSizer(wx.VERTICAL)
+	self.Sizer.Add(self.titlesizer, 0)
 	self.Sizer.Add(self.sw, 1, wx.EXPAND|wx.ALL, 5)	
-	self.Sizer.Add(self.butt_sizer,  0, wx.ALL|wx.ALIGN_RIGHT, 5)	
-	
-		
+	self.Sizer.Add(self.butt_sizer,  0, wx.ALL|wx.ALIGN_RIGHT, 5)			
 
     def onCreateNotepad(self, event):
 	ctrl = event.GetEventObject()
@@ -61,84 +58,48 @@ class NotePad(wx.Dialog):
     def createNotePad(self):	
 	meta = ExperimentSettings.getInstance()
 	
-	self.note_label.Hide()
-	self.noteSelect.Hide()	
+	self.noteSelect.Disable()	
 	
-	if self.noteType=='CriticalPoint':
+	if self.noteType=='Text':
 	    self.noteDescrip = wx.TextCtrl(self.sw,  value=meta.get_field('Notes|%s|%s|%s' %(self.noteType, str(self.timepoint), str(self.page_counter)), default=''), style=wx.TE_MULTILINE)
-	    self.noteDescrip.SetInitialSize((250, 300))
-	
-	    text = wx.StaticText(self.sw, -1, 'Critical Note')
-	    font = wx.Font(9, wx.SWISS, wx.NORMAL, wx.BOLD)
-	    text.SetFont(font)
-
-	    self.titlesizer.Add(text, 0) 
-	    self.bot_fgs.Add(self.noteDescrip, 0,  wx.EXPAND)
-	    self.bot_fgs.Add(wx.StaticText(self.sw, -1, ''), 0)
-	    
-	if self.noteType=='Hint':
-	    self.noteDescrip = wx.TextCtrl(self.sw,  value=meta.get_field('Notes|%s|%s|%s' %(self.noteType, str(self.timepoint), str(self.page_counter)), default=''), style=wx.TE_MULTILINE)
-	    self.noteDescrip.SetInitialSize((250, 300))
-	
-	    text = wx.StaticText(self.sw, -1, 'Hint')
-	    font = wx.Font(9, wx.SWISS, wx.NORMAL, wx.BOLD)
-	    text.SetFont(font)
-	    
-	    self.titlesizer.Add(text, 0) 
-	    self.bot_fgs.Add(self.noteDescrip, 0,  wx.EXPAND)
-	    self.bot_fgs.Add(wx.StaticText(self.sw, -1, ''), 0)	
-	    
-	if self.noteType=='Rest':
-	    self.noteDescrip = wx.TextCtrl(self.sw,  value=meta.get_field('Notes|%s|%s|%s' %(self.noteType, str(self.timepoint), str(self.page_counter)), default=''), style=wx.TE_MULTILINE)
-	    self.noteDescrip.SetInitialSize((250, 300))
-	    
-	    text = wx.StaticText(self.sw, -1, 'Rest')
-	    font = wx.Font(9, wx.SWISS, wx.NORMAL, wx.BOLD)
-	    text.SetFont(font)
-	    
-	    self.titlesizer.Add(text, 0) 
-	    self.bot_fgs.Add(self.noteDescrip, 0,  wx.EXPAND)
-	    self.bot_fgs.Add(wx.StaticText(self.sw, -1, ''), 0)	
-	
+	    self.swsizer.Add(self.noteDescrip, 1, wx.EXPAND|wx.ALL, 10)	    
 
 	if self.noteType == 'URL':
-	    self.noteDescrip = wx.TextCtrl(self.sw,  value=meta.get_field('Notes|%s|%s|%s' %(self.noteType, str(self.timepoint), str(self.page_counter)), default='http://www.jove.com/'))
+	    self.noteDescrip = wx.TextCtrl(self.sw,  value=meta.get_field('Notes|%s|%s|%s' %(self.noteType, str(self.timepoint), str(self.page_counter)), default=''))
 	    self.noteDescrip.SetInitialSize((250, 20))
 	    
 	    goURLBtn = wx.Button(self.sw, -1, 'Go to URL')
 	    goURLBtn.Bind(wx.EVT_BUTTON, self.goURL)
-	    text = wx.StaticText(self.sw, -1, 'URL')
-	    font = wx.Font(9, wx.SWISS, wx.NORMAL, wx.BOLD)
-	    text.SetFont(font)
-
-	    self.titlesizer.Add(text, 0) 
-	    self.top_fgs.Add(self.noteDescrip, 0,  wx.EXPAND)
-	    self.top_fgs.Add(goURLBtn, 0)	    
 	    
-	if self.noteType == 'Video':
+	    urlsizer = wx.BoxSizer(wx.HORIZONTAL)
+	    urlsizer.Add(self.noteDescrip, 0, wx.EXPAND|wx.ALL, 10)
+	    urlsizer.Add(goURLBtn, 0, wx.ALIGN_CENTER_VERTICAL)
+	    self.swsizer.Add(urlsizer, 0, wx.EXPAND|wx.ALL, 10)
+	        
+	if self.noteType == 'MultiMedia':
 	    self.mediaTAG = 'Notes|%s|%s|%s' %(self.noteType, str(self.timepoint), str(self.page_counter))
 	    self.noteDescrip = wx.TextCtrl(self.sw, value=meta.get_field(self.mediaTAG, default=''))	    
 	    self.browseBtn = wx.Button(self.sw, -1, 'Load Media File')
 	    self.browseBtn.Bind(wx.EVT_BUTTON, self.loadFile)
-	    self.mediaplayer = MediaPlayer(self.sw)
-	    text = wx.StaticText(self.sw, -1, 'Video')
-	    font = wx.Font(9, wx.SWISS, wx.NORMAL, wx.BOLD)
-	    text.SetFont(font)	    
+	    self.mediaplayer = MediaPlayer(self.sw)	    
 	    
 	    if meta.get_field('Notes|%s|%s|%s' %(self.noteType, str(self.timepoint), str(self.page_counter))) is not None:	
-		self.mediaplayer.mc.Load(meta.get_field('Notes|%s|%s|%s' %(self.noteType, str(self.timepoint), str(self.page_counter))))		
-    
-	    self.titlesizer.Add(text, 0) 
-	    self.top_fgs.Add(self.noteDescrip, 0,  wx.EXPAND)
-	    self.top_fgs.Add(self.browseBtn, 0)	    	
-	    self.bot_fgs.Add(self.mediaplayer, 0)
+		self.mediaplayer.mc.Load(meta.get_field('Notes|%s|%s|%s' %(self.noteType, str(self.timepoint), str(self.page_counter))))
+		
+		
+	    mediasizer = wx.BoxSizer(wx.HORIZONTAL)
+	    mediasizer.Add(self.noteDescrip, 0, wx.ALL, 10)
+	    mediasizer.Add(self.browseBtn, 0, wx.ALIGN_CENTER_VERTICAL)
+	    playersizer = wx.BoxSizer(wx.VERTICAL)
+	    playersizer.Add(self.mediaplayer, 0, wx.ALIGN_CENTER_VERTICAL)
+	    self.swsizer.Add(mediasizer, 0, wx.EXPAND|wx.ALL, 10)
+	    self.swsizer.Add(playersizer, 1, wx.EXPAND|wx.ALL, 10)
 
-	self.sw.SetSizer(self.mainSizer)
+	    
+	self.sw.SetSizer(self.swsizer)
 	self.sw.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
+	self.sw.Refresh()	
 
-	self.Sizer = wx.BoxSizer(wx.VERTICAL)
-	self.Sizer.Add(self.sw, 1, wx.EXPAND|wx.ALL, 5)
-	
 	
     def loadFile(self, event):
 	meta = ExperimentSettings.getInstance()
@@ -163,11 +124,6 @@ class NotePad(wx.Dialog):
 	    dial = wx.MessageDialog(None, 'Unable to launch internet browser', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()  
 	    return
-
-    #def OnSavingData(self, event):	
-	#meta = ExperimentSettings.getInstance()    
-	#self.noteTAG = 'Notes|%s|Description|%s' %(self.noteType, str(self.page_counter))
-	#meta.set_field(self.noteTAG, self.noteDescrip.GetValue())
 
 
 class MediaPlayer(wx.Panel):
