@@ -7,9 +7,9 @@ from experimentsettings import *
 ########################################################################            
 class FileListDialog(wx.Dialog):
     def __init__(self, parent):
-        wx.Dialog.__init__(self, parent, -1, size=(550,500), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+        wx.Dialog.__init__(self, parent, -1, size=(550,300), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         
-        self.label = wx.StaticText(self, -1, "Drop files here:")
+        self.label = wx.StaticText(self, -1, "Drag and drop files in the box bellow")
         self.text_box = wx.TextCtrl(self, -1, "",style=wx.TE_MULTILINE|wx.HSCROLL|wx.TE_READONLY)
         
         self.drop_target = MyFileDropTarget(self.text_box)
@@ -20,11 +20,11 @@ class FileListDialog(wx.Dialog):
         
         vbox = wx.BoxSizer(wx.VERTICAL)
         hbox = wx.BoxSizer(wx.HORIZONTAL)
-        hbox.Add(self.selection_btn, 1)
-        hbox.Add(self.close_btn, 1)
+        hbox.Add(self.selection_btn, 1, wx.ALL, 5)
+        hbox.Add(self.close_btn, 1, wx.ALL, 5)
         vbox.Add(self.label, 0, wx.ALL, 5)
         vbox.Add(self.text_box, 1, wx.EXPAND|wx.ALL, 5)
-        vbox.Add(hbox, 1, wx.ALIGN_RIGHT, 5)
+        vbox.Add(hbox, 0, wx.ALIGN_RIGHT, 5)
         
         self.SetSizer(vbox)
         self.Center()

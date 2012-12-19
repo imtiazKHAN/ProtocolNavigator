@@ -70,7 +70,7 @@ class RowBuilder(wx.Panel):
 		    self.del_btn.row_to_delete = row
 		    self.del_btn.Bind(wx.EVT_BUTTON, self.OnDelRow) 		
 		    self.fgs.Add(self.add_btn, 0, wx.ALIGN_CENTRE)
-		    self.fgs.Add(self.del_btn, 0, wx.ALIGN_CENTRE)
+		    self.fgs.Add(self.del_btn, 0, wx.ALIGN_CENTRE)		    
 		else: # new row
 		    for c, h in enumerate(self.col_headers):
 			if self.col_details[h][0] is 'TextCtrl':

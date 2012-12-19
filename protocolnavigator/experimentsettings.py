@@ -1,5 +1,6 @@
 import re
 import wx
+import os
 import icons
 from singleton import Singleton
 from utils import *
@@ -269,6 +270,23 @@ class ExperimentSettings(Singleton):
             f.write('%s = %s\n'%(field, repr(value)))
         f.close()
     
+    def saving_settings(self, protocol, tag, m_tags):
+	if not self.get_field(tag):
+	    dial = wx.MessageDialog(None, 'Please provide a settings/protocol name', 'Error', wx.OK | wx.ICON_ERROR)
+	    dial.ShowModal()  
+	    return	
+	if self.checkMandatoryTags(m_tags):
+	    filename = self.get_field(tag)+'.txt'
+	    
+	    dlg = wx.FileDialog(None, message='Saving ...', 
+	                        defaultDir=os.getcwd(), defaultFile=filename, 
+	                        wildcard='.txt', 
+	                        style=wx.SAVE|wx.FD_OVERWRITE_PROMPT)
+	    if dlg.ShowModal() == wx.ID_OK:
+		dirname=dlg.GetDirectory()
+		filename=dlg.GetFilename()
+		file_path = os.path.join(dirname, filename)
+		self.save_settings(file_path, protocol)     
 	
     def save_settings(self, file, protocol):
 	'''
@@ -286,6 +304,9 @@ class ExperimentSettings(Singleton):
 	    print info
 	    f.write('%s = %s\n'%(attr, repr(info)))
 	f.close()	    	
+	
+	
+
 	
     
     def save_supp_protocol_file(self, file, protocol):
@@ -530,15 +551,15 @@ class ExperimentSettings(Singleton):
 	    for st in subtags:
 		if isinstance(settings_controls[st], wx.Choice) or isinstance(settings_controls[st], wx.ListBox):
 		    info[int(st.split('|')[4])]=settings_controls[st].GetStringSelection()	
-		    settings_controls[st].SetToolTipString(settings_controls[st].GetStringSelection())
+		    #settings_controls[st].SetToolTipString(settings_controls[st].GetStringSelection())
 		else:
 		    info[int(st.split('|')[4])]=settings_controls[st].GetValue()
-		    settings_controls[st].SetToolTipString(settings_controls[st].GetValue())
+		    #settings_controls[st].SetToolTipString(settings_controls[st].GetValue())
 	    self.set_field(get_tag_stump(tag, 4), info)  # get the core tag like AddProcess|Spin|Step|<instance> = [duration, description, temp]
 	else:
 	    if isinstance(ctrl, wx.Choice) or isinstance(ctrl, wx.ListBox):
 		self.set_field(tag, ctrl.GetStringSelection())
-		ctrl.SetToolTipString(ctrl.GetStringSelection())
+		#ctrl.SetToolTipString(ctrl.GetStringSelection())
 		
 	    elif isinstance(ctrl, wx.DatePickerCtrl):
 		date = ctrl.GetValue()
@@ -546,7 +567,7 @@ class ExperimentSettings(Singleton):
 	    else:
 		user_input = ctrl.GetValue()
 		self.set_field(tag, user_input)	
-		ctrl.SetToolTipString(ctrl.GetValue())
+		#ctrl.SetToolTipString(ctrl.GetValue())
 	    
     def get_seeded_sample(self, platewell_id):
 	'''this method returns sample or cell line information for the selected well
