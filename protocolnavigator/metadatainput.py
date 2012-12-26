@@ -1951,49 +1951,48 @@ class FlowcytometerSettingPanel(wx.Panel):
         self.settings_controls = {}
         meta = ExperimentSettings.getInstance()
 		
-	self.protocol = 'Instrument|Flowcytometer'	
+	self.tag_stump = 'Instrument|Flowcytometer'	
 
         self.notebook = fnb.FlatNotebook(self, -1, style=fnb.FNB_NO_X_BUTTON | fnb.FNB_VC8)
 	self.notebook.Bind(fnb.EVT_FLATNOTEBOOK_PAGE_CLOSING, meta.onTabClosing)
 
-	for instance_id in sorted(meta.get_field_instances(self.protocol)):
-	    panel = FlowcytometerPanel(self.notebook, int(instance_id))
+	for instance_id in sorted(meta.get_field_instances(self.tag_stump)):
+	    panel = FlowcytometerPanel(self.notebook, self.tag_stump, int(instance_id))
 	    self.notebook.AddPage(panel, 'Instance No: %s'%(instance_id), True)
 		
 	# Buttons
 	createTabBtn = wx.Button(self, label="Create Instance")
-	createTabBtn.Bind(wx.EVT_BUTTON, self.onCreateTab)
+	createTabBtn.Bind(wx.EVT_BUTTON, self.onCreateTab)    
 	loadTabBtn = wx.Button(self, label="Load Instance")
-	loadTabBtn.Bind(wx.EVT_BUTTON, self.onLoadTab)        
+	loadTabBtn.Bind(wx.EVT_BUTTON, self.onLoadTab)  	
 
 	# Sizers
 	mainsizer = wx.BoxSizer(wx.VERTICAL)
 	btnSizer = wx.BoxSizer(wx.HORIZONTAL)
 	mainsizer.Add(self.notebook, 1, wx.ALL|wx.EXPAND, 5)
 	btnSizer.Add(createTabBtn  , 0, wx.ALL, 5)
-	btnSizer.Add(loadTabBtn , 0, wx.ALL, 5)
+	btnSizer.Add(loadTabBtn, 0, wx.ALL, 5)
 	mainsizer.Add(btnSizer)
 	self.SetSizer(mainsizer)
 	self.Layout()
 	
     def onCreateTab(self, event):
-	next_tab_num = meta.get_new_protocol_id(self.protocol)	
+	next_tab_num = meta.get_new_protocol_id(self.tag_stump)
 	if self.notebook.GetPageCount()+1 != int(next_tab_num):
 	    dlg = wx.MessageDialog(None, 'Can not create the next instance\nPlease fill information in Instance No: %s'%next_tab_num, 'Creating Instance..', wx.OK| wx.ICON_STOP)
 	    dlg.ShowModal()
-	    return 	    
-	
-	panel = FlowcytometerPanel(self.notebook, next_tab_num)
-	self.notebook.AddPage(panel, 'Instance No: %s'%next_tab_num, True)
-    
+	    return 	
+	panel = FlowcytometerPanel(self.notebook, self.tag_stump, next_tab_num)
+	self.notebook.AddPage(panel, 'Instance No: %s'%next_tab_num, True)    
+ 
     def onLoadTab(self, event):
-	next_tab_num = meta.get_new_protocol_id(self.protocol)	
+	next_tab_num = meta.get_new_protocol_id(self.tag_stump)	
 	if self.notebook.GetPageCount()+1 != int(next_tab_num):
 	    dlg = wx.MessageDialog(None, 'Can not load the next instance\nPlease fill information in Instance No: %s'%next_tab_num, 'Creating Instance..', wx.OK| wx.ICON_STOP)
 	    dlg.ShowModal()
 	    return 
 	
-	dlg = wx.FileDialog(None, "Select the file containing your Flowcytometer settings...",
+	dlg = wx.FileDialog(None, "Select the file containing settings...",
                                     defaultDir=os.getcwd(), style=wx.OPEN|wx.FD_CHANGE_DIR)
 	# read the supp protocol file and setup a new tab
 	if dlg.ShowModal() == wx.ID_OK:
@@ -2006,68 +2005,98 @@ class FlowcytometerSettingPanel(wx.Panel):
 		dial.ShowModal()  
 		return	
 	    #Check for Settings Type:	
-	    if open(file_path).readline().rstrip() != exp.get_tag_event(self.protocol):
-		dial = wx.MessageDialog(None, 'The file is not %s settings!!'%exp.get_tag_event(self.protocol), 'Error', wx.OK | wx.ICON_ERROR)
+	    if open(file_path).readline().rstrip() != exp.get_tag_event(self.tag_stump):
+		dial = wx.MessageDialog(None, 'The file is not %s settings!!'%exp.get_tag_event(self.tag_stump), 'Error', wx.OK | wx.ICON_ERROR)
 		dial.ShowModal()  
 		return		    
-
-	    meta.load_settings(file_path, self.protocol+'|%s'%str(next_tab_num))  
-	    panel = FlowcytometerPanel(self.notebook, next_tab_num)
-	    self.notebook.AddPage(panel, 'Instance No: %s'%str(next_tab_num), True) 
-   
-
+	    
+	    meta.load_settings(file_path, self.tag_stump+'|%s'%str(next_tab_num))  
+	    panel = FlowcytometerPanel(self.notebook, self.tag_stump, next_tab_num)
+	    self.notebook.AddPage(panel, 'Instance No: %s'%str(next_tab_num), True)     
+ 
+ 
 class FlowcytometerPanel(wx.Panel):
-    def __init__(self, parent, page_counter):
-
-        self.settings_controls = {}
-        meta = ExperimentSettings.getInstance()
-
-        wx.Panel.__init__(self, parent=parent)
+    def __init__(self, parent, tag_stump, tab_number):
+	 
+	self.settings_controls = {}
+	self.labels = {}
+	meta = ExperimentSettings.getInstance()
 	
-	self.page_counter = page_counter
-	self.protocol = 'Instrument|Flowcytometer|%s'%str(self.page_counter)
+	wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
+	
+	# TAG
+	self.tab_number = tab_number	# tab or instance number
+	self.tag_stump = tag_stump                  # first two parts of tag (type|event) e.g Instrument|Centrifuge
+	self.protocol = self.tag_stump+'|'+str(self.tab_number)
+	self.mandatory_tags = []        # mandatory fields 
  
 	self.top_panel = wx.Panel(self)
 	self.bot_panel = wx.ScrolledWindow(self)	
   
-	self.top_fgs = wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
-	self.bot_fgs = wx.FlexGridSizer(cols=30, hgap=5, vgap=5)
+	self.top_fgs = wx.BoxSizer(wx.VERTICAL)
+	self.bot_fgs = wx.FlexGridSizer(cols=1, hgap=5, vgap=5)
 	
-	#------- Heading ---#
-	text = wx.StaticText(self.top_panel, -1, 'Flowcytometer')
-	font = wx.Font(9, wx.SWISS, wx.NORMAL, wx.BOLD)
+	# Title
+	text = wx.StaticText(self.top_panel, -1, exp.get_tag_event(self.tag_stump))
+	font = wx.Font(12, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
 	text.SetFont(font)
-	titlesizer = wx.BoxSizer(wx.VERTICAL)
-	titlesizer.Add(text, 0)
+	titlesizer = wx.BoxSizer(wx.HORIZONTAL)
+	titlesizer.AddSpacer((5,-1))	
+	titlesizer.Add(text, 0)	
+	# Attributes	
+	attributesizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)    
 	
-	#----------- Microscope Labels and Text Controler-------#
-	self.saveSettings = wx.Button(self.top_panel, -1, 'Save Settings')
-	self.saveSettings.Bind(wx.EVT_BUTTON, self.OnSavingSettings)
-	self.top_fgs.Add(wx.StaticText(self.top_panel, -1, ''), 0)
-	self.top_fgs.Add(self.saveSettings, 0)		
-	#--Manufacture--#
-	flowmfgTAG = 'Instrument|Flowcytometer|Manufacturer|'+str(self.page_counter)
+	self.nameTAG = self.tag_stump+'|Name|'+str(self.tab_number)
+	self.settings_controls[self.nameTAG] = wx.TextCtrl(self.top_panel, value=meta.get_field(self.nameTAG, default=''))
+	self.settings_controls[self.nameTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.settings_controls[self.nameTAG].SetInitialSize((250,20))
+	self.settings_controls[self.nameTAG].SetToolTipString('Type a unique name for the channel')
+	self.save_btn = wx.Button(self.top_panel, -1, "Save Settings")
+	self.save_btn.Bind(wx.EVT_BUTTON, self.OnSavingSettings)
+	attributesizer.Add(wx.StaticText(self.top_panel, -1, 'Settings Name'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL) 
+	attributesizer.Add(self.settings_controls[self.nameTAG], 0, wx.EXPAND)
+	attributesizer.Add(self.save_btn, 0, wx.EXPAND)
+	
+	mfgTAG = self.tag_stump+'|Manufacturer|'+str(self.tab_number)
 	choices=['Beckman','BD-Biosciences', 'Other']
-	self.settings_controls[flowmfgTAG] = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (120,30), choices, wx.LB_SINGLE)
-	if meta.get_field(flowmfgTAG) is not None:
-	    self.settings_controls[flowmfgTAG].Append(meta.get_field(flowmfgTAG))
-	    self.settings_controls[flowmfgTAG].SetStringSelection(meta.get_field(flowmfgTAG))
-	self.settings_controls[flowmfgTAG].Bind(wx.EVT_LISTBOX, self.OnSavingData)
-	self.settings_controls[flowmfgTAG].SetToolTipString('Manufacturer name')
-	self.top_fgs.Add(wx.StaticText(self.top_panel, -1, 'Manufacturer'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	self.top_fgs.Add(self.settings_controls[flowmfgTAG], 0, wx.EXPAND)
-	#--Model--#
-	flowmdlTAG = 'Instrument|Flowcytometer|Model|'+str(self.page_counter)
-	self.settings_controls[flowmdlTAG] = wx.TextCtrl(self.top_panel,  value=meta.get_field(flowmdlTAG, default=''))
-	self.settings_controls[flowmdlTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
-	self.settings_controls[flowmdlTAG].SetToolTipString('Model number of the Flowcytometer')
-	self.top_fgs.Add(wx.StaticText(self.top_panel, -1, 'Model'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	self.top_fgs.Add(self.settings_controls[flowmdlTAG], 0, wx.EXPAND)
+	self.settings_controls[mfgTAG] = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (120,30), choices, wx.LB_SINGLE)
+	if meta.get_field(mfgTAG) is not None:
+	    self.settings_controls[mfgTAG].Append(meta.get_field(mfgTAG))
+	    self.settings_controls[mfgTAG].SetStringSelection(meta.get_field(mfgTAG))	    
+	self.settings_controls[mfgTAG].Bind(wx.EVT_LISTBOX, self.OnSavingData)
+	self.settings_controls[mfgTAG].SetToolTipString('Manufacturer name')
+	self.labels[mfgTAG] = wx.StaticText(self.top_panel, -1, 'Manufacturer')
+	attributesizer.Add(self.labels[mfgTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	attributesizer.Add(self.settings_controls[mfgTAG], 0)
+	attributesizer.Add(wx.StaticText(self.top_panel, -1, ''), 0)
+	
+	modelTAG = self.tag_stump+'|Model|'+str(self.tab_number)
+	self.settings_controls[modelTAG] = wx.TextCtrl(self.top_panel, value=meta.get_field(modelTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[modelTAG].Bind(wx.EVT_TEXT,self.OnSavingData)
+	self.settings_controls[modelTAG].SetToolTipString('Model number of the Centrifuge')
+	self.labels[modelTAG] = wx.StaticText(self.top_panel , -1,  'Model')
+	attributesizer.Add(self.labels[modelTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	attributesizer.Add(self.settings_controls[modelTAG], 0)
+	attributesizer.Add(wx.StaticText(self.top_panel, -1, ''), 0)
+	
+	# Attach Files
+	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
+	attach_bmp = icons.clip.Scale(20.0, 20.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+	attach_btn = wx.BitmapButton(self.top_panel, -1, attach_bmp)
+	attach_btn.SetToolTipString("Attach file links")
+	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)
+	self.fileURL_container = gizmos.EditableListBox(self.top_panel, -1, 'Result Files', wx.DefaultPosition, (100,30), style=gizmos.EL_ALLOW_EDIT)
+	self.fileURL_container.SetStrings(meta.get_field(self.propfileTAG, []))
+	attributesizer.Add(wx.StaticText(self.top_panel, -1, ''), 0)
+	attributesizer.Add(self.fileURL_container, 0, wx.EXPAND)
+	attributesizer.Add(attach_btn, 0)	
+	
 	#---Add Channel--#	
-	self.addCh = wx.Button(self.top_panel, 1, '+ Add Channel')
-	self.addCh.Bind(wx.EVT_BUTTON, self.onAddChnnel) 
-	self.top_fgs.Add(wx.StaticText(self.top_panel, -1, ''), 0)
-	self.top_fgs.Add(self.addCh, 0)
+	self.addCh = wx.Button(self.top_panel, 1, 'Add Channel +')
+	self.addCh.Bind(wx.EVT_BUTTON, self.onAddChnnel) 	
+	#attributesizer.Add(wx.StaticText(self.top_panel, -1, ''), 0)
+	#attributesizer.Add(wx.StaticText(self.top_panel, -1, 'Add new channel'), 0)
+	attributesizer.Add(self.addCh, 0)
 
 	#-- Show previously encoded channels in case of loading ch settings--#	
 	self.showChannels()
@@ -2076,7 +2105,7 @@ class FlowcytometerPanel(wx.Panel):
 	swsizer = wx.BoxSizer(wx.VERTICAL)
 	swsizer.Add(titlesizer)
 	swsizer.Add((-1,10))
-	swsizer.Add(self.top_fgs)
+	swsizer.Add(attributesizer, 0 , wx.EXPAND)
 	self.top_panel.SetSizer(swsizer)
 	self.bot_panel.SetSizer(self.bot_fgs)
 	self.bot_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
@@ -2095,7 +2124,7 @@ class FlowcytometerPanel(wx.Panel):
 	    for comp in self.dlg.componentList:
 		lightpath.append(self.dlg.componentList[comp])
 	    chName = self.dlg.select_chName.GetStringSelection()
-	    tag = 'Instrument|Flowcytometer|%s|%s' %(chName, str(self.page_counter))
+	    tag = self.tag_stump+'|%s|%s' %(chName, str(self.tab_number))
 	    value = lightpath
 	    self.drawChannel(chName, value)
 	    meta.set_field(tag, value)
@@ -2104,19 +2133,18 @@ class FlowcytometerPanel(wx.Panel):
 	meta = ExperimentSettings.getInstance()	
 			    
 	#-- Show previously encoded channels --#
-	chs = [tag.split('|')[2] for tag in meta.get_field_tags('Instrument|Flowcytometer', str(self.page_counter))
-                           if not tag.startswith('Instrument|Flowcytometer|Manufacturer') 
-	                   if not tag.startswith('Instrument|Flowcytometer|Model')]
+	chs = [tag.split('|')[2] for tag in meta.get_field_tags(self.tag_stump+'', str(self.tab_number))
+                           if not tag.startswith(self.tag_stump+'|Manufacturer') 
+	                   if not tag.startswith(self.tag_stump+'|Model')]
 	if chs:
 	    for ch in sorted(chs):
-		self.drawChannel(ch, meta.get_field(('Instrument|Flowcytometer|%s|%s') %(ch, str(self.page_counter))))
+		self.drawChannel(ch, meta.get_field((self.tag_stump+'|%s|%s') %(ch, str(self.tab_number))))
 	    
     
     def drawChannel(self, chName, lightpath):
-	meta = ExperimentSettings.getInstance()
+	ch_sizer = wx.BoxSizer(wx.HORIZONTAL)
 	# Add the channel name
-	self.bot_fgs.Add(wx.StaticText(self.bot_panel, -1, chName), 0)
-	
+	ch_sizer.Add(wx.StaticText(self.bot_panel, -1, chName), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
 	# Add the components
 	for component in lightpath:
 	    compName = component[0]
@@ -2125,25 +2153,20 @@ class FlowcytometerPanel(wx.Panel):
 	    if compName.startswith('LSR'):
 		staticbox = wx.StaticBox(self.bot_panel, -1, "Excitation Laser")
 		laserNM = int(compName.split('LSR')[1])
-		
 		self.laser = wx.TextCtrl(self.bot_panel, -1, str(laserNM), style=wx.TE_READONLY)
 		self.laser.SetBackgroundColour(meta.nmToRGB(laserNM))
-		
 		laserSizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
 		laserSizer.Add(self.laser, 0) 	    
-		self.bot_fgs.Add(laserSizer,  0)
+		ch_sizer.Add(laserSizer,  0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
 	    
 	    if compName.startswith('DMR') or compName.startswith('FLT') or compName.startswith('SLT'):
 		staticbox = wx.StaticBox(self.bot_panel, -1, compName)
-		
 		self.startNM, self.endNM = meta.getNM(nmRange)
 		self.spectralRange =  meta.partition(range(self.startNM, self.endNM+1), 5)
-
 		self.spectrum = DrawSpectrum(self.bot_panel, self.startNM, self.endNM)
-		
 		mirrorSizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
 		mirrorSizer.Add(self.spectrum, 0)
-		self.bot_fgs.Add(mirrorSizer, 0)
+		ch_sizer.Add(mirrorSizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
 		
 	    if compName.startswith('DYE'):
 		staticbox = wx.StaticBox(self.bot_panel, -1, 'DYE')
@@ -2153,61 +2176,44 @@ class FlowcytometerPanel(wx.Panel):
 		if dye not in dyeList:
 		    dyeList.append(dye) 
 		dyeList.append('Add Dye by double click')
-		
 		self.dyeListBox = wx.ListBox(self.bot_panel, -1, wx.DefaultPosition, (150, 50), dyeList, wx.LB_SINGLE)
 		self.dyeListBox.SetStringSelection(dye)
 		self.dyeListBox.Bind(wx.EVT_LISTBOX, partial(self.onEditDye, ch = chName, compNo = lightpath.index(component), opticalpath = lightpath))
 		self.dyeListBox.Bind(wx.EVT_LISTBOX_DCLICK, partial(self.onMyDyeSelect, ch = chName, compNo = lightpath.index(component), opticalpath = lightpath))
-		
 		dye_sizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
 		dye_sizer.Add(self.dyeListBox, 0)               
-		self.bot_fgs.Add(dye_sizer, 0) 	    		
-		
+		ch_sizer.Add(dye_sizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5) 	    		
 		
 	    if compName.startswith('DTC'):
 		staticbox = wx.StaticBox(self.bot_panel, -1, "Detector")
-		volt = int(compName.split('DTC')[1])
-		
+		volt = int(compName.split('DTC')[1])		
 		self.detector = wx.SpinCtrl(self.bot_panel, -1, "", (30, 50))
 		self.detector.SetRange(1,1000)
 		self.detector.SetValue(volt)
-		
 		self.detector.Bind(wx.EVT_SPINCTRL, partial(self.onEditDetector, ch = chName, compNo = lightpath.index(component), opticalpath = lightpath))
-			 		
 		detector_sizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
 		detector_sizer.Add(self.detector, 0)
-		self.bot_fgs.Add(detector_sizer, 0)
-		
-
-		#pmtSizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
-		#pmtSizer.Add(wx.StaticText(self.bot_panel, -1, volt+' Volts'))
-		#self.bot_fgs.Add(pmtSizer, 0)
-		
+		ch_sizer.Add(detector_sizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
+	
 	
 	##set the delete button at the end
 	self.delete_button = wx.Button(self.bot_panel, wx.ID_DELETE)
 	self.delete_button.Bind(wx.EVT_BUTTON, partial(self.onDeleteCh, cn = chName))
-	self.bot_fgs.Add(self.delete_button, 0, wx.EXPAND|wx.ALL, 10)
-	# Fill up the gap	
-	for gap in range(len(lightpath)+3, 31): #because there are 30 cols in fgs max number of componensts it can hold
-	    self.bot_fgs.Add(wx.StaticText(self.bot_panel, -1, ''), 0)
-		
+	ch_sizer.Add(self.delete_button, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
+	
 	#-- Sizers --#
 	#self.top_panel.SetSizer(self.top_fgs)
+	self.bot_fgs.Add(ch_sizer, 0, wx.EXPAND)
 	self.bot_panel.SetSizer(self.bot_fgs)
         self.bot_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
 
-        self.Sizer = wx.BoxSizer(wx.VERTICAL)
-	self.Sizer.Add(self.top_panel, 0, wx.EXPAND|wx.ALL, 5)
-	self.Sizer.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.ALL, 5)
-	self.Sizer.Add(self.bot_panel, 1, wx.EXPAND|wx.ALL, 10)	 
 	
     def onEditDye(self, event, ch, compNo, opticalpath):
 	meta = ExperimentSettings.getInstance() 
 	ctrl = event.GetEventObject()
 		
 	opticalpath[compNo][0] = 'DYE'+'_'+ctrl.GetStringSelection()
-	tag = 'Instrument|Flowcytometer|%s|%s' %(ch, str(self.page_counter))
+	tag = self.tag_stump+'|%s|%s' %(ch, str(self.tab_number))
 	meta.remove_field(tag)
 	meta.set_field(tag, opticalpath)
     
@@ -2223,7 +2229,7 @@ class FlowcytometerPanel(wx.Panel):
 	    ctrl.SetStringSelection(dye)
 	    
 	    opticalpath[compNo][0] = 'DYE'+'_'+dye
-	    tag = 'Instrument|Flowcytometer|%s|%s' %(ch, str(self.page_counter))
+	    tag = self.tag_stump+'|%s|%s' %(ch, str(self.tab_number))
 	    meta.remove_field(tag)
 	    meta.set_field(tag, opticalpath)
 	    
@@ -2233,44 +2239,38 @@ class FlowcytometerPanel(wx.Panel):
 
 	opticalpath[compNo][0] = 'DTC%s' %str(ctrl.GetValue())
 		
-	tag = 'Instrument|Flowcytometer|%s|%s' %(ch, str(self.page_counter))
+	tag = self.tag_stump+'|%s|%s' %(ch, str(self.tab_number))
 	meta.remove_field(tag)
 	meta.set_field(tag, opticalpath)	
 		    
     def onDeleteCh(self, event, cn):
 	meta = ExperimentSettings.getInstance()
-	meta.remove_field('Instrument|Flowcytometer|%s|%s'%(cn, self.page_counter))
+	meta.remove_field(self.tag_stump+'|%s|%s'%(cn, self.tab_number))
 	self.bot_fgs.Clear(deleteWindows=True)
 	self.showChannels()
 	
     def OnSavingSettings(self, event):
-	# Checks
-	if meta.get_field('Instrument|Flowcytometer|Manufacturer|%s'%str(self.page_counter)) is None:
-	    dial = wx.MessageDialog(None, 'Please select a manufacturer', 'Error', wx.OK | wx.ICON_ERROR)
-	    dial.ShowModal()  
-	    return
-	if meta.get_field('Instrument|Flowcytometer|Model|%s'%str(self.page_counter)) is None:
-	    dial = wx.MessageDialog(None, 'Please type the model name', 'Error', wx.OK | wx.ICON_ERROR)
-	    dial.ShowModal()  
-	    return
-	#TO DO check check whether there is atleast one channel optical path being filled	
-	filename = meta.get_field('Instrument|Flowcytometer|Manufacturer|%s'%str(self.page_counter))+'_'+meta.get_field('Instrument|Flowcytometer|Model|%s'%str(self.page_counter)).rstrip('\n').rstrip('\n')
-	filename = filename+'.txt'
-		
-	dlg = wx.FileDialog(None, message='Saving ...', 
-                            defaultDir=os.getcwd(), defaultFile=filename, 
-                            wildcard='.txt', 
-                            style=wx.SAVE|wx.FD_OVERWRITE_PROMPT)
-	if dlg.ShowModal() == wx.ID_OK:
-	    dirname=dlg.GetDirectory()
-	    filename=dlg.GetFilename()
-	    self.file_path = os.path.join(dirname, filename)
-	    meta.save_settings(self.file_path, self.protocol) 	
+	meta.saving_settings(self.protocol, self.nameTAG, self.mandatory_tags)  
+	    
+    def OnAttachPropFile(self, event):
+	if meta.checkMandatoryTags(self.mandatory_tags) is True:	
+	    dia = FileListDialog(self)
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.drop_target.filelist
+		if f_list:
+		    meta.set_field(self.propfileTAG, f_list)
+		    self.fileURL_container.SetStrings(f_list) 
 		
     def OnSavingData(self, event):
-        ctrl = event.GetEventObject()
+	ctrl = event.GetEventObject()
 	tag = [t for t, c in self.settings_controls.items() if c==ctrl][0]
-	meta.saveData(ctrl, tag, self.settings_controls)
+	if exp.get_tag_stump(tag, 4) in self.mandatory_tags:
+	    meta.saveData(ctrl, tag, self.settings_controls)
+	    meta.setLabelColour(self.mandatory_tags, self.labels)	    
+	elif meta.checkMandatoryTags(self.mandatory_tags):
+	    meta.saveData(ctrl, tag, self.settings_controls)
+
+
 
 #########################################################################        
 ###################     Draw Spectrum on panel size 100,30 pxl  #########
