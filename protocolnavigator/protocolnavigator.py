@@ -10,6 +10,7 @@ import snapshotPrinter
 import wx
 import os
 
+VERSION = 'ProtocolNavigator_v1.12.12'
 
 class ProtocolNavigator(wx.App):
     '''The ProtocolNavigator Application
@@ -28,13 +29,13 @@ class ProtocolNavigator(wx.App):
         self.settings_frame.SetMenuBar(wx.MenuBar())
         fileMenu = wx.Menu()
         
-        saveSettingsMenuItem = fileMenu.Append(-1, 'Save Protocol\tCtrl+S', help='')
-        loadSettingsMenuItem = fileMenu.Append(-1, 'Load Protocol\tCtrl+O', help='')
-        printExperimentMenuItem = fileMenu.Append(-1, 'Print Protocol\tCtrl+P', help='')
+        saveSettingsMenuItem = fileMenu.Append(wx.ID_SAVE, 'Save Protocol\tCtrl+S', 'Saves the current session')
+        self.loadSettingsMenuItem = fileMenu.Append(wx.ID_OPEN, 'Open Protocol\tCtrl+O', 'Open previously curated protocol')
+        printExperimentMenuItem = fileMenu.Append(wx.ID_PRINT, 'Print Protocol\tCtrl+P', 'Printing current protocol')
         #self.settings_frame.Bind(wx.EVT_MENU, self.on_new_experiment, newExperimentMenuItem)
        
         self.settings_frame.Bind(wx.EVT_MENU, self.on_save_settings, saveSettingsMenuItem)
-        self.settings_frame.Bind(wx.EVT_MENU, self.on_load_settings, loadSettingsMenuItem)
+        self.settings_frame.Bind(wx.EVT_MENU, self.on_load_settings, self.loadSettingsMenuItem)
         self.settings_frame.Bind(wx.EVT_MENU, self.on_print_protocol, printExperimentMenuItem)
         self.settings_frame.GetMenuBar().Append(fileMenu, 'File')
         
@@ -104,14 +105,14 @@ class ProtocolNavigator(wx.App):
                             style=wx.SAVE|wx.FD_OVERWRITE_PROMPT)
         if dlg.ShowModal() == wx.ID_OK:
             os.chdir(os.path.split(dlg.GetPath())[0])
-            ExperimentSettings.getInstance().save_to_file(dlg.GetPath())
+            ExperimentSettings.getInstance().save_to_file(dlg.GetPath(), VERSION)
     
             
     def on_load_settings(self, evt):
         dlg = wx.FileDialog(None, "Select the file containing your ProtocolNavigator workspace...",
                             defaultDir=os.getcwd(), style=wx.OPEN|wx.FD_CHANGE_DIR)
         if dlg.ShowModal() == wx.ID_OK:
-            ExperimentSettings.getInstance().load_from_file(dlg.GetPath())
+            ExperimentSettings.getInstance().load_from_file(dlg.GetPath(), self.loadSettingsMenuItem)
     
     def on_print_protocol(self, event):
         """ Takes a screenshot of the lineage panel pos & size (rect). 

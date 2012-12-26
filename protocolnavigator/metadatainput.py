@@ -2028,7 +2028,7 @@ class FlowcytometerPanel(wx.Panel):
 	self.tab_number = tab_number	# tab or instance number
 	self.tag_stump = tag_stump                  # first two parts of tag (type|event) e.g Instrument|Centrifuge
 	self.protocol = self.tag_stump+'|'+str(self.tab_number)
-	self.mandatory_tags = []        # mandatory fields 
+	self.mandatory_tags = [self.tag_stump+'|Manufacturer|'+str(self.tab_number)]        # mandatory fields 
  
 	self.top_panel = wx.Panel(self)
 	self.bot_panel = wx.ScrolledWindow(self)	
@@ -2050,10 +2050,13 @@ class FlowcytometerPanel(wx.Panel):
 	self.settings_controls[self.nameTAG] = wx.TextCtrl(self.top_panel, value=meta.get_field(self.nameTAG, default=''))
 	self.settings_controls[self.nameTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
 	self.settings_controls[self.nameTAG].SetInitialSize((250,20))
-	self.settings_controls[self.nameTAG].SetToolTipString('Type a unique name for the channel')
-	self.save_btn = wx.Button(self.top_panel, -1, "Save Settings")
+	save_bmp = icons.save.Scale(20.0, 20.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+	self.save_btn = wx.BitmapButton(self.top_panel, -1, save_bmp)
+	self.save_btn.SetToolTipString("Save instance for future reuse")
 	self.save_btn.Bind(wx.EVT_BUTTON, self.OnSavingSettings)
-	attributesizer.Add(wx.StaticText(self.top_panel, -1, 'Settings Name'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL) 
+	self.labels[self.nameTAG] = wx.StaticText(self.top_panel, -1, 'Settings Name')
+	self.labels[self.nameTAG].SetToolTipString('Type a unique name for the settings')
+	attributesizer.Add(self.labels[self.nameTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL) 
 	attributesizer.Add(self.settings_controls[self.nameTAG], 0, wx.EXPAND)
 	attributesizer.Add(self.save_btn, 0, wx.EXPAND)
 	
@@ -2064,19 +2067,19 @@ class FlowcytometerPanel(wx.Panel):
 	    self.settings_controls[mfgTAG].Append(meta.get_field(mfgTAG))
 	    self.settings_controls[mfgTAG].SetStringSelection(meta.get_field(mfgTAG))	    
 	self.settings_controls[mfgTAG].Bind(wx.EVT_LISTBOX, self.OnSavingData)
-	self.settings_controls[mfgTAG].SetToolTipString('Manufacturer name')
 	self.labels[mfgTAG] = wx.StaticText(self.top_panel, -1, 'Manufacturer')
+	self.labels[mfgTAG].SetToolTipString('Manufacturer name')
 	attributesizer.Add(self.labels[mfgTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	attributesizer.Add(self.settings_controls[mfgTAG], 0)
+	attributesizer.Add(self.settings_controls[mfgTAG], 0, wx.EXPAND)
 	attributesizer.Add(wx.StaticText(self.top_panel, -1, ''), 0)
 	
 	modelTAG = self.tag_stump+'|Model|'+str(self.tab_number)
 	self.settings_controls[modelTAG] = wx.TextCtrl(self.top_panel, value=meta.get_field(modelTAG, default=''), style=wx.TE_PROCESS_ENTER)
 	self.settings_controls[modelTAG].Bind(wx.EVT_TEXT,self.OnSavingData)
-	self.settings_controls[modelTAG].SetToolTipString('Model number of the Centrifuge')
 	self.labels[modelTAG] = wx.StaticText(self.top_panel , -1,  'Model')
+	self.labels[modelTAG].SetToolTipString('Model number')
 	attributesizer.Add(self.labels[modelTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	attributesizer.Add(self.settings_controls[modelTAG], 0)
+	attributesizer.Add(self.settings_controls[modelTAG], 0, wx.EXPAND)
 	attributesizer.Add(wx.StaticText(self.top_panel, -1, ''), 0)
 	
 	# Attach Files
@@ -2085,21 +2088,21 @@ class FlowcytometerPanel(wx.Panel):
 	attach_btn = wx.BitmapButton(self.top_panel, -1, attach_bmp)
 	attach_btn.SetToolTipString("Attach file links")
 	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)
-	self.fileURL_container = gizmos.EditableListBox(self.top_panel, -1, 'Result Files', wx.DefaultPosition, (100,30), style=gizmos.EL_ALLOW_EDIT)
+	self.fileURL_container = gizmos.EditableListBox(self.top_panel, -1, 'Proprietary Files', wx.DefaultPosition, (100,30), style=gizmos.EL_ALLOW_EDIT)
 	self.fileURL_container.SetStrings(meta.get_field(self.propfileTAG, []))
 	attributesizer.Add(wx.StaticText(self.top_panel, -1, ''), 0)
 	attributesizer.Add(self.fileURL_container, 0, wx.EXPAND)
 	attributesizer.Add(attach_btn, 0)	
 	
-	#---Add Channel--#	
+	# Add Channel	
 	self.addCh = wx.Button(self.top_panel, 1, 'Add Channel +')
 	self.addCh.Bind(wx.EVT_BUTTON, self.onAddChnnel) 	
-	#attributesizer.Add(wx.StaticText(self.top_panel, -1, ''), 0)
-	#attributesizer.Add(wx.StaticText(self.top_panel, -1, 'Add new channel'), 0)
 	attributesizer.Add(self.addCh, 0)
 
-	#-- Show previously encoded channels in case of loading ch settings--#	
+	# Show previously encoded channels in case of loading ch settings	
 	self.showChannels()
+	# Set Mandatory Label colour
+	meta.setLabelColour(self.mandatory_tags, self.labels)	
         
 	#---------------Layout with sizers---------------
 	swsizer = wx.BoxSizer(wx.VERTICAL)
@@ -2135,7 +2138,9 @@ class FlowcytometerPanel(wx.Panel):
 	#-- Show previously encoded channels --#
 	chs = [tag.split('|')[2] for tag in meta.get_field_tags(self.tag_stump+'', str(self.tab_number))
                            if not tag.startswith(self.tag_stump+'|Manufacturer') 
-	                   if not tag.startswith(self.tag_stump+'|Model')]
+	                   if not tag.startswith(self.tag_stump+'|Model')
+	                   if not tag.startswith(self.tag_stump+'|Name')
+	                   if not tag.startswith(self.tag_stump+'|AttachFiles')]
 	if chs:
 	    for ch in sorted(chs):
 		self.drawChannel(ch, meta.get_field((self.tag_stump+'|%s|%s') %(ch, str(self.tab_number))))
@@ -3553,6 +3558,7 @@ class CellSeedPanel(wx.Panel):
 		                              ('Tips', ['TextCtrl', 50, -1, ''])
 		                            ])				
 	self.procedure = RowBuilder(self.sw, self.protocol, self.token, COLUMN_DETAILS, self.mandatory_tags)
+	self.procedure.SetBackgroundColour('#99CC99')
 	self.procedure.Disable()
 	proceduresizer.Add(self.procedure, 0, wx.ALL, 5)	
 	
@@ -3561,8 +3567,10 @@ class CellSeedPanel(wx.Panel):
 	
         self.selectinstTAG = self.tag_stump+'|CellLineInstance|'+str(self.tab_number)
 	self.settings_controls[self.selectinstTAG] = wx.TextCtrl(self.sw, value='', style=wx.TE_READONLY)  
-	showInstBut = wx.Button(self.sw, -1, 'Show Choices', (100,100))
-	showInstBut.Bind (wx.EVT_BUTTON, self.ShowInstrumentInstances)	
+	link_bmp = icons.link.Scale(20.0, 20.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+	showInstBut = wx.BitmapButton(self.sw, -1, link_bmp)
+	showInstBut.SetToolTipString("Show choices")
+	showInstBut.Bind (wx.EVT_BUTTON, self.ShowInstrumentInstances)
 	if meta.get_field(self.selectinstTAG) is not None: # seeded from the stock flask
 	    self.settings_controls[self.selectinstTAG].SetValue(meta.get_cellLine_Name(self.tab_number, 'S'))
 	    pic=wx.StaticBitmap(self.sw)
@@ -3619,7 +3627,7 @@ class CellSeedPanel(wx.Panel):
 	self.swsizer.Add(titlesizer,0,wx.ALL, 5)
 	self.swsizer.Add((-1,10))
 	self.swsizer.Add(attributesizer, 0, wx.EXPAND|wx.ALL, 5)
-	self.swsizer.Add(proceduresizer,1,wx.EXPAND|wx.ALL, 5)
+	self.swsizer.Add(proceduresizer, 0,wx.EXPAND|wx.ALL, 5)
 	self.sw.SetSizer(self.swsizer)
 	self.sw.SetScrollbars(20, 20, self.Size[0]+10, self.Size[1]+10, 0, 0)
 
@@ -3917,6 +3925,7 @@ class ChemicalAgentPanel(wx.Panel):
 	                              ('Temp\n(C)', ['TextCtrl', 30, -1, ''])
                                     ])		
 	self.procedure = RowBuilder(self.sw, self.protocol, 'Step', COLUMN_DETAILS, self.mandatory_tags)
+	self.procedure.SetBackgroundColour('#99CC99')
 	proceduresizer.Add(self.procedure, 0, wx.ALL, 5)	
 	
 	# Attributes
@@ -4174,19 +4183,22 @@ class BiologicalAgentPanel(wx.Panel):
 	                              ('Temp\n(C)', ['TextCtrl', 30, -1, ''])
                                     ])		
 	self.procedure = RowBuilder(self.sw, self.protocol, 'Step', COLUMN_DETAILS, self.mandatory_tags)
+	self.procedure.SetBackgroundColour('#99CC99')
 	proceduresizer.Add(self.procedure, 0, wx.ALL, 5)	
 	
 	# Attributes
 	attributesizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)	 
 	
 	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
-	showInstBut = wx.Button(self.sw, -1, 'Attach Files', (100,100))
-	showInstBut.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)
+	attach_bmp = icons.clip.Scale(20.0, 20.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+	attach_btn = wx.BitmapButton(self.sw, -1, attach_bmp)
+	attach_btn.SetToolTipString("Attach file links")
+	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)
 	self.fileURL_container = gizmos.EditableListBox(self.sw, -1, 'Associated Files', wx.DefaultPosition, (100,30), style=gizmos.EL_ALLOW_EDIT)
 	self.fileURL_container.SetStrings(meta.get_field(self.propfileTAG, []))
 	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)
 	attributesizer.Add(self.fileURL_container, 1, wx.EXPAND)
-	attributesizer.Add(showInstBut, 0, wx.ALIGN_CENTER_VERTICAL)	
+	attributesizer.Add(attach_btn, 0, wx.ALIGN_TOP)	
 
 	# Set Mandatory Label colour
 	meta.setLabelColour(self.mandatory_tags, self.labels)	
@@ -4371,6 +4383,7 @@ class ImmunoPanel(wx.Panel):
 	                              ('Temp\n(C)', ['TextCtrl', 30, -1, ''])
                                     ])		
 	self.procedure = RowBuilder(self.sw, self.protocol, 'Step', COLUMN_DETAILS, self.mandatory_tags)
+	self.procedure.SetBackgroundColour('#99CC99')
 	proceduresizer.Add(self.procedure, 0, wx.ALL, 5)	
 	
 	# Attributes
@@ -4595,6 +4608,7 @@ class GeneticPanel(wx.Panel):
 	                              ('Temp\n(C)', ['TextCtrl', 30, -1, ''])
                                     ])		
 	self.procedure = RowBuilder(self.sw, self.protocol, 'Step', COLUMN_DETAILS, self.mandatory_tags)
+	self.procedure.SetBackgroundColour('#99CC99')
 	proceduresizer.Add(self.procedure, 0, wx.ALL, 5)	
 	
 	# Attributes
@@ -4819,6 +4833,7 @@ class DyePanel(wx.Panel):
 	                              ('Temp\n(C)', ['TextCtrl', 30, -1, ''])
                                     ])		
 	self.procedure = RowBuilder(self.sw, self.protocol, 'Step', COLUMN_DETAILS, self.mandatory_tags)
+	self.procedure.SetBackgroundColour('#99CC99')
 	proceduresizer.Add(self.procedure, 0, wx.ALL, 5)	
 	
 	# Attributes
@@ -5185,8 +5200,9 @@ class DryingPanel(wx.Panel):
                                     ('Duration\n(Min)', ['TextCtrl', 30, -1, '']),
                                     ('Temp\n(C)', ['TextCtrl', 30, -1, ''])
                                     ])		
-	procedure = RowBuilder(self.sw, self.protocol, 'Step', COLUMN_DETAILS, self.mandatory_tags)
-	proceduresizer.Add(procedure, 0, wx.ALL, 5)
+	self.procedure = RowBuilder(self.sw, self.protocol, 'Step', COLUMN_DETAILS, self.mandatory_tags)
+	self.procedure.SetBackgroundColour('#99CC99')
+	proceduresizer.Add(self.procedure, 0, wx.ALL, 5)
 	
 	# Set Mandatory Label colour
 	meta.setLabelColour(self.mandatory_tags, self.labels)		
@@ -5439,8 +5455,9 @@ class IncubationPanel(wx.Panel):
                                     ('Duration\n(Min)', ['TextCtrl', 30, -1, '']),
                                     ('Temp\n(C)', ['TextCtrl', 30, -1, ''])
 	                            ])		
-	procedure = RowBuilder(self.sw, self.protocol, 'Step', COLUMN_DETAILS, self.mandatory_tags)
-	proceduresizer.Add(procedure, 0, wx.ALL, 5)
+	self.procedure = RowBuilder(self.sw, self.protocol, 'Step', COLUMN_DETAILS, self.mandatory_tags)
+	self.procedure.SetBackgroundColour('#99CC99')
+	proceduresizer.Add(self.procedure, 0, wx.ALL, 5)
 	
 	# Set Mandatory Label colour
 	meta.setLabelColour(self.mandatory_tags, self.labels)		
@@ -5621,6 +5638,7 @@ class AddMediumPanel(wx.Panel):
 	                              ('Temp\n(C)', ['TextCtrl', 30, -1, ''])
                                     ])		
 	self.procedure = RowBuilder(self.sw, self.protocol, 'Step', COLUMN_DETAILS, self.mandatory_tags)
+	self.procedure.SetBackgroundColour('#99CC99')
 	proceduresizer.Add(self.procedure, 0, wx.ALL, 5)	
 	
 	# Attributes
@@ -5809,6 +5827,7 @@ class WashPanel(wx.Panel):
 	                              ('Temp\n(C)', ['TextCtrl', 30, -1, ''])
                                     ])		
 	self.procedure = RowBuilder(self.sw, self.protocol, 'Step', COLUMN_DETAILS, self.mandatory_tags)
+	self.procedure.SetBackgroundColour('#99CC99')
 	proceduresizer.Add(self.procedure, 0, wx.ALL, 5)	
 	
 	# Attributes
@@ -5956,7 +5975,7 @@ class IncubatorPanel(wx.Panel):
 	self.tab_number = tab_number	# tab or instance number
 	self.tag_stump = tag_stump                  # first two parts of tag (type|event) e.g Instrument|Centrifuge
 	self.protocol = self.tag_stump+'|'+str(self.tab_number)
-	self.mandatory_tags = []        # mandatory fields 
+	self.mandatory_tags = [self.tag_stump+'|Manufacturer|'+str(self.tab_number)]        # mandatory fields 
 	
 	# Panel
 	self.sw = wx.ScrolledWindow(self)
@@ -5976,10 +5995,12 @@ class IncubatorPanel(wx.Panel):
 	self.settings_controls[self.nameTAG] = wx.TextCtrl(self.sw, value=meta.get_field(self.nameTAG, default=''), style=wx.TE_PROCESS_ENTER)
 	self.settings_controls[self.nameTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
 	self.settings_controls[self.nameTAG].SetInitialSize((250,20))
-	self.settings_controls[self.nameTAG].SetToolTipString('Type a unique name for identifying the setting:\n%s'%meta.get_field(self.nameTAG))
-	self.save_btn = wx.Button(self.sw, -1, "Save Settings")
+	save_bmp = icons.save.Scale(20.0, 20.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+	self.save_btn = wx.BitmapButton(self.sw, -1, save_bmp)
+	self.save_btn.SetToolTipString("Save instance for future reuse")
 	self.save_btn.Bind(wx.EVT_BUTTON, self.OnSavingSettings)
 	self.labels[self.nameTAG] = wx.StaticText(self.sw , -1,  'Settings Name')
+	self.labels[self.nameTAG].SetToolTipString('Type a unique name for identifying the setting')
 	attributesizer.Add(self.labels[self.nameTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	attributesizer.Add(self.settings_controls[self.nameTAG], 0, wx.EXPAND|wx.ALL, 5) 
 	attributesizer.Add(self.save_btn, 0, wx.ALL, 5)
@@ -5987,38 +6008,40 @@ class IncubatorPanel(wx.Panel):
 	mfgTAG = self.tag_stump+'|Manufacturer|'+str(self.tab_number)
 	self.settings_controls[mfgTAG] = wx.TextCtrl(self.sw, name='Manufacturer' ,  value=meta.get_field(mfgTAG, default=''), style=wx.TE_PROCESS_ENTER)
 	self.settings_controls[mfgTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
-	self.settings_controls[mfgTAG].SetToolTipString('Manufacturer name')
 	self.labels[mfgTAG] = wx.StaticText(self.sw, -1, 'Manufacturer')
+	self.labels[mfgTAG].SetToolTipString('Manufacturer name')
 	attributesizer.Add(self.labels[mfgTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	attributesizer.Add(self.settings_controls[mfgTAG], 0)
+	attributesizer.Add(self.settings_controls[mfgTAG], 0, wx.EXPAND)
 	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)
 	
 	modelTAG = self.tag_stump+'|Model|'+str(self.tab_number)
 	self.settings_controls[modelTAG] = wx.TextCtrl(self.sw, value=meta.get_field(modelTAG, default=''), style=wx.TE_PROCESS_ENTER)
 	self.settings_controls[modelTAG].Bind(wx.EVT_TEXT,self.OnSavingData)
-	self.settings_controls[modelTAG].SetToolTipString('Model number of the Centrifuge')
-	self.labels[modelTAG] = wx.StaticText(self.sw , -1,  'Model')
+	self.labels[modelTAG] = wx.StaticText(self.sw , -1,  'Model number')
+	self.labels[modelTAG].SetToolTipString('Model number')
 	attributesizer.Add(self.labels[modelTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	attributesizer.Add(self.settings_controls[modelTAG], 0)
+	attributesizer.Add(self.settings_controls[modelTAG], 0, wx.EXPAND)
 	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)
 	
 	capacityTAG = self.tag_stump+'|Capacity|'+str(self.tab_number)
 	self.settings_controls[capacityTAG] = wx.TextCtrl(self.sw, value=meta.get_field(capacityTAG, default=''), style=wx.TE_PROCESS_ENTER)
 	self.settings_controls[capacityTAG].Bind(wx.EVT_TEXT,self.OnSavingData)
-	self.settings_controls[capacityTAG].SetToolTipString('Capacity (L) of the incubator')
 	self.labels[capacityTAG] = wx.StaticText(self.sw , -1,  'Capacity')
+	self.labels[capacityTAG].SetToolTipString('Capacity (L) of the incubator')
 	attributesizer.Add(self.labels[capacityTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	attributesizer.Add(self.settings_controls[capacityTAG], 0)
+	attributesizer.Add(self.settings_controls[capacityTAG], 0, wx.EXPAND)
 	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)	
 	
 	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
-	showInstBut = wx.Button(self.sw, -1, 'Attach Files', (100,100))
-	showInstBut.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)
+	attach_bmp = icons.clip.Scale(20.0, 20.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+	attach_btn = wx.BitmapButton(self.sw, -1, attach_bmp)
+	attach_btn.SetToolTipString("Attach file links")
+	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)
 	self.fileURL_container = gizmos.EditableListBox(self.sw, -1, 'Proprietary Files', wx.DefaultPosition, (100,30), style=gizmos.EL_ALLOW_EDIT)
 	self.fileURL_container.SetStrings(meta.get_field(self.propfileTAG, []))
 	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)
-	attributesizer.Add(self.fileURL_container, 1, wx.EXPAND)
-	attributesizer.Add(showInstBut, 0, wx.ALIGN_CENTER_VERTICAL)
+	attributesizer.Add(self.fileURL_container, 0, wx.EXPAND)
+	attributesizer.Add(attach_btn, 0, wx.ALIGN_TOP)
 	
 	# Set Mandatory Label colour
 	meta.setLabelColour(self.mandatory_tags, self.labels)
@@ -6129,69 +6152,88 @@ class RheometerSettingPanel(wx.Panel):
 	
         
 class RheometerPanel(wx.Panel):
-    def __init__(self, parent, tag, tab_number):
-
+    def __init__(self, parent, tag_stump, tab_number):
+	 
 	self.settings_controls = {}
+	self.labels = {}
 	meta = ExperimentSettings.getInstance()
 	
 	wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
 	
 	# TAG
-	self.tab_number = tab_number	
-	self.tag = tag
-	self.protocol = self.tag+'|'+str(self.tab_number)
-	self.mandatory_tags = []
+	self.tab_number = tab_number	# tab or instance number
+	self.tag_stump = tag_stump                  # first two parts of tag (type|event) e.g Instrument|Centrifuge
+	self.protocol = self.tag_stump+'|'+str(self.tab_number)
+	self.mandatory_tags = [self.tag_stump+'|Manufacturer|'+str(self.tab_number)]        # mandatory fields 
 	
 	# Panel
 	self.sw = wx.ScrolledWindow(self)
 	self.swsizer = wx.BoxSizer(wx.VERTICAL)
 	
 	# Title
-	text = wx.StaticText(self.sw, -1, 'Rheometer')
+	text = wx.StaticText(self.sw, -1, exp.get_tag_event(self.tag_stump))
 	font = wx.Font(12, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
 	text.SetFont(font)
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)
 	titlesizer.AddSpacer((5,-1))	
 	titlesizer.Add(text, 0)	
-	# Settings/Protocol Name	
+	# Attributes	
 	attributesizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
-	# Name
-	self.nameTAG = self.tag+'|Name|'+str(self.tab_number)
-	self.settings_controls[self.nameTAG] = wx.TextCtrl(self.sw, value=meta.get_field(self.nameTAG, default=''))
+
+	self.nameTAG = self.tag_stump+'|Name|'+str(self.tab_number)
+	self.settings_controls[self.nameTAG] = wx.TextCtrl(self.sw, value=meta.get_field(self.nameTAG, default=''), style=wx.TE_PROCESS_ENTER)
 	self.settings_controls[self.nameTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
 	self.settings_controls[self.nameTAG].SetInitialSize((250,20))
-	self.settings_controls[self.nameTAG].SetToolTipString('Type a unique name for identifying the setting')
-	self.save_btn = wx.Button(self.sw, -1, "Save Settings")
+	save_bmp = icons.save.Scale(20.0, 20.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+	self.save_btn = wx.BitmapButton(self.sw, -1, save_bmp)
+	self.save_btn.SetToolTipString("Save instance for future reuse")
 	self.save_btn.Bind(wx.EVT_BUTTON, self.OnSavingSettings)
-	attributesizer.Add(wx.StaticText(self.sw, -1, 'Settings Name'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[self.nameTAG] = wx.StaticText(self.sw , -1,  'Settings Name')
+	self.labels[self.nameTAG].SetToolTipString('Type a unique name for identifying the setting')
+	attributesizer.Add(self.labels[self.nameTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	attributesizer.Add(self.settings_controls[self.nameTAG], 0, wx.EXPAND|wx.ALL, 5) 
 	attributesizer.Add(self.save_btn, 0, wx.ALL, 5)
-	# Make
-	incbmfgTAG = self.tag+'|Manufacturer|'+str(self.tab_number)
-	self.settings_controls[incbmfgTAG] = wx.TextCtrl(self.sw, name='Manufacturer' ,  value=meta.get_field(incbmfgTAG, default=''))
-	self.settings_controls[incbmfgTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
-	self.settings_controls[incbmfgTAG].SetToolTipString('Manufacturer name')
-	attributesizer.Add(wx.StaticText(self.sw, -1, 'Manufacturer'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	attributesizer.Add(self.settings_controls[incbmfgTAG], 0)
+
+	mfgTAG = self.tag_stump+'|Manufacturer|'+str(self.tab_number)
+	self.settings_controls[mfgTAG] = wx.TextCtrl(self.sw, name='Manufacturer' ,  value=meta.get_field(mfgTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[mfgTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[mfgTAG] = wx.StaticText(self.sw, -1, 'Manufacturer')
+	self.labels[mfgTAG].SetToolTipString('Manufacturer name')
+	attributesizer.Add(self.labels[mfgTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	attributesizer.Add(self.settings_controls[mfgTAG], 0, wx.EXPAND)
 	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)
-	# Model
-	incbmdlTAG = self.tag+'|Model|'+str(self.tab_number)
-	self.settings_controls[incbmdlTAG] = wx.TextCtrl(self.sw, value=meta.get_field(incbmdlTAG, default=''))
-	self.settings_controls[incbmdlTAG].Bind(wx.EVT_TEXT,self.OnSavingData)
-	self.settings_controls[incbmdlTAG].SetToolTipString('Model number of the Incubator')
-	attributesizer.Add(wx.StaticText(self.sw, -1, 'Model'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	attributesizer.Add(self.settings_controls[incbmdlTAG], 0)
+	
+	modelTAG = self.tag_stump+'|Model|'+str(self.tab_number)
+	self.settings_controls[modelTAG] = wx.TextCtrl(self.sw, value=meta.get_field(modelTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[modelTAG].Bind(wx.EVT_TEXT,self.OnSavingData)
+	self.labels[modelTAG] = wx.StaticText(self.sw , -1,  'Model')
+	self.labels[modelTAG].SetToolTipString('Model number')
+	attributesizer.Add(self.labels[modelTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	attributesizer.Add(self.settings_controls[modelTAG], 0, wx.EXPAND)
 	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)
-	# Attach Files	
-	self.propfileTAG = self.tag+'|AttachFiles|%s'%str(self.tab_number)	
-	showInstBut = wx.Button(self.sw, -1, 'Attach Files', (100,100))
-	showInstBut.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)
+	
+	capacityTAG = self.tag_stump+'|Capacity|'+str(self.tab_number)
+	self.settings_controls[capacityTAG] = wx.TextCtrl(self.sw, value=meta.get_field(capacityTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[capacityTAG].Bind(wx.EVT_TEXT,self.OnSavingData)
+	self.labels[capacityTAG] = wx.StaticText(self.sw , -1,  'Capacity')
+	self.labels[capacityTAG].SetToolTipString('Capacity (L) of the oven')
+	attributesizer.Add(self.labels[capacityTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	attributesizer.Add(self.settings_controls[capacityTAG], 0, wx.EXPAND)
+	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)	
+	
+	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
+	attach_bmp = icons.clip.Scale(20.0, 20.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+	attach_btn = wx.BitmapButton(self.sw, -1, attach_bmp)
+	attach_btn.SetToolTipString("Attach file links")
+	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)
 	self.fileURL_container = gizmos.EditableListBox(self.sw, -1, 'Proprietary Files', wx.DefaultPosition, (100,30), style=gizmos.EL_ALLOW_EDIT)
 	self.fileURL_container.SetStrings(meta.get_field(self.propfileTAG, []))
 	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)
-	attributesizer.Add(self.fileURL_container, 1, wx.EXPAND)
-	attributesizer.Add(showInstBut, 0, wx.ALIGN_CENTER_VERTICAL)	
+	attributesizer.Add(self.fileURL_container, 0, wx.EXPAND)
+	attributesizer.Add(attach_btn, 0, wx.ALIGN_TOP)
 	
+	# Set Mandatory Label colour
+	meta.setLabelColour(self.mandatory_tags, self.labels)
 	#Geometry	
 	self.geometry_staticbox = wx.StaticBox(self.sw, -1, "Geometry")
 	self.geometrysizer = wx.StaticBoxSizer(self.geometry_staticbox, wx.VERTICAL)
@@ -6207,8 +6249,8 @@ class RheometerPanel(wx.Panel):
 	self.geometrysizer.Add(self.ctypeSizer, 0, wx.ALIGN_LEFT|wx.ALL, 5)
 	self.geometrysizer.Add((-1,10))
     
-	if meta.get_field(self.tag+'|GeometryType|'+str(self.tab_number)) is not None: 	
-	    self.onShowGeometry(event=meta.get_field(self.tag+'|GeometryType|'+str(self.tab_number)))
+	if meta.get_field(self.tag_stump+'|GeometryType|'+str(self.tab_number)) is not None: 	
+	    self.onShowGeometry(event=meta.get_field(self.tag_stump+'|GeometryType|'+str(self.tab_number)))
 	else:	    
 	    self.par_plate.Bind(wx.EVT_RADIOBUTTON, self.onShowGeometry)
 	    self.cone_plate.Bind(wx.EVT_RADIOBUTTON, self.onShowGeometry)	
@@ -6245,7 +6287,7 @@ class RheometerPanel(wx.Panel):
 	    
 	fgs = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
 	    
-	diaTAG = self.tag+'|GeometryDiameter|'+str(self.tab_number)
+	diaTAG = self.tag_stump+'|GeometryDiameter|'+str(self.tab_number)
 	dia = meta.get_field(diaTAG, [])
 	self.settings_controls[diaTAG+'|0'] = wx.TextCtrl(self.sw, size=(20,-1), style=wx.TE_PROCESS_ENTER|wx.TE_RIGHT)
 	if len(dia) > 0:
@@ -6261,7 +6303,7 @@ class RheometerPanel(wx.Panel):
 	fgs.Add(self.settings_controls[diaTAG+'|0'], 0, wx.EXPAND)	    
 	fgs.Add(self.settings_controls[diaTAG+'|1'], 0, wx.EXPAND)	
 	
-	materialTAG = self.tag+'|GeometryMaterial|'+str(self.tab_number)
+	materialTAG = self.tag_stump+'|GeometryMaterial|'+str(self.tab_number)
 	material_choices =['Aluminium', 'Stainless Steel', 'Acrylic', 'Other']
 	self.settings_controls[materialTAG]= wx.ListBox(self.sw, -1, wx.DefaultPosition, (-1,30), material_choices, wx.LB_SINGLE)
 	if meta.get_field(materialTAG) is not None:
@@ -6275,9 +6317,9 @@ class RheometerPanel(wx.Panel):
 	
 	if plate_type == 'Parallel':
 	    self.par_plate.SetValue(1)
-	    meta.set_field(self.tag+'|GeometryType|'+str(self.tab_number), 'Parallel')	
+	    meta.set_field(self.tag_stump+'|GeometryType|'+str(self.tab_number), 'Parallel')	
 
-	    gapTAG = self.tag+'|GeometryGap|'+str(self.tab_number)
+	    gapTAG = self.tag_stump+'|GeometryGap|'+str(self.tab_number)
 	    gap = meta.get_field(gapTAG, [])
 	    self.settings_controls[gapTAG+'|0'] = wx.TextCtrl(self.sw, size=(20,-1), style=wx.TE_PROCESS_ENTER|wx.TE_RIGHT)
 	    if len(gap) > 0:
@@ -6295,9 +6337,9 @@ class RheometerPanel(wx.Panel):
 	    
 	if plate_type == 'Cone':
 	    self.cone_plate.SetValue(1)
-	    meta.set_field(self.tag+'|GeometryType|'+str(self.tab_number), 'Cone')	
+	    meta.set_field(self.tag_stump+'|GeometryType|'+str(self.tab_number), 'Cone')	
 	    
-	    angelTAG = self.tag+'|GeometryAngel|'+str(self.tab_number)
+	    angelTAG = self.tag_stump+'|GeometryAngel|'+str(self.tab_number)
 	    angel = meta.get_field(angelTAG, [])
 	    self.settings_controls[angelTAG+'|0'] = wx.TextCtrl(self.sw, size=(20,-1), style=wx.TE_PROCESS_ENTER|wx.TE_RIGHT)
 	    if len(angel) > 0:
@@ -6313,7 +6355,7 @@ class RheometerPanel(wx.Panel):
 	    fgs.Add(self.settings_controls[angelTAG+'|0'], 0, wx.EXPAND)	    
 	    fgs.Add(self.settings_controls[angelTAG+'|1'], 0, wx.EXPAND)	 
 	    
-	    trctTAG = self.tag+'|GeometryTurncate|'+str(self.tab_number)
+	    trctTAG = self.tag_stump+'|GeometryTurncate|'+str(self.tab_number)
 	    trct = meta.get_field(trctTAG, [])
 	    self.settings_controls[trctTAG+'|0'] = wx.TextCtrl(self.sw, size=(20,-1), style=wx.TE_PROCESS_ENTER|wx.TE_RIGHT)
 	    if len(trct) > 0:
@@ -6342,19 +6384,22 @@ class RheometerPanel(wx.Panel):
 	meta.saving_settings(self.protocol, self.nameTAG, self.mandatory_tags)  
 	    
     def OnAttachPropFile(self, event):
-	dia = FileListDialog(self)
-	if dia.ShowModal()== wx.ID_OK:
-	    f_list = dia.drop_target.filelist
-	    if f_list:
-		meta.set_field(self.propfileTAG, f_list)
-		self.fileURL_container.SetStrings(f_list) 
-		    
-     
+	if meta.checkMandatoryTags(self.mandatory_tags) is True:	
+	    dia = FileListDialog(self)
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.drop_target.filelist
+		if f_list:
+		    meta.set_field(self.propfileTAG, f_list)
+		    self.fileURL_container.SetStrings(f_list) 
+		
     def OnSavingData(self, event):
 	ctrl = event.GetEventObject()
 	tag = [t for t, c in self.settings_controls.items() if c==ctrl][0]
-	meta.saveData(ctrl, tag, self.settings_controls)
-
+	if exp.get_tag_stump(tag, 4) in self.mandatory_tags:
+	    meta.saveData(ctrl, tag, self.settings_controls)
+	    meta.setLabelColour(self.mandatory_tags, self.labels)	    
+	elif meta.checkMandatoryTags(self.mandatory_tags):
+	    meta.saveData(ctrl, tag, self.settings_controls)
 
 ########################################################################        
 #### RHEOLOGICAL MANIPULATION SETTING PANEL     ########################
@@ -6477,8 +6522,9 @@ class RheoManipulationPanel(wx.Panel):
                                     ('Oscillation\nAmplitude\n(%)', ['TextCtrl', 30, -1, '']),
                                     ('Oscillation\nFrequency\n(Hz)', ['TextCtrl', 30, -1, ''])
                                     ])		
-	procedure = RowBuilder(self.sw, self.protocol, 'Step', COLUMN_DETAILS, self.mandatory_tags)
-	proceduresizer.Add(procedure, 0, wx.ALL, 5)	
+	self.procedure = RowBuilder(self.sw, self.protocol, 'Step', COLUMN_DETAILS, self.mandatory_tags)
+	self.procedure.SetBackgroundColour('#99CC99')
+	proceduresizer.Add(self.procedure, 0, wx.ALL, 5)	
 	
         #--- Layout ----
 	self.swsizer.Add(titlesizer,0,wx.ALL, 5)
@@ -6614,8 +6660,9 @@ class RHEPanel(wx.Panel):
                                     ('Oscillation\nAmplitude\n(%)', ['TextCtrl', 30, -1, '']),
                                     ('Oscillation\nFrequency\n(Hz)', ['TextCtrl', 30, -1, ''])
                                     ])		
-	procedure = RowBuilder(self.sw, self.protocol, 'Step', COLUMN_DETAILS, self.mandatory_tags)
-	proceduresizer.Add(procedure, 0, wx.ALL, 5)	
+	self.procedure = RowBuilder(self.sw, self.protocol, 'Step', COLUMN_DETAILS, self.mandatory_tags)
+	self.procedure.SetBackgroundColour('#99CC99')
+	proceduresizer.Add(self.procedure, 0, wx.ALL, 5)	
 	
         #--- Layout ----
 	self.swsizer.Add(titlesizer,0,wx.ALL, 5)
@@ -6768,10 +6815,12 @@ class CentrifugePanel(wx.Panel):
 	self.settings_controls[self.nameTAG] = wx.TextCtrl(self.sw, value=meta.get_field(self.nameTAG, default=''), style=wx.TE_PROCESS_ENTER)
 	self.settings_controls[self.nameTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
 	self.settings_controls[self.nameTAG].SetInitialSize((250,20))
-	self.settings_controls[self.nameTAG].SetToolTipString('Type a unique name for identifying the setting:\n%s'%meta.get_field(self.nameTAG))
-	self.save_btn = wx.Button(self.sw, -1, "Save Settings")
-	self.save_btn.Bind(wx.EVT_BUTTON, self.OnSavingSettings)
+	save_bmp = icons.save.Scale(20.0, 20.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+	self.save_btn = wx.BitmapButton(self.sw, -1, save_bmp)
+	self.save_btn.SetToolTipString("Save instance for future reuse")
+	self.save_btn.Bind(wx.EVT_BUTTON, self.OnSavingSettings)	
 	self.labels[self.nameTAG] = wx.StaticText(self.sw , -1,  'Settings Name')
+	self.labels[self.nameTAG].SetToolTipString('Type a unique name for identifying the setting')
 	attributesizer.Add(self.labels[self.nameTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	attributesizer.Add(self.settings_controls[self.nameTAG], 0, wx.EXPAND|wx.ALL, 5) 
 	attributesizer.Add(self.save_btn, 0, wx.ALL, 5)
@@ -6779,19 +6828,19 @@ class CentrifugePanel(wx.Panel):
 	mfgTAG = self.tag_stump+'|Manufacturer|'+str(self.tab_number)
 	self.settings_controls[mfgTAG] = wx.TextCtrl(self.sw, name='Manufacturer' ,  value=meta.get_field(mfgTAG, default=''), style=wx.TE_PROCESS_ENTER)
 	self.settings_controls[mfgTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
-	self.settings_controls[mfgTAG].SetToolTipString('Manufacturer name')
 	self.labels[mfgTAG] = wx.StaticText(self.sw, -1, 'Manufacturer')
+	self.labels[mfgTAG].SetToolTipString('Manufacturer name')
 	attributesizer.Add(self.labels[mfgTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	attributesizer.Add(self.settings_controls[mfgTAG], 0)
+	attributesizer.Add(self.settings_controls[mfgTAG], 0, wx.EXPAND)
 	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)
 	
 	modelTAG = self.tag_stump+'|Model|'+str(self.tab_number)
 	self.settings_controls[modelTAG] = wx.TextCtrl(self.sw, value=meta.get_field(modelTAG, default=''), style=wx.TE_PROCESS_ENTER)
 	self.settings_controls[modelTAG].Bind(wx.EVT_TEXT,self.OnSavingData)
-	self.settings_controls[modelTAG].SetToolTipString('Model number of the Centrifuge')
 	self.labels[modelTAG] = wx.StaticText(self.sw , -1,  'Model')
+	self.labels[modelTAG].SetToolTipString('Model number of the Centrifuge')
 	attributesizer.Add(self.labels[modelTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	attributesizer.Add(self.settings_controls[modelTAG], 0)
+	attributesizer.Add(self.settings_controls[modelTAG], 0, wx.EXPAND)
 	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)
 
 	typeTAG = self.tag_stump+'|Type|'+str(self.tab_number)
@@ -6801,20 +6850,22 @@ class CentrifugePanel(wx.Panel):
 	    self.settings_controls[typeTAG].Append(meta.get_field(typeTAG))
 	    self.settings_controls[typeTAG].SetStringSelection(meta.get_field(typeTAG))
 	self.settings_controls[typeTAG].Bind(wx.EVT_LISTBOX, self.OnSavingData)	    
-	self.settings_controls[typeTAG].SetToolTipString('Type of the Centrifuge')
 	self.labels[typeTAG] = wx.StaticText(self.sw , -1,  'Type')
+	self.labels[typeTAG].SetToolTipString('Type of the Centrifuge')
 	attributesizer.Add(self.labels[typeTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	attributesizer.Add(self.settings_controls[typeTAG], 0)
+	attributesizer.Add(self.settings_controls[typeTAG], 0, wx.EXPAND)
 	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)	
 	
 	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
-	showInstBut = wx.Button(self.sw, -1, 'Attach Files', (100,100))
-	showInstBut.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)
+	attach_bmp = icons.clip.Scale(20.0, 20.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+	attach_btn = wx.BitmapButton(self.sw, -1, attach_bmp)
+	attach_btn.SetToolTipString("Attach file links")
+	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)
 	self.fileURL_container = gizmos.EditableListBox(self.sw, -1, 'Proprietary Files', wx.DefaultPosition, (100,30), style=gizmos.EL_ALLOW_EDIT)
 	self.fileURL_container.SetStrings(meta.get_field(self.propfileTAG, []))
 	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)
-	attributesizer.Add(self.fileURL_container, 1, wx.EXPAND)
-	attributesizer.Add(showInstBut, 0, wx.ALIGN_CENTER_VERTICAL)
+	attributesizer.Add(self.fileURL_container, 0, wx.EXPAND)
+	attributesizer.Add(attach_btn, 0, wx.ALIGN_TOP)
 	
 	# Set Mandatory Label colour
 	meta.setLabelColour(self.mandatory_tags, self.labels)
@@ -6998,6 +7049,7 @@ class CentrifugationPanel(wx.Panel):
                                     ('Temp\n(C)', ['TextCtrl', 30, -1, ''])
                                     ])		
 	self.procedure = RowBuilder(self.sw, self.protocol, 'Step', COLUMN_DETAILS, self.mandatory_tags)
+	self.procedure.SetBackgroundColour('#99CC99')
 	proceduresizer.Add(self.procedure, 0, wx.ALL, 5)	
 	
 	# Set Mandatory Label colour
@@ -7141,7 +7193,7 @@ class OvenPanel(wx.Panel):
 	self.tab_number = tab_number	# tab or instance number
 	self.tag_stump = tag_stump                  # first two parts of tag (type|event) e.g Instrument|Centrifuge
 	self.protocol = self.tag_stump+'|'+str(self.tab_number)
-	self.mandatory_tags = []        # mandatory fields 
+	self.mandatory_tags = [self.tag_stump+'|Manufacturer|'+str(self.tab_number)]        # mandatory fields 
 	
 	# Panel
 	self.sw = wx.ScrolledWindow(self)
@@ -7161,10 +7213,12 @@ class OvenPanel(wx.Panel):
 	self.settings_controls[self.nameTAG] = wx.TextCtrl(self.sw, value=meta.get_field(self.nameTAG, default=''), style=wx.TE_PROCESS_ENTER)
 	self.settings_controls[self.nameTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
 	self.settings_controls[self.nameTAG].SetInitialSize((250,20))
-	self.settings_controls[self.nameTAG].SetToolTipString('Type a unique name for identifying the setting:\n%s'%meta.get_field(self.nameTAG))
-	self.save_btn = wx.Button(self.sw, -1, "Save Settings")
+	save_bmp = icons.save.Scale(20.0, 20.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+	self.save_btn = wx.BitmapButton(self.sw, -1, save_bmp)
+	self.save_btn.SetToolTipString("Save instance for future reuse")
 	self.save_btn.Bind(wx.EVT_BUTTON, self.OnSavingSettings)
 	self.labels[self.nameTAG] = wx.StaticText(self.sw , -1,  'Settings Name')
+	self.labels[self.nameTAG].SetToolTipString('Type a unique name for identifying the setting')
 	attributesizer.Add(self.labels[self.nameTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	attributesizer.Add(self.settings_controls[self.nameTAG], 0, wx.EXPAND|wx.ALL, 5) 
 	attributesizer.Add(self.save_btn, 0, wx.ALL, 5)
@@ -7172,38 +7226,31 @@ class OvenPanel(wx.Panel):
 	mfgTAG = self.tag_stump+'|Manufacturer|'+str(self.tab_number)
 	self.settings_controls[mfgTAG] = wx.TextCtrl(self.sw, name='Manufacturer' ,  value=meta.get_field(mfgTAG, default=''), style=wx.TE_PROCESS_ENTER)
 	self.settings_controls[mfgTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
-	self.settings_controls[mfgTAG].SetToolTipString('Manufacturer name')
 	self.labels[mfgTAG] = wx.StaticText(self.sw, -1, 'Manufacturer')
+	self.labels[mfgTAG].SetToolTipString('Manufacturer name')
 	attributesizer.Add(self.labels[mfgTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	attributesizer.Add(self.settings_controls[mfgTAG], 0)
+	attributesizer.Add(self.settings_controls[mfgTAG], 0, wx.EXPAND)
 	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)
 	
 	modelTAG = self.tag_stump+'|Model|'+str(self.tab_number)
 	self.settings_controls[modelTAG] = wx.TextCtrl(self.sw, value=meta.get_field(modelTAG, default=''), style=wx.TE_PROCESS_ENTER)
 	self.settings_controls[modelTAG].Bind(wx.EVT_TEXT,self.OnSavingData)
-	self.settings_controls[modelTAG].SetToolTipString('Model number of the Centrifuge')
 	self.labels[modelTAG] = wx.StaticText(self.sw , -1,  'Model')
+	self.labels[modelTAG].SetToolTipString('Model number')
 	attributesizer.Add(self.labels[modelTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	attributesizer.Add(self.settings_controls[modelTAG], 0)
+	attributesizer.Add(self.settings_controls[modelTAG], 0, wx.EXPAND)
 	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)
 	
-	capacityTAG = self.tag_stump+'|Capacity|'+str(self.tab_number)
-	self.settings_controls[capacityTAG] = wx.TextCtrl(self.sw, value=meta.get_field(capacityTAG, default=''), style=wx.TE_PROCESS_ENTER)
-	self.settings_controls[capacityTAG].Bind(wx.EVT_TEXT,self.OnSavingData)
-	self.settings_controls[capacityTAG].SetToolTipString('Capacity (L) of the oven')
-	self.labels[capacityTAG] = wx.StaticText(self.sw , -1,  'Capacity')
-	attributesizer.Add(self.labels[capacityTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	attributesizer.Add(self.settings_controls[capacityTAG], 0)
-	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)	
-	
 	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
-	showInstBut = wx.Button(self.sw, -1, 'Attach Files', (100,100))
-	showInstBut.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)
+	attach_bmp = icons.clip.Scale(20.0, 20.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+	attach_btn = wx.BitmapButton(self.sw, -1, attach_bmp)
+	attach_btn.SetToolTipString("Attach file links")
+	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)
 	self.fileURL_container = gizmos.EditableListBox(self.sw, -1, 'Proprietary Files', wx.DefaultPosition, (100,30), style=gizmos.EL_ALLOW_EDIT)
 	self.fileURL_container.SetStrings(meta.get_field(self.propfileTAG, []))
 	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)
-	attributesizer.Add(self.fileURL_container, 1, wx.EXPAND)
-	attributesizer.Add(showInstBut, 0, wx.ALIGN_CENTER_VERTICAL)
+	attributesizer.Add(self.fileURL_container, 0, wx.EXPAND)
+	attributesizer.Add(attach_btn, 0, wx.ALIGN_TOP)
 	
 	# Set Mandatory Label colour
 	meta.setLabelColour(self.mandatory_tags, self.labels)

@@ -264,14 +264,16 @@ class ExperimentSettings(Singleton):
             else:
                 self.timeline.add_event(welltag, platewell_ids)
 
-    def save_to_file(self, file):
+    def save_to_file(self, file, version):
         f = open(file, 'w')
+	f.write(version+'\n')
         for field, value in sorted(self.global_settings.items()):
             f.write('%s = %s\n'%(field, repr(value)))
         f.close()
     
     def saving_settings(self, protocol, tag, m_tags):
 	if not self.get_field(tag):
+	    import wx
 	    dial = wx.MessageDialog(None, 'Please provide a settings/protocol name', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()  
 	    return	
@@ -332,15 +334,23 @@ class ExperimentSettings(Singleton):
 		f.write('%s|%s\n'%(attr, info))
 	f.close()	
 
-    def load_from_file(self, file):
+    def load_from_file(self, file, menuitem):
         # Populate the tag structure
         self.clear()
         f = open(file, 'r')
-        for line in f:
+	lines = [line.strip() for line in f]
+	if not lines.pop(0).startswith('ProtocolNavigator'):
+	    import wx
+	    dial = wx.MessageDialog(None, 'Selected file is not a ProtocolNavigator file', 'Error', wx.OK | wx.ICON_ERROR)
+	    dial.ShowModal()  
+	    return
+        for line in lines:
             tag, value = line.split('=', 1)
             tag = tag.strip()
             self.set_field(tag, eval(value), notify_subscribers=False)
         f.close()
+	# Disable the open file menu
+	menuitem.Enable(False)
         
         # Populate PlateDesign
         PlateDesign.clear()
@@ -698,6 +708,7 @@ class ExperimentSettings(Singleton):
 	"""Checks whether the mandatory fields/tags being filled"""
 	for tag in tags:
 	    if not self.get_field(tag):	
+		import wx
 		dial = wx.MessageDialog(None, 'Please fill %s mandatory field' %get_tag_attribute(tag), 'Error', wx.OK | wx.ICON_ERROR)
 		dial.ShowModal()   
 		return
