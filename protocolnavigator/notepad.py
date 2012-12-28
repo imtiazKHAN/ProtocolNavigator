@@ -1,6 +1,8 @@
 import wx
 import sys
 import os
+import webbrowser
+import icons
 from experimentsettings import *
 
 ########################################################################        
@@ -42,11 +44,11 @@ class NotePad(wx.Dialog):
 	else:
 	    self.noteSelect.SetStringSelection('None')
 	    self.noteSelect.Bind(wx.EVT_RADIOBOX, self.onCreateNotepad)
-	self.titlesizer.Add(self.noteSelect, 1, wx.ALL|wx.EXPAND, 5)		
+	self.titlesizer.Add(self.noteSelect, 0)		
 	
 	#---------------Layout with sizers---------------
 	self.Sizer = wx.BoxSizer(wx.VERTICAL)
-	self.Sizer.Add(self.titlesizer, 0)
+	self.Sizer.Add(self.titlesizer, 0, wx.EXPAND|wx.ALL, 10)
 	self.Sizer.Add(self.sw, 1, wx.EXPAND|wx.ALL, 5)	
 	self.Sizer.Add(self.butt_sizer,  0, wx.ALL|wx.ALIGN_RIGHT, 5)			
 
@@ -68,7 +70,9 @@ class NotePad(wx.Dialog):
 	    self.noteDescrip = wx.TextCtrl(self.sw,  value=meta.get_field('Notes|%s|%s|%s' %(self.noteType, str(self.timepoint), str(self.page_counter)), default=''))
 	    self.noteDescrip.SetInitialSize((250, 20))
 	    
-	    goURLBtn = wx.Button(self.sw, -1, 'Go to URL')
+	    url_bmp = icons.url.Scale(20.0, 20.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+	    goURLBtn = wx.BitmapButton(self.sw, -1, url_bmp)
+	    goURLBtn.SetToolTipString("Open webpage in browser")	    
 	    goURLBtn.Bind(wx.EVT_BUTTON, self.goURL)
 	    
 	    urlsizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -86,7 +90,6 @@ class NotePad(wx.Dialog):
 	    if meta.get_field('Notes|%s|%s|%s' %(self.noteType, str(self.timepoint), str(self.page_counter))) is not None:	
 		self.mediaplayer.mc.Load(meta.get_field('Notes|%s|%s|%s' %(self.noteType, str(self.timepoint), str(self.page_counter))))
 		
-		
 	    mediasizer = wx.BoxSizer(wx.HORIZONTAL)
 	    mediasizer.Add(self.noteDescrip, 0, wx.ALL, 10)
 	    mediasizer.Add(self.browseBtn, 0, wx.ALIGN_CENTER_VERTICAL)
@@ -94,11 +97,10 @@ class NotePad(wx.Dialog):
 	    playersizer.Add(self.mediaplayer, 0, wx.ALIGN_CENTER_VERTICAL)
 	    self.swsizer.Add(mediasizer, 0, wx.EXPAND|wx.ALL, 10)
 	    self.swsizer.Add(playersizer, 1, wx.EXPAND|wx.ALL, 10)
-
 	    
 	self.sw.SetSizer(self.swsizer)
 	self.sw.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
-	self.sw.Refresh()	
+	self.sw.Refresh()
 
 	
     def loadFile(self, event):
@@ -139,7 +141,7 @@ class MediaPlayer(wx.Panel):
             return
 
         vsizer = wx.BoxSizer(wx.VERTICAL)
-        vsizer.Add(self.mc, 0, border=10)
+        vsizer.Add(self.mc, 0, wx.EXPAND|wx.ALL, 10)
         self.SetSizer(vsizer)
         
         self.mc.ShowPlayerControls()

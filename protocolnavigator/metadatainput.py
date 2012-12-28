@@ -4985,6 +4985,9 @@ class DyePanel(wx.Panel):
     def OnAttachPropFile(self, event):
 	    if meta.checkMandatoryTags(self.mandatory_tags):	
 		dia = FileListDialog(self)
+		if meta.get_field(self.propfileTAG):
+		    for file in meta.get_field(self.propfileTAG):
+			dia.drop_target.window.AppendText("%s\n" % file)		
 		if dia.ShowModal()== wx.ID_OK:
 		    f_list = dia.drop_target.filelist
 		    if f_list:

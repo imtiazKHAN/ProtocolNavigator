@@ -66,7 +66,7 @@ class Bench(wx.Panel):
         self.taglistctrl.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.on_instance_selected)
         self.del_evt_button.Bind(wx.EVT_BUTTON, self.on_del_event)
 	self.del_evt_button.Disable()
-	#self.attach_button.Bind(wx.EVT_BUTTON, self.OnAttachPropFile)
+	self.attach_button.Bind(wx.EVT_BUTTON, self.OnAttachPropFile)
 	self.add_note_button.Bind(wx.EVT_BUTTON, self.on_add_note)
         self.group_checklist.GetCheckList().Bind(wx.EVT_CHECKLISTBOX, self.update_plate_groups)
 
@@ -197,8 +197,8 @@ class Bench(wx.Panel):
 	    dial = wx.MessageDialog(None, 'No Timeline found!!', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()              
 	    return	
-	prefixes = set([get_tag_stump(ev.get_welltag(), 2) for ev in self.events_by_timepoint[self.get_selected_timepoint()]])	    
-		
+	
+	prefixes = set([get_tag_stump(ev.get_welltag(), 2) for ev in self.events_by_timepoint[self.get_selected_timepoint()]])	    	
 	if not prefixes:
 	    dial = wx.MessageDialog(None, 'Notes need to be associated with events!!', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()              
@@ -234,8 +234,8 @@ class Bench(wx.Panel):
 	    dial = wx.MessageDialog(None, 'No Timeline found!!', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()              
 	    return	
-	prefixes = set([get_tag_stump(ev.get_welltag(), 2) for ev in self.events_by_timepoint[self.get_selected_timepoint()]])	    
-		
+	
+	prefixes = set([get_tag_stump(ev.get_welltag(), 2) for ev in self.events_by_timepoint[self.get_selected_timepoint()]])	    	
 	if not prefixes:
 	    dial = wx.MessageDialog(None, 'Attachments need to be associated with events!!', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()              
@@ -246,19 +246,17 @@ class Bench(wx.Panel):
 	except: 
 	    return	
 		
-	self.page_counter = meta.get_new_protocol_id('Attachment')	
+	self.page_counter = meta.get_new_protocol_id('Attachments')	
 	if int(self.page_counter) > 1:
 	    lineage_panel.timeline_panel.on_note_icon_add()
-	    	    
 	    
 	dia = FileListDialog(self)
 	if dia.ShowModal()== wx.ID_OK:
 	    f_list = dia.drop_target.filelist
 	    if f_list:
-		meta.set_field(self.propfileTAG, f_list)
-		self.fileURL_container.SetStrings(f_list)     
-
-    
+		meta.set_field('Attachments|Files|%s|%s' %(str(self.get_selected_timepoint()), str(self.page_counter)), f_list)  	    
+		lineage_panel.timeline_panel.on_note_icon_add()		
+		
     def on_del_event(self, evt):
         protocols = self.taglistctrl.get_selected_protocols()
         if protocols == []:

@@ -14,6 +14,7 @@ from PIL import Image
 from time import time
 from datalinkList import *
 from notepad import NotePad
+from draganddrop import FileListDialog, MyFileDropTarget
 
 # x-spacing modes for timeline and lineage panels
 SPACE_EVEN = 0
@@ -126,6 +127,7 @@ class TimelinePanel(wx.Panel):
     TIC_SIZE = 10
     FONT_SIZE = (5,10)
     NOTE_ICON_FACTOR = 0.0
+    ATTACH_ICON_FACTOR = 0.0
 
     def __init__(self, parent, **kwargs):
         wx.Panel.__init__(self, parent, **kwargs)
@@ -177,7 +179,7 @@ class TimelinePanel(wx.Panel):
     def on_note_icon_add(self):
 	note_num = {}
 	for tag in meta.global_settings: 
-	    if tag.startswith('Notes'):
+	    if tag.startswith('Notes') or tag.startswith('Attachments'):
 		timepoint = exp.get_tag_attribute(tag)
 		if not timepoint in note_num:
 		    note_num[timepoint] = 1
@@ -188,6 +190,21 @@ class TimelinePanel(wx.Panel):
 	    self._recalculate_min_size()
 	    self.Refresh(eraseBackground=False)
 	    self.Parent.FitInside()
+    
+    def on_attach_icon_add(self):
+	attach_num = {}
+	for tag in meta.global_settings: 
+	    if tag.startswith('Attachments'):
+		timepoint = exp.get_tag_attribute(tag)
+		if not timepoint in attach_num:
+		    attach_num[timepoint] = 1
+		else:
+		    attach_num[timepoint] += 1	
+	if attach_num:
+	    self.NOTE_ICON_FACTOR = (max(attach_num.values())+1) * self.ICON_SIZE
+	    self._recalculate_min_size()
+	    self.Refresh(eraseBackground=False)
+	    self.Parent.FitInside()    
 	
     def _recalculate_min_size(self):
         if self.timepoints is not None and len(self.timepoints) > 0:
@@ -212,8 +229,10 @@ class TimelinePanel(wx.Panel):
         MAX_TIMEPOINT = self.timepoints[-1]
 	WIGGEL_NUM = 100
         self.hover_timepoint = None
-	self.current_ntag = None
+	self.curr_note_tag = None
 	self.on_note_icon_add()
+	#self.current_atag = None
+	#self.on_attach_icon_add()
 
         dc = wx.BufferedPaintDC(self)
         dc.Clear()
@@ -293,21 +312,21 @@ class TimelinePanel(wx.Panel):
             dc.DrawLine(x, y - TIC_SIZE, 
                         x, y + TIC_SIZE)    
 	    
-	    # Draw the note icon above the tick
+	    # Draw the note/attachment icon above the tick
 	    note_tags = [ tag for tag in meta.global_settings
-	                  if tag.startswith('Notes') and exp.get_tag_attribute(tag) == str(timepoint)] 
-	    #if note_tags:
-		#self.on_note_icon_add()  #update the min_h of the panel
-	    for i, ntag in enumerate(note_tags):
-		    bmp = icons.note.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 		
-		    dc.DrawBitmap(bmp, x - ICON_SIZE / 2.0, 
-		                    y - ((i+1)*ICON_SIZE) - TIC_SIZE - 1)	
-		    
-		    if icon_hover(self.cursor_pos, (x - ICON_SIZE / 2.0, 
-		                    y - ((i+1)*ICON_SIZE) - TIC_SIZE - 1), ICON_SIZE):
-			self.current_ntag = ntag
-					#highlight the note icon		    
-            		
+	                  if (tag.startswith('Notes') or tag.startswith('Attachments')) and exp.get_tag_attribute(tag) == str(timepoint)] 
+	    for i, note_tag in enumerate(note_tags):
+		if exp.get_tag_type(note_tag) == 'Notes':
+		    bmp = icons.note.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 
+		if exp.get_tag_type(note_tag) == 'Attachments':
+		    bmp = icons.clip.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 
+		dc.DrawBitmap(bmp, x - ICON_SIZE / 2.0, 
+	                        y - ((i+1)*ICON_SIZE) - TIC_SIZE - 1)	
+		
+		if icon_hover(self.cursor_pos, (x - ICON_SIZE / 2.0, 
+	                        y - ((i+1)*ICON_SIZE) - TIC_SIZE - 1), ICON_SIZE):
+		    self.curr_note_tag = note_tag
+
             # draw the timepoint beneath the line
             time_string = exp.format_time_string(timepoint)
             wtext = FONT_SIZE[0] * len(time_string)
@@ -333,16 +352,24 @@ class TimelinePanel(wx.Panel):
             bench.set_timepoint(self.hover_timepoint)
             bench.update_well_selections()
 	
-	if self.current_ntag is not None:
-	    note_type = exp.get_tag_event(self.current_ntag)	    
-	    timepoint = exp.get_tag_attribute(self.current_ntag)
-	    self.page_counter = exp.get_tag_instance(self.current_ntag)
-	    
-	    
-	    note_dia = NotePad(self, note_type, timepoint, self.page_counter)
-	    if note_dia.ShowModal() == wx.ID_OK:
+	if self.curr_note_tag is not None:
+	    note_type = exp.get_tag_event(self.curr_note_tag)	    
+	    timepoint = exp.get_tag_attribute(self.curr_note_tag)
+	    self.page_counter = exp.get_tag_instance(self.curr_note_tag)	
+	    if exp.get_tag_type(self.curr_note_tag) == 'Notes':
+		note_dia = NotePad(self, note_type, timepoint, self.page_counter)
+		if note_dia.ShowModal() == wx.ID_OK:
 		    # Notes|<type>|<timepoint>|<instance> = value
-		meta.set_field('Notes|%s|%s|%s' %(note_dia.noteType, timepoint, str(self.page_counter)), note_dia.noteDescrip.GetValue())   	    
+		    meta.set_field('Notes|%s|%s|%s' %(note_dia.noteType, timepoint, str(self.page_counter)), note_dia.noteDescrip.GetValue())  
+	    elif exp.get_tag_type(self.curr_note_tag) == 'Attachments':
+		attach_dia = FileListDialog(self)
+		for file in meta.get_field(self.curr_note_tag):
+		    attach_dia.drop_target.window.AppendText("%s\n" % file)
+		if attach_dia.ShowModal()== wx.ID_OK:
+		    f_list = attach_dia.drop_target.filelist
+		    if f_list:
+			meta.set_field('Attachments|Files|%s|%s' %(timepoint, str(self.page_counter)), f_list)  
+		
 
 class LineagePanel(wx.Panel):
     '''A Panel that displays a lineage tree.
