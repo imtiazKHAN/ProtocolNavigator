@@ -4809,10 +4809,20 @@ class DyePanel(wx.Panel):
 	text.SetFont(font)
 	pic=wx.StaticBitmap(self.sw)
 	pic.SetBitmap(icons.stain.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())	
+	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
+	attach_bmp = icons.clip.Scale(16.0, 16.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
+	attach_btn = wx.BitmapButton(self.sw, -1, attach_bmp)
+	attach_btn.SetToolTipString("Attach file links.")
+	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.propfileTAG, default=[]))))
+	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)	
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)	
-	titlesizer.Add(pic)
+	titlesizer.Add(pic, 0)
 	titlesizer.AddSpacer((5,-1))	
 	titlesizer.Add(text, 0)
+	titlesizer.AddSpacer((10,-1))
+	titlesizer.Add(attach_btn, 0)
+	titlesizer.AddSpacer((5,-1))
+	titlesizer.Add(self.attach_file_num)
 	
 	# Additives
 	staticbox = wx.StaticBox(self.sw, -1, "Additives")
@@ -4947,17 +4957,6 @@ class DyePanel(wx.Panel):
         attributesizer.Add(self.settings_controls[chemothTAG], 0, wx.EXPAND)
         attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)
 	
-	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
-	attach_bmp = icons.clip.Scale(20.0, 20.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
-	attach_btn = wx.BitmapButton(self.sw, -1, attach_bmp)
-	attach_btn.SetToolTipString("Attach file links.")
-	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)
-	self.fileURL_container = gizmos.EditableListBox(self.sw, -1, 'Associated Files', wx.DefaultPosition, (100,30), style=gizmos.EL_ALLOW_EDIT)
-	self.fileURL_container.SetStrings(meta.get_field(self.propfileTAG, []))
-	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)
-	attributesizer.Add(self.fileURL_container, 1, wx.EXPAND)
-	attributesizer.Add(attach_btn, 0, wx.ALIGN_TOP)	
-
 	# Set Mandatory Label colour
 	meta.setLabelColour(self.mandatory_tags, self.labels)	
 	
@@ -4992,7 +4991,8 @@ class DyePanel(wx.Panel):
 		    f_list = dia.drop_target.filelist
 		    if f_list:
 			meta.set_field(self.propfileTAG, f_list)
-			self.fileURL_container.SetStrings(f_list) 
+			self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+			
 			
     def OnSavingSettings(self, event):
 	meta.saving_settings(self.protocol, self.nameTAG, self.mandatory_tags)     
