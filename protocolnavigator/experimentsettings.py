@@ -637,10 +637,12 @@ class ExperimentSettings(Singleton):
 	elif act =='Harvest':
 	    icon = icons.harvest.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
 	    
-	elif act =='ChemAgent':
+	elif act =='Chemical':
 	    icon = icons.treat.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 
-	elif act =='BioAgent':
+	elif act =='Biological':
 	    icon = icons.dna.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+	elif act =='Physical':
+	    icon = icons.physical.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
 	    
 	elif act =='Dye':
 	    icon = icons.stain.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 
@@ -657,7 +659,7 @@ class ExperimentSettings(Singleton):
 	    icon = icons.drying.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
 	elif act =='Medium':
 	    icon = icons.medium.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
-	elif act =='Incubator':
+	elif act =='Incubation':
 	    icon = icons.incubator.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 
 	elif act =='RheoManipulation':
 	    icon = icons.rheometer.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 	
@@ -745,13 +747,14 @@ class ExperimentSettings(Singleton):
 EVENT_RGB ={
     'Seed': (255,255,0,100),
     'Harvest': (227,205,41,100),
-    'ChemAgent': (255,51,102,100),
-    'BioAgent': (102,102,255,100),
+    'Chemical': (255,51,102,100),
+    'Biological': (102,102,255,100),
+    'Physical': (107, 112, 255, 100),
     'Dye': (27,188,224,100),
     'Immuno': (27,224,43,100),
     'Genetic': (27,224,181,100),
     'Centrifugation': (224,27,198,100),
-    'Incubator': (224,27,224,100),
+    'Incubation': (224,27,224,100),
     'RheoManipulation': (224, 27, 244, 100),
     'Wash': (175,27,224,100),
     'Dry': (168,27224,100),

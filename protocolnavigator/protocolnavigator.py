@@ -106,13 +106,18 @@ class ProtocolNavigator(wx.App):
         if dlg.ShowModal() == wx.ID_OK:
             os.chdir(os.path.split(dlg.GetPath())[0])
             ExperimentSettings.getInstance().save_to_file(dlg.GetPath(), VERSION)
+	    if exp_title is not None:
+		self.settings_frame.SetTitle('ProtocolNavigator - %s'%exp_title)
     
             
     def on_load_settings(self, evt):
+	meta = ExperimentSettings.getInstance()
         dlg = wx.FileDialog(None, "Select the file containing your ProtocolNavigator workspace...",
                             defaultDir=os.getcwd(), style=wx.OPEN|wx.FD_CHANGE_DIR)
         if dlg.ShowModal() == wx.ID_OK:
             ExperimentSettings.getInstance().load_from_file(dlg.GetPath(), self.loadSettingsMenuItem)
+	    if  meta.get_field('Overview|Project|Title') is not None:
+		self.settings_frame.SetTitle('ProtocolNavigator - %s'%meta.get_field('Overview|Project|Title'))	    
     
     def on_print_protocol(self, event):
         """ Takes a screenshot of the lineage panel pos & size (rect). 
