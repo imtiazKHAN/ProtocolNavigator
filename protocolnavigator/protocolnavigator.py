@@ -37,6 +37,9 @@ class ProtocolNavigator(wx.App):
         self.settings_frame.Bind(wx.EVT_MENU, self.on_save_settings, saveSettingsMenuItem)
         self.settings_frame.Bind(wx.EVT_MENU, self.on_load_settings, self.loadSettingsMenuItem)
         self.settings_frame.Bind(wx.EVT_MENU, self.on_print_protocol, printExperimentMenuItem)
+	
+	self.filename = 'new_experiment.txt'	
+
         self.settings_frame.GetMenuBar().Append(fileMenu, 'File')
         
         self.settings_frame.Bind(wx.EVT_CLOSE, self.onCloseWindow)
@@ -63,6 +66,8 @@ class ProtocolNavigator(wx.App):
         self.settings_frame.SetIcon(icon)
         self.settings_frame.Layout()
         self.settings_frame.Show()
+	
+	self.auto_timeinterval()
          
         return True
  
@@ -95,12 +100,12 @@ class ProtocolNavigator(wx.App):
         exp_title = meta.get_field('Overview|Project|Title')
         if None not in [exp_date, exp_num, exp_title]:
             day, month, year = exp_date.split('/')
-            filename = '%s%s%s_%s_%s.txt'%(year, month, day , exp_num, exp_title)
-        else:
-            filename = 'new_experiment.txt'
+            self.filename = '%s%s%s_%s_%s.txt'%(year, month, day , exp_num, exp_title)
+        #else:
+            #filename = 'new_experiment.txt'
         
         dlg = wx.FileDialog(None, message='Saving experimental metadata...', 
-                            defaultDir=os.getcwd(), defaultFile=filename, 
+                            defaultDir=os.getcwd(), defaultFile=self.filename, 
                             wildcard='.txt', 
                             style=wx.SAVE|wx.FD_OVERWRITE_PROMPT)
         if dlg.ShowModal() == wx.ID_OK:
@@ -147,6 +152,19 @@ class ProtocolNavigator(wx.App):
 		dlg.Destroy()
 	else:
 	    event.Skip()
+	    
+    def auto_timeinterval(self):
+	self.auto_save()
+	wx.CallLater(int(5 * 1000), self.auto_timeinterval)
+	
+    def auto_save(self):
+	meta = ExperimentSettings.getInstance()
+	if meta.global_settings:
+	    curr_dir = os.path.dirname(os.path.abspath(__file__))
+	    ExperimentSettings.getInstance().save_to_file(curr_dir+'\\%s'%self.filename, VERSION)
+	    
+	
+    
 		
 if __name__ == '__main__':
     app = ProtocolNavigator(redirect=False)

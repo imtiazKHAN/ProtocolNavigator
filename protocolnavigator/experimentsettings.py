@@ -91,7 +91,7 @@ class ExperimentSettings(Singleton):
         '''returns all existing TEMPORAL tags as list'''
         return [tag for tag in self.global_settings 
                 if tag.split('|')[0] in ('Transfer', 'Perturbation', 
-                                    'Labelling', 'AddProcess', 'DataAcquis', 'InstProcess', 'Notes')]
+                                    'Labeling', 'AddProcess', 'DataAcquis', 'InstProcess', 'Notes')]
 
     def get_field_instances(self, tag_prefix):
         '''returns a list of unique instance ids for each tag beginning with 
@@ -848,7 +848,11 @@ FLUOR_SPECTRUM = {
                    'BD Horizon V500' : ['390-450', '460-500'],
              }
 
-
+ATTRIBUTE_THESAURUS = {
+    'Immuno': ['Immunological', ]
+    
+    
+    }
 class Vessel(object):
     def __init__(self, vessel_type, instance, shape, group, **kwargs):
         self.instance    = instance
