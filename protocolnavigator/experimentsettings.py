@@ -272,14 +272,13 @@ class ExperimentSettings(Singleton):
         f.close()
     
     def saving_settings(self, protocol, tag, m_tags):
+	import wx
 	if not self.get_field(tag):
-	    import wx
 	    dial = wx.MessageDialog(None, 'Please provide a settings/protocol name', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()  
 	    return	
 	if self.checkMandatoryTags(m_tags):
 	    filename = self.get_field(tag)+'.txt'
-	    
 	    dlg = wx.FileDialog(None, message='Saving ...', 
 	                        defaultDir=os.getcwd(), defaultFile=filename, 
 	                        wildcard='.txt', 
@@ -436,6 +435,7 @@ class ExperimentSettings(Singleton):
             if re.match(matchstring, tag):
                 for callback in callbacks:
                     callback(tag)
+		    print "something has changed"
                     
     def getNM(self, nm):
         return int(nm.split('-')[0]), int(nm.split('-')[1])
@@ -671,7 +671,7 @@ class ExperimentSettings(Singleton):
 	elif act =='TLM':
 	    icon = icons.tlm.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
 	elif act =='RHE':
-	    icon = icons.rheometer.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
+	    icon = icons.rhe.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
 	
 	#elif act =='Hint':
 	    #icon = icons.hint.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 

@@ -11,6 +11,7 @@ import wx
 import os
 
 VERSION = 'ProtocolNavigator_v1.12.12'
+AUTO_SAVE_INTERVAL = 500  # in seconds
 
 class ProtocolNavigator(wx.App):
     '''The ProtocolNavigator Application
@@ -38,7 +39,7 @@ class ProtocolNavigator(wx.App):
         self.settings_frame.Bind(wx.EVT_MENU, self.on_load_settings, self.loadSettingsMenuItem)
         self.settings_frame.Bind(wx.EVT_MENU, self.on_print_protocol, printExperimentMenuItem)
 	
-	self.filename = 'new_experiment.txt'	
+	self.temp_filename = 'temp_experiment.txt'	
 
         self.settings_frame.GetMenuBar().Append(fileMenu, 'File')
         
@@ -101,8 +102,8 @@ class ProtocolNavigator(wx.App):
         if None not in [exp_date, exp_num, exp_title]:
             day, month, year = exp_date.split('/')
             self.filename = '%s%s%s_%s_%s.txt'%(year, month, day , exp_num, exp_title)
-        #else:
-            #filename = 'new_experiment.txt'
+        else:
+            self.filename = 'new_experiment.txt'
         
         dlg = wx.FileDialog(None, message='Saving experimental metadata...', 
                             defaultDir=os.getcwd(), defaultFile=self.filename, 
@@ -155,13 +156,12 @@ class ProtocolNavigator(wx.App):
 	    
     def auto_timeinterval(self):
 	self.auto_save()
-	wx.CallLater(int(5 * 1000), self.auto_timeinterval)
+	wx.CallLater(AUTO_SAVE_INTERVAL * 1000, self.auto_timeinterval)
 	
     def auto_save(self):
-	meta = ExperimentSettings.getInstance()
-	if meta.global_settings:
+	if ExperimentSettings.global_settings:
 	    curr_dir = os.path.dirname(os.path.abspath(__file__))
-	    ExperimentSettings.getInstance().save_to_file(curr_dir+'\\%s'%self.filename, VERSION)
+	    ExperimentSettings.getInstance().save_to_file(curr_dir+'\\%s'%self.temp_filename, VERSION)
 	    
 	
     
