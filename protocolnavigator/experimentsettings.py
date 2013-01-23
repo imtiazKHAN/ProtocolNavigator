@@ -6,6 +6,8 @@ from singleton import Singleton
 from utils import *
 from timeline import Timeline
 
+
+VERSION = 'ProtocolNavigator_v1.01.13'
 # TODO: Updating PlateDesign could be done entirely within 
 #       set_field and remove_field.
 #
@@ -60,7 +62,7 @@ class ExperimentSettings(Singleton):
     global_settings = {}
     timeline        = Timeline('TEST_STOCK')
     subscribers     = {}
-    
+   
     def __init__(self):
         pass
     
@@ -264,9 +266,9 @@ class ExperimentSettings(Singleton):
             else:
                 self.timeline.add_event(welltag, platewell_ids)
 
-    def save_to_file(self, file, version):
+    def save_to_file(self, file):
         f = open(file, 'w')
-	f.write(version+'\n')
+	f.write(VERSION+'\n')
         for field, value in sorted(self.global_settings.items()):
             f.write('%s = %s\n'%(field, repr(value)))
         f.close()
@@ -305,10 +307,6 @@ class ExperimentSettings(Singleton):
 	    print info
 	    f.write('%s = %s\n'%(attr, repr(info)))
 	f.close()	    	
-	
-	
-
-	
     
     def save_supp_protocol_file(self, file, protocol):
 	instance = get_tag_attribute(protocol)
@@ -433,9 +431,9 @@ class ExperimentSettings(Singleton):
     def notify_subscribers(self, tag):
         for matchstring, callbacks in self.subscribers.items():
             if re.match(matchstring, tag):
+		self.save_auto()
                 for callback in callbacks:
                     callback(tag)
-		    print "something has changed"
                     
     def getNM(self, nm):
         return int(nm.split('-')[0]), int(nm.split('-')[1])
@@ -578,6 +576,9 @@ class ExperimentSettings(Singleton):
 		user_input = ctrl.GetValue()
 		self.set_field(tag, user_input)	
 		#ctrl.SetToolTipString(ctrl.GetValue())
+    def save_auto(self):
+	curr_dir = os.path.dirname(os.path.abspath(__file__))
+	self.save_to_file(curr_dir+'\\temp.txt')
 	    
     def get_seeded_sample(self, platewell_id):
 	'''this method returns sample or cell line information for the selected well

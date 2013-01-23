@@ -10,9 +10,6 @@ import snapshotPrinter
 import wx
 import os
 
-VERSION = 'ProtocolNavigator_v1.12.12'
-AUTO_SAVE_INTERVAL = 500  # in seconds
-
 class ProtocolNavigator(wx.App):
     '''The ProtocolNavigator Application
     This launches the main UI, and keeps track of the session.
@@ -67,8 +64,6 @@ class ProtocolNavigator(wx.App):
         self.settings_frame.SetIcon(icon)
         self.settings_frame.Layout()
         self.settings_frame.Show()
-	
-	self.auto_timeinterval()
          
         return True
  
@@ -111,7 +106,7 @@ class ProtocolNavigator(wx.App):
                             style=wx.SAVE|wx.FD_OVERWRITE_PROMPT)
         if dlg.ShowModal() == wx.ID_OK:
             os.chdir(os.path.split(dlg.GetPath())[0])
-            ExperimentSettings.getInstance().save_to_file(dlg.GetPath(), VERSION)
+            ExperimentSettings.getInstance().save_to_file(dlg.GetPath())
 	    if exp_title is not None:
 		self.settings_frame.SetTitle('ProtocolNavigator - %s'%exp_title)
     
@@ -153,17 +148,6 @@ class ProtocolNavigator(wx.App):
 		dlg.Destroy()
 	else:
 	    event.Skip()
-	    
-    def auto_timeinterval(self):
-	self.auto_save()
-	wx.CallLater(AUTO_SAVE_INTERVAL * 1000, self.auto_timeinterval)
-	
-    def auto_save(self):
-	if ExperimentSettings.global_settings:
-	    curr_dir = os.path.dirname(os.path.abspath(__file__))
-	    ExperimentSettings.getInstance().save_to_file(curr_dir+'\\%s'%self.temp_filename, VERSION)
-	    
-	
     
 		
 if __name__ == '__main__':
