@@ -1,0 +1,21 @@
+ProtocolNavigator_v1.01.13
+ExptVessel|Plate|CatalogueNo|1 = u''
+ExptVessel|Plate|Coat|1 = u''
+ExptVessel|Plate|Design|1 = u'6-Well-(2x3)'
+ExptVessel|Plate|Manufacturer|1 = u''
+ExptVessel|Plate|Number|1 = u'1'
+ExptVessel|Plate|OtherInfo|1 = u''
+ExptVessel|Plate|Shape|1 = u''
+ExptVessel|Plate|Size|1 = u''
+ExptVessel|Plate|StackName|1 = u'sd'
+ExptVessel|Plate|StackNo|1 = 1
+Perturbation|Chemical|Name|1 = u'wserfwe'
+Perturbation|Chemical|PerturbConc|1 = [u'123', u'']
+Perturbation|Chemical|Wells|1|143 = [('Plate1', 'A02'), ('Plate1', 'A03'), ('Plate1', 'A01')]
+Perturbation|Chemical|Wells|1|21 = [('Plate1', 'B02')]
+Sample|CellLine|CatalogueNo|1 = u'wq'
+Sample|CellLine|Name|1 = u'ws'
+Sample|CellLine|Organism|1 = u'Rattus Norvegicus'
+Transfer|Seed|CellLineInstance|1 = '1'
+Transfer|Seed|SeedingDensity|1 = [23423, u'']
+Transfer|Seed|Wells|1|0 = [('Plate1', 'B03'), ('Plate1', 'B02'), ('Plate1', 'B01'), ('Plate1', 'A01'), ('Plate1', 'A02'), ('Plate1', 'A03')]
