@@ -62,6 +62,9 @@ class ExperimentSettings(Singleton):
     global_settings = {}
     timeline        = Timeline('TEST_STOCK')
     subscribers     = {}
+    curr_dir =  os.path.dirname(os.path.abspath(__file__))
+    save_file_path = curr_dir+'\\temporary_experiment.txt'    # first assign it to the temp directory
+   
    
     def __init__(self):
         pass
@@ -265,14 +268,98 @@ class ExperimentSettings(Singleton):
                 event.set_well_ids(platewell_ids)
             else:
                 self.timeline.add_event(welltag, platewell_ids)
+		
+    def save_file_dialogue(self):
+	print self.save_file_path
+	if self.save_file_path.endswith('temporary_experiment.txt'):
+	    exp_date = self.get_field('Overview|Project|ExptDate')
+	    exp_num = self.get_field('Overview|Project|ExptNum')
+	    exp_title = self.get_field('Overview|Project|Title')
+	    
+	    if None not in [exp_date, exp_num, exp_title]:
+		day, month, year = exp_date.split('/')
+		filename = '%s%s%s_%s_%s.txt'%(year, month, day , exp_num, exp_title)
+	    else:
+		filename = 'new_experiment.txt'
+	    
+	    dlg = wx.FileDialog(None, message='Saving experimental metadata...', 
+		                defaultDir=os.getcwd(), defaultFile=filename, 
+		                wildcard='.txt', 
+		                style=wx.SAVE|wx.FD_OVERWRITE_PROMPT)
+	    if dlg.ShowModal() == wx.ID_OK:
+		#os.chdir(os.path.split(dlg.GetPath())[0])
+		self.save_file_path = dlg.GetPath()
+	self.save_to_file()
+	
+    def save_as_file_dialogue(self):
+	exp_date = self.get_field('Overview|Project|ExptDate')
+	exp_num = self.get_field('Overview|Project|ExptNum')
+	exp_title = self.get_field('Overview|Project|Title')
+	
+	if None not in [exp_date, exp_num, exp_title]:
+	    day, month, year = exp_date.split('/')
+	    filename = '%s%s%s_%s_%s.txt'%(year, month, day , exp_num, exp_title)
+	else:
+	    filename = 'new_experiment.txt'
+	
+	dlg = wx.FileDialog(None, message='Saving experimental metadata...', 
+                            defaultDir=os.getcwd(), defaultFile=filename, 
+                            wildcard='.txt', 
+                            style=wx.SAVE|wx.FD_OVERWRITE_PROMPT)
+	if dlg.ShowModal() == wx.ID_OK:
+	    #os.chdir(os.path.split(dlg.GetPath())[0])
+	    self.save_file_path = dlg.GetPath()
+	    self.save_to_file()	
+	    
+    def save_to_file(self):
+	try:
+	    f = open(self.save_file_path, 'w')
+	    f.write(VERSION+'\n')
+	    for field, value in sorted(self.global_settings.items()):
+		f.write('%s = %s\n'%(field, repr(value)))
+	    f.close()	
+	except IOError:
+	    import wx
+	    dial = wx.MessageDialog(None, 'No permission to create temporary experimental file in current directory\nPlease save file in separate directory.', 'Error', wx.OK | wx.ICON_ERROR)
+	    if dial.ShowModal() == wx.OK:
+		self.save_file_dialogue()    
 
-    def save_to_file(self, file):
-        f = open(file, 'w')
-	f.write(VERSION+'\n')
-        for field, value in sorted(self.global_settings.items()):
-            f.write('%s = %s\n'%(field, repr(value)))
-        f.close()
-    
+    def saveData(self, ctrl, tag, settings_controls):
+	if isinstance(ctrl, wx.ListBox) and ctrl.GetStringSelection() == 'Other':
+	    other = wx.GetTextFromUser('Insert Other', 'Other')
+	    ctrl.Append(other)
+	    ctrl.SetStringSelection(other)	
+	    
+	if len(tag.split('|'))>4:
+	    # get the relevant controls for this tag eg, duration, temp controls for this step
+	    subtags = []
+	    info = []
+	    for subtag in [t for t, c in settings_controls.items()]:
+		if get_tag_stump(tag, 4) == get_tag_stump(subtag, 4):
+		    subtags.append(subtag)
+	    for i in range(0, len(subtags)):
+		info.append('')
+	    for st in subtags:
+		if isinstance(settings_controls[st], wx.Choice) or isinstance(settings_controls[st], wx.ListBox):
+		    info[int(st.split('|')[4])]=settings_controls[st].GetStringSelection()	
+		    #settings_controls[st].SetToolTipString(settings_controls[st].GetStringSelection())
+		else:
+		    info[int(st.split('|')[4])]=settings_controls[st].GetValue()
+		    #settings_controls[st].SetToolTipString(settings_controls[st].GetValue())
+	    self.set_field(get_tag_stump(tag, 4), info)  # get the core tag like AddProcess|Spin|Step|<instance> = [duration, description, temp]
+	else:
+	    if isinstance(ctrl, wx.Choice) or isinstance(ctrl, wx.ListBox):
+		self.set_field(tag, ctrl.GetStringSelection())
+		#ctrl.SetToolTipString(ctrl.GetStringSelection())
+		
+	    elif isinstance(ctrl, wx.DatePickerCtrl):
+		date = ctrl.GetValue()
+		self.set_field(tag, '%02d/%02d/%4d'%(date.Day, date.Month+1, date.Year))
+	    else:
+		user_input = ctrl.GetValue()
+		self.set_field(tag, user_input)	
+		#ctrl.SetToolTipString(ctrl.GetValue())
+		
     def saving_settings(self, protocol, tag, m_tags):
 	import wx
 	if not self.get_field(tag):
@@ -431,7 +518,7 @@ class ExperimentSettings(Singleton):
     def notify_subscribers(self, tag):
         for matchstring, callbacks in self.subscribers.items():
             if re.match(matchstring, tag):
-		self.save_auto()
+		self.save_to_file()
                 for callback in callbacks:
                     callback(tag)
                     
@@ -539,47 +626,7 @@ class ExperimentSettings(Singleton):
 		    dyeList.append(dye)
 	#self.dyeListBox.Clear()	
 	return sorted(list(set(dyeList)))  
-    
-    def saveData(self, ctrl, tag, settings_controls):
-
-	if isinstance(ctrl, wx.ListBox) and ctrl.GetStringSelection() == 'Other':
-	    other = wx.GetTextFromUser('Insert Other', 'Other')
-	    ctrl.Append(other)
-	    ctrl.SetStringSelection(other)	
-	    
-	if len(tag.split('|'))>4:
-	    # get the relevant controls for this tag eg, duration, temp controls for this step
-	    subtags = []
-	    info = []
-	    for subtag in [t for t, c in settings_controls.items()]:
-		if get_tag_stump(tag, 4) == get_tag_stump(subtag, 4):
-		    subtags.append(subtag)
-	    for i in range(0, len(subtags)):
-		info.append('')
-	    for st in subtags:
-		if isinstance(settings_controls[st], wx.Choice) or isinstance(settings_controls[st], wx.ListBox):
-		    info[int(st.split('|')[4])]=settings_controls[st].GetStringSelection()	
-		    #settings_controls[st].SetToolTipString(settings_controls[st].GetStringSelection())
-		else:
-		    info[int(st.split('|')[4])]=settings_controls[st].GetValue()
-		    #settings_controls[st].SetToolTipString(settings_controls[st].GetValue())
-	    self.set_field(get_tag_stump(tag, 4), info)  # get the core tag like AddProcess|Spin|Step|<instance> = [duration, description, temp]
-	else:
-	    if isinstance(ctrl, wx.Choice) or isinstance(ctrl, wx.ListBox):
-		self.set_field(tag, ctrl.GetStringSelection())
-		#ctrl.SetToolTipString(ctrl.GetStringSelection())
-		
-	    elif isinstance(ctrl, wx.DatePickerCtrl):
-		date = ctrl.GetValue()
-		self.set_field(tag, '%02d/%02d/%4d'%(date.Day, date.Month+1, date.Year))
-	    else:
-		user_input = ctrl.GetValue()
-		self.set_field(tag, user_input)	
-		#ctrl.SetToolTipString(ctrl.GetValue())
-    def save_auto(self):
-	curr_dir = os.path.dirname(os.path.abspath(__file__))
-	self.save_to_file(curr_dir+'\\temp.txt')
-	    
+	
     def get_seeded_sample(self, platewell_id):
 	'''this method returns sample or cell line information for the selected well
 	'''

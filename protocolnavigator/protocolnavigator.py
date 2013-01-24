@@ -28,11 +28,13 @@ class ProtocolNavigator(wx.App):
         fileMenu = wx.Menu()
         
         saveSettingsMenuItem = fileMenu.Append(wx.ID_SAVE, 'Save Protocol\tCtrl+S', 'Saves the current session')
+	saveasSettingsMenuItem = fileMenu.Append(wx.ID_SAVEAS, 'Save As Protocol\tCtrl+S', 'Saves the current session in new file')
         self.loadSettingsMenuItem = fileMenu.Append(wx.ID_OPEN, 'Open Protocol\tCtrl+O', 'Open previously curated protocol')
         printExperimentMenuItem = fileMenu.Append(wx.ID_PRINT, 'Print Protocol\tCtrl+P', 'Printing current protocol')
         #self.settings_frame.Bind(wx.EVT_MENU, self.on_new_experiment, newExperimentMenuItem)
        
         self.settings_frame.Bind(wx.EVT_MENU, self.on_save_settings, saveSettingsMenuItem)
+	self.settings_frame.Bind(wx.EVT_MENU, self.on_save_as_settings, saveasSettingsMenuItem)
         self.settings_frame.Bind(wx.EVT_MENU, self.on_load_settings, self.loadSettingsMenuItem)
         self.settings_frame.Bind(wx.EVT_MENU, self.on_print_protocol, printExperimentMenuItem)
 	
@@ -87,28 +89,16 @@ class ProtocolNavigator(wx.App):
     def on_save_settings(self, evt):
         # for saving the experimental file, the text file may have the following nomenclature
         # Date(YYYY_MM_DD)_ExperimenterNumber_Experimenter Name_ first 20 words from the aim
-    
         meta = ExperimentSettings.getInstance()
-        
-        #-- Get Experimental Date/number ---#
-        exp_date = meta.get_field('Overview|Project|ExptDate')
-        exp_num = meta.get_field('Overview|Project|ExptNum')
-        exp_title = meta.get_field('Overview|Project|Title')
-        if None not in [exp_date, exp_num, exp_title]:
-            day, month, year = exp_date.split('/')
-            self.filename = '%s%s%s_%s_%s.txt'%(year, month, day , exp_num, exp_title)
-        else:
-            self.filename = 'new_experiment.txt'
-        
-        dlg = wx.FileDialog(None, message='Saving experimental metadata...', 
-                            defaultDir=os.getcwd(), defaultFile=self.filename, 
-                            wildcard='.txt', 
-                            style=wx.SAVE|wx.FD_OVERWRITE_PROMPT)
-        if dlg.ShowModal() == wx.ID_OK:
-            os.chdir(os.path.split(dlg.GetPath())[0])
-            ExperimentSettings.getInstance().save_to_file(dlg.GetPath())
-	    if exp_title is not None:
-		self.settings_frame.SetTitle('ProtocolNavigator - %s'%exp_title)
+	if meta.get_field('Overview|Project|Title') is not None:
+	    self.settings_frame.SetTitle('ProtocolNavigator - %s'%meta.get_field('Overview|Project|Title'))
+	meta.save_file_dialogue()  
+    
+    def on_save_as_settings(self, evt):
+	meta = ExperimentSettings.getInstance()
+	if meta.get_field('Overview|Project|Title') is not None:
+	    self.settings_frame.SetTitle('ProtocolNavigator - %s'%meta.get_field('Overview|Project|Title'))
+	meta.save_as_file_dialogue() 	
     
             
     def on_load_settings(self, evt):
