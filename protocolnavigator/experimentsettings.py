@@ -321,8 +321,8 @@ class ExperimentSettings(Singleton):
 	except IOError:
 	    import wx
 	    dial = wx.MessageDialog(None, 'No permission to create temporary experimental file in current directory\nPlease save file in separate directory.', 'Error', wx.OK | wx.ICON_ERROR)
-	    if dial.ShowModal() == wx.OK:
-		self.save_file_dialogue()    
+	    if dial.ShowModal() == wx.ID_OK:
+		self.save_as_file_dialogue()    
 
     def saveData(self, ctrl, tag, settings_controls):
 	if isinstance(ctrl, wx.ListBox) and ctrl.GetStringSelection() == 'Other':

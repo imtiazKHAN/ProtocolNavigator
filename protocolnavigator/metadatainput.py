@@ -155,18 +155,18 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
 	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)
 		
 		
-	if get_tag_type(tag) == 'DataAcquis' and get_tag_event(tag) == 'TLM':  # may link with microscope settings??
+	if get_tag_type(tag) == 'DataAcquis' and get_tag_event(tag) == 'TLM':  
 	    self.settings_panel = MicroscopeSettingPanel(self.settings_container)
 	    self.settings_panel.notebook.SetSelection(int(meta.get_field('DataAcquis|TLM|MicroscopeInstance|%s'%get_tag_instance(tag)))-1)
-	if get_tag_type(tag) == 'DataAcquis' and get_tag_event(tag) == 'HCS':  # may link with microscope settings??
+	if get_tag_type(tag) == 'DataAcquis' and get_tag_event(tag) == 'HCS':  
 	    self.settings_panel = MicroscopeSettingPanel(self.settings_container)
 	    self.settings_panel.notebook.SetSelection(int(meta.get_field('DataAcquis|HCS|MicroscopeInstance|%s'%get_tag_instance(tag)))-1)	
-	if get_tag_type(tag) == 'DataAcquis' and get_tag_event(tag) == 'FCS':  # may link with flowcytometer settings??
+	if get_tag_type(tag) == 'DataAcquis' and get_tag_event(tag) == 'FCS': 
 	    self.settings_panel = FlowcytometerSettingPanel(self.settings_container)
-	    self.settings_panel.notebook.SetSelection(int(meta.get_field('DataAcquis|FCS|FlowcytInstance|%s'%get_tag_instance(tag)))-1)
+	    self.settings_panel.notebook.SetSelection(int(meta.get_field('DataAcquis|FCS|FlowcytometerInstance|%s'%get_tag_instance(tag)))-1)
 	if get_tag_type(tag) == 'DataAcquis' and get_tag_event(tag) == 'RHE':
-	    self.settings_panel = RHESettingPanel(self.settings_container)
-	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)	    
+	    self.settings_panel = RheometerSettingPanel(self.settings_container)
+	    self.settings_panel.notebook.SetSelection(int(meta.get_field('DataAcquis|RHE|RheometerInstance|%s'%get_tag_instance(tag)))-1)
 
 	    
 	self.settings_container.Sizer.Add(self.settings_panel, 1, wx.EXPAND)        
@@ -2368,7 +2368,7 @@ class PlateSettingPanel(wx.Panel):
 	    self.notebook.AddPage(panel, 'Instance No: %s'%(stack_id), True)
 		
 	# Buttons
-	self.createTabBtn = wx.Button(self, label="Create Intance")
+	self.createTabBtn = wx.Button(self, label="Create Instance")
 	self.createTabBtn.Bind(wx.EVT_BUTTON, self.onCreateTab)      
 
 	# Sizers
@@ -2619,7 +2619,7 @@ class DishSettingPanel(wx.Panel):
 	    self.notebook.AddPage(panel, 'Instance No: %s'%(stack_id), True)
 		
 	# Buttons
-	self.createTabBtn = wx.Button(self, label="Create Intance")
+	self.createTabBtn = wx.Button(self, label="Create Instance")
 	self.createTabBtn.Bind(wx.EVT_BUTTON, self.onCreateTab)      
 
 	# Sizers
@@ -2845,7 +2845,7 @@ class CoverslipSettingPanel(wx.Panel):
 	    self.notebook.AddPage(panel, 'Instance No: %s'%(stack_id), True)
 		
 	# Buttons
-	self.createTabBtn = wx.Button(self, label="Create Intance")
+	self.createTabBtn = wx.Button(self, label="Create Instance")
 	self.createTabBtn.Bind(wx.EVT_BUTTON, self.onCreateTab)      
 
 	# Sizers
@@ -3082,7 +3082,7 @@ class FlaskSettingPanel(wx.Panel):
 	    self.notebook.AddPage(panel, 'Instance No: %s'%(stack_id), True)
 		
 	# Buttons
-	self.createTabBtn = wx.Button(self, label="Create Intance")
+	self.createTabBtn = wx.Button(self, label="Create Instance")
 	self.createTabBtn.Bind(wx.EVT_BUTTON, self.onCreateTab)      
 
 	# Sizers
@@ -3309,7 +3309,7 @@ class TubeSettingPanel(wx.Panel):
 	    self.notebook.AddPage(panel, 'Instance No: %s'%(stack_id), True)
 		
 	# Buttons
-	self.createTabBtn = wx.Button(self, label="Create Intance")
+	self.createTabBtn = wx.Button(self, label="Create Instance")
 	self.createTabBtn.Bind(wx.EVT_BUTTON, self.onCreateTab)      
 
 	# Sizers

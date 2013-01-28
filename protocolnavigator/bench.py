@@ -386,7 +386,6 @@ class Bench(wx.Panel):
 
         # Update the Images tags
         if selected and prefix.startswith('DataAcquis'):
-            
             images_tag = '%s|Images|%s|%s|%s'%(prefix, instance, self.get_selected_timepoint(), repr(platewell_id))
             
             if prefix == 'DataAcquis|HCS':
@@ -395,34 +394,25 @@ class Bench(wx.Panel):
             elif prefix == 'DataAcquis|FCS':
                 #dlg = wx.FileDialog(self,message='Select the FCS files for flask %s'%(platewell_id[0].strip('[]')),
                 dlg = wx.FileDialog(self,message='Select the FCS files for flask',
-                                    defaultDir=os.getcwd(), defaultFile='', wildcard = "All files (*.*)|*.*|", style=wx.OPEN|wx.MULTIPLE)
+                                    defaultDir=os.getcwd(), defaultFile='', style=wx.OPEN|wx.MULTIPLE)
             elif prefix == 'DataAcquis|TLM':
                 dlg = wx.FileDialog(self,message='Select the images files',
                                     defaultDir=os.getcwd(), defaultFile='', style=wx.OPEN|wx.MULTIPLE)
 	    elif prefix == 'DataAcquis|RHE':
-		
 		dlg = wx.FileDialog(self,message='Select the Rheometer files',
 	                            defaultDir=os.getcwd(), defaultFile='', style=wx.OPEN|wx.MULTIPLE)	    
             else:
                 raise Exception('unrecognized tag prefix')
-            
+	    
             if dlg.ShowModal() == wx.ID_OK:
-                meta.set_field(images_tag, dlg.GetPaths())
-                os.chdir(os.path.split(dlg.GetPath())[0])
-                dlg.Destroy()		
-            else:
-                dlg.Destroy()
+		meta.set_field(images_tag, dlg.GetPaths())
+		os.chdir(os.path.split(dlg.GetPath())[0])
+		dlg.Destroy()
+            else:   
                 meta.remove_field(wells_tag)
-                vessel = self.vesselscroller.get_vessel(platewell_id[0])
-                if vessel:
-                    vessel.deselect_well_at_pos(
-                        PlateDesign.get_pos_for_wellid(
-                            PlateDesign.get_plate_format(platewell_id[0]), 
-                            platewell_id[1]))
-                else:
-                    raise Exception('Could not find vessel: %s'%(platewell_id[0]))
-                
-	                 
+		self.update_well_selections()
+		dlg.Destroy()
+     
         # NOTE: None of the code needs to use the EventTimepoint tag,
         #       it's redundant with the timepoints encoded in the tags
         #       so we don't set it anymore.

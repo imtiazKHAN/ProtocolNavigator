@@ -1,15 +1,16 @@
 import wx
 import sys
 import wx.lib.mixins.listctrl as listmix
+import icons
 from experimentsettings import *
 
 ########################################################################        
 ########       Popup Dialog showing all instances of settings       ####
 ########################################################################            
 class DataLinkListDialog(wx.Dialog):
-    def __init__(self, parent, well_ids, ancestor_tags):
+    def __init__(self, parent, well_ids, time_point, ancestor_tags):
         wx.Dialog.__init__(self, parent, -1, size=(500,450), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
-        self.listctrl = InstanceListCtrl(self, well_ids, ancestor_tags)
+        self.listctrl = InstanceListCtrl(self, well_ids, time_point, ancestor_tags)
         
         outputs = ('Export Selected', 'Export All', 'Show in ImageJ')
         self.output_options = wx.RadioBox(self, -1, "Output Choices", choices=outputs)
@@ -32,18 +33,17 @@ class DataLinkListDialog(wx.Dialog):
         vbox.Add(hbox3, 0, wx.ALL|wx.ALIGN_RIGHT, 5)
         self.SetSizer(vbox)
         self.Center()
- 
-        
+    
 class InstanceListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.ColumnSorterMixin, listmix.TextEditMixin):
-    def __init__(self, parent, well_ids, ancestor_tags):
+    def __init__(self, parent, well_ids, time_point, ancestor_tags):
         '''
         tag_prefix -- the tag whose instances to list in this list control
         '''
         meta = ExperimentSettings.getInstance()
         
-        wx.ListCtrl.__init__(self, parent, -1, size=(-1,270), style=wx.LC_REPORT|wx.BORDER_SUNKEN|wx.LC_SORT_ASCENDING|wx.LC_HRULES)
+        wx.ListCtrl.__init__(self, parent, -1, size=(-1,370), style=wx.LC_REPORT|wx.BORDER_SUNKEN|wx.LC_SORT_ASCENDING|wx.LC_HRULES)
         
-        
+
         # get all data acquisition tags
         self.data_acquis_well = {}
         self.select_data_acquis_well = {}
@@ -53,7 +53,6 @@ class InstanceListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.Colu
                 for url in meta.get_field(tag):
                     self.data_acquis_well[row] = (get_tag_well(tag), str(get_tag_timepoint(tag)), url)
                     row += 1
-                
 
         self.InsertColumn(0, 'Location')
         self.InsertColumn(1, 'Time')
@@ -61,22 +60,21 @@ class InstanceListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.Colu
         self.InsertColumn(3, 'Data Provenance')
           
         items = self.data_acquis_well.items()
-       
-        for key, data in items:                
+        
+        for key, data in items:  
             index = self.InsertStringItem(sys.maxint, data[0])
             self.SetStringItem(index, 1, format_time_string(data[1]), wx.LIST_FORMAT_CENTER)
             self.SetStringItem(index, 2, data[2], wx.LIST_FORMAT_RIGHT)
-            self.SetItemData(index, key) 
             
             r = 1
             for well in well_ids:
-                if str(well) == str(data[0]):
+                if well in eval(data[0]) and data[1] == str(time_point): 
                     provenance_description = self.decode_tags(ancestor_tags)
                     self.SetStringItem(index, 3, provenance_description, wx.LIST_FORMAT_RIGHT)
                     self.select_data_acquis_well[r] = (data[0], data[1], data[2], provenance_description)
                     self.Select(index)
                     r +=1
-        
+                
     def get_selected_urls(self):
         i = -1
         selections = []

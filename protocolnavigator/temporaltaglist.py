@@ -15,7 +15,6 @@ class TemporalTagListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):#, listmi
         '''
         wx.ListCtrl.__init__(self, parent, -1, size=(200,100), style=wx.LC_REPORT|wx.BORDER_NONE|wx.LC_HRULES|wx.LC_SINGLE_SEL)
         listmix.ListCtrlAutoWidthMixin.__init__(self)
-##        listmix.ColumnSorterMixin.__init__(self, 4)
 
         self.protocols = []
         
@@ -25,12 +24,6 @@ class TemporalTagListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):#, listmi
         meta.add_subscriber(self.update, 'AddProcess.*')
         meta.add_subscriber(self.update, 'InstProcess.*')
         meta.add_subscriber(self.update, 'DataAcquis.*')
-        #meta.add_subscriber(self.update, 'Notes.*')
-        
-        #self.InsertColumn(0, "Category")
-        #self.InsertColumn(1, "Action")
-        #self.InsertColumn(2, "Instance No")
-        #self.InsertColumn(3, "Description")
         
         self.InsertColumn(0, "Action")
         self.InsertColumn(1, "Instance No")

@@ -792,8 +792,8 @@ class PrintProtocol(wx.Frame):
 	    return (header, info)
 	
 	if exp.get_tag_event(protocol) == 'FCS':	    
-	    if meta.get_field('DataAcquis|FCS|FlowcytInstance|%s'%instance) is not None:
-		cytometer_instance = meta.get_field('DataAcquis|FCS|FlowcytInstance|%s'%instance)
+	    if meta.get_field('DataAcquis|FCS|FlowcytometerInstance|%s'%instance) is not None:
+		cytometer_instance = meta.get_field('DataAcquis|FCS|FlowcytometerInstance|%s'%instance)
 		header += meta.get_field('Instrument|Flowcytometer|Manufacter|%s'%cytometer_instance, default='')+' flowcytometer '
 		if meta.get_field('Instrument|Flowcytometer|Model|%s'%cytometer_instance) is not None:
 		    header += '(model: %s)' %meta.get_field('Instrument|Flowcytometer|Model|%s'%cytometer_instance, default = 'not specified')
