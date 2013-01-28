@@ -14,6 +14,7 @@ from wx.lib.embeddedimage import PyEmbeddedImage
 from wx.lib.masked import TimeCtrl
 from wx.lib.buttons import GenBitmapButton
 from draganddrop import FileListDialog
+from metadatalinkList import ShowMetaDataLinkListDialog
 
 meta = ExperimentSettings.getInstance()
 
@@ -405,9 +406,14 @@ class Bench(wx.Panel):
                 raise Exception('unrecognized tag prefix')
 	    
             if dlg.ShowModal() == wx.ID_OK:
-		meta.set_field(images_tag, dlg.GetPaths())
+		file_paths = dlg.GetPaths()
 		os.chdir(os.path.split(dlg.GetPath())[0])
 		dlg.Destroy()
+		
+		dia = ShowMetaDataLinkListDialog(self, file_paths)
+		if dia.ShowModal() == wx.ID_OK:
+		    meta.set_field(images_tag, dia.files_metadata.items())
+		    dia.Destroy()
             else:   
                 meta.remove_field(wells_tag)
 		self.update_well_selections()

@@ -3,15 +3,54 @@ import sys
 import wx.lib.mixins.listctrl as listmix
 import icons
 from experimentsettings import *
+from wx.lib.agw import ultimatelistctrl as ULC
 
 ########################################################################        
 ########       Popup Dialog showing all instances of settings       ####
 ########################################################################            
 class DataLinkListDialog(wx.Dialog):
     def __init__(self, parent, well_ids, time_point, ancestor_tags):
-        wx.Dialog.__init__(self, parent, -1, size=(500,450), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
-        self.listctrl = InstanceListCtrl(self, well_ids, time_point, ancestor_tags)
+        wx.Dialog.__init__(self, parent, -1, size=(500,650), title='Data Links', style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
         
+        self.ultimateList = ULC.UltimateListCtrl(self, agwStyle = ULC.ULC_REPORT|ULC.ULC_HAS_VARIABLE_ROW_HEIGHT)       
+        
+        meta = ExperimentSettings.getInstance()
+
+        ## get all data acquisition tags
+        self.data_acquis_well = {}
+        self.select_data_acquis_well = {}
+        row = 1
+        for tag in meta.global_settings:
+            if len(tag.split('|')) == 6:
+                for url in meta.get_field(tag):
+                    self.data_acquis_well[row] = (get_tag_well(tag), str(get_tag_timepoint(tag)), url)
+                    row += 1
+
+        self.ultimateList.InsertColumn(0, 'Location')
+        self.ultimateList.InsertColumn(1, 'Time')
+        self.ultimateList.InsertColumn(2, 'URL')
+        self.ultimateList.InsertColumn(3, 'Provenance')
+        self.ultimateList.InsertColumn(4, 'Metadata')
+          
+        items = self.data_acquis_well.items()
+         
+        
+        for key, data in items:  
+            index = self.ultimateList.InsertStringItem(sys.maxint, data[0])
+            self.ultimateList.SetStringItem(index, 1, format_time_string(data[1]), wx.LIST_FORMAT_CENTER)
+            self.ultimateList.SetStringItem(index, 2, data[2], wx.LIST_FORMAT_RIGHT)
+            button = wx.Button(self.ultimateList, id=wx.ID_ANY, label="Attach")
+            self.ultimateList.SetItemWindow(index, 4, wnd=button, expand=True)  
+            r = 1
+            for well in well_ids:
+                if well in eval(data[0]) and data[1] == str(time_point): 
+                    provenance_description = self.decode_tags(ancestor_tags)  # better to provide ancestor tags for all rows 
+                    self.ultimateList.SetStringItem(index, 3, provenance_description, wx.LIST_FORMAT_RIGHT)
+                    self.select_data_acquis_well[r] = (data[0], data[1], data[2], provenance_description)                        
+                    self.ultimateList.Select(index)
+                    r +=1
+                  
+
         outputs = ('Export Selected', 'Export All', 'Show in ImageJ')
         self.output_options = wx.RadioBox(self, -1, "Output Choices", choices=outputs)
         
@@ -23,57 +62,17 @@ class DataLinkListDialog(wx.Dialog):
         hbox1 = wx.BoxSizer(wx.HORIZONTAL)
         hbox2 = wx.BoxSizer(wx.HORIZONTAL) 
         hbox3 = wx.BoxSizer(wx.HORIZONTAL)
-        hbox1.Add(self.listctrl, 1, wx.EXPAND)
+        hbox1.Add(self.ultimateList, 1, wx.EXPAND)
         hbox2.Add(self.output_options, 1)
         hbox3.Add(self.ok_btn, 1)
         hbox3.AddSpacer((10,-1))
         hbox3.Add(self.close_btn, 1)
-        vbox.Add(hbox1, 0, wx.ALL|wx.EXPAND|wx.ALIGN_CENTER, 5)
+        vbox.Add(hbox1, 1, wx.ALL|wx.EXPAND|wx.ALIGN_CENTER, 5)
         vbox.Add(hbox2, 0, wx.ALL|wx.EXPAND|wx.ALIGN_CENTER, 5)
         vbox.Add(hbox3, 0, wx.ALL|wx.ALIGN_RIGHT, 5)
         self.SetSizer(vbox)
         self.Center()
-    
-class InstanceListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin, listmix.ColumnSorterMixin, listmix.TextEditMixin):
-    def __init__(self, parent, well_ids, time_point, ancestor_tags):
-        '''
-        tag_prefix -- the tag whose instances to list in this list control
-        '''
-        meta = ExperimentSettings.getInstance()
-        
-        wx.ListCtrl.__init__(self, parent, -1, size=(-1,370), style=wx.LC_REPORT|wx.BORDER_SUNKEN|wx.LC_SORT_ASCENDING|wx.LC_HRULES)
-        
 
-        # get all data acquisition tags
-        self.data_acquis_well = {}
-        self.select_data_acquis_well = {}
-        row = 1
-        for tag in meta.global_settings:
-            if len(tag.split('|')) == 6:
-                for url in meta.get_field(tag):
-                    self.data_acquis_well[row] = (get_tag_well(tag), str(get_tag_timepoint(tag)), url)
-                    row += 1
-
-        self.InsertColumn(0, 'Location')
-        self.InsertColumn(1, 'Time')
-        self.InsertColumn(2, 'Data URL')
-        self.InsertColumn(3, 'Data Provenance')
-          
-        items = self.data_acquis_well.items()
-        
-        for key, data in items:  
-            index = self.InsertStringItem(sys.maxint, data[0])
-            self.SetStringItem(index, 1, format_time_string(data[1]), wx.LIST_FORMAT_CENTER)
-            self.SetStringItem(index, 2, data[2], wx.LIST_FORMAT_RIGHT)
-            
-            r = 1
-            for well in well_ids:
-                if well in eval(data[0]) and data[1] == str(time_point): 
-                    provenance_description = self.decode_tags(ancestor_tags)
-                    self.SetStringItem(index, 3, provenance_description, wx.LIST_FORMAT_RIGHT)
-                    self.select_data_acquis_well[r] = (data[0], data[1], data[2], provenance_description)
-                    self.Select(index)
-                    r +=1
                 
     def get_selected_urls(self):
         i = -1

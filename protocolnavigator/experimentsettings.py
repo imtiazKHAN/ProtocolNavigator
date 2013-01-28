@@ -391,32 +391,31 @@ class ExperimentSettings(Singleton):
 	attributes = self.get_attribute_list_by_instance(tag_stump, instance)
 	for attr in attributes:
 	    info = self.get_field(tag_stump+'|%s|%s' %(attr, instance))
-	    print info
 	    f.write('%s = %s\n'%(attr, repr(info)))
 	f.close()	    	
     
-    def save_supp_protocol_file(self, file, protocol):
-	instance = get_tag_attribute(protocol)
-	tag_stump = get_tag_stump(protocol, 2)
+    #def save_supp_protocol_file(self, file, protocol):
+	#instance = get_tag_attribute(protocol)
+	#tag_stump = get_tag_stump(protocol, 2)
 		    
-	f = open(file,'w')
-	attributes = self.get_attribute_list_by_instance(tag_stump, instance)
+	#f = open(file,'w')
+	#attributes = self.get_attribute_list_by_instance(tag_stump, instance)
     
-	for attr in attributes:
-	    info = self.get_field(tag_stump+'|%s|%s' %(attr, instance))
-	    if isinstance(info, list):
-		f.write('%s|'%attr)	    		    
-		for i, val in enumerate(info):
-		    if isinstance(val, tuple):
-			print val
-		    elif i == len(info)-1:
-			f.write('%s'%val)
-		    else:
-			f.write('%s|'%val)
-		f.write('\n')
-	    else:
-		f.write('%s|%s\n'%(attr, info))
-	f.close()	
+	#for attr in attributes:
+	    #info = self.get_field(tag_stump+'|%s|%s' %(attr, instance))
+	    #if isinstance(info, list):
+		#f.write('%s|'%attr)	    		    
+		#for i, val in enumerate(info):
+		    #if isinstance(val, tuple):
+			#print val
+		    #elif i == len(info)-1:
+			#f.write('%s'%val)
+		    #else:
+			#f.write('%s|'%val)
+		#f.write('\n')
+	    #else:
+		#f.write('%s|%s\n'%(attr, info))
+	#f.close()	
 
     def load_from_file(self, file, menuitem):
         # Populate the tag structure
