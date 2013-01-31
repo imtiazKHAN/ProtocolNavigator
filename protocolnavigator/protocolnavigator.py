@@ -31,12 +31,14 @@ class ProtocolNavigator(wx.App):
 	saveasSettingsMenuItem = fileMenu.Append(wx.ID_SAVEAS, 'Save As Protocol\tCtrl+S', 'Saves the current session in new file')
         self.loadSettingsMenuItem = fileMenu.Append(wx.ID_OPEN, 'Open Protocol\tCtrl+O', 'Open previously curated protocol')
         printExperimentMenuItem = fileMenu.Append(wx.ID_PRINT, 'Print Protocol\tCtrl+P', 'Printing current protocol')
+	exitMenuItem = fileMenu.Append(wx.ID_CLOSE, 'Close\tCtrl+C', 'Close current protocol')
         #self.settings_frame.Bind(wx.EVT_MENU, self.on_new_experiment, newExperimentMenuItem)
        
         self.settings_frame.Bind(wx.EVT_MENU, self.on_save_settings, saveSettingsMenuItem)
 	self.settings_frame.Bind(wx.EVT_MENU, self.on_save_as_settings, saveasSettingsMenuItem)
         self.settings_frame.Bind(wx.EVT_MENU, self.on_load_settings, self.loadSettingsMenuItem)
         self.settings_frame.Bind(wx.EVT_MENU, self.on_print_protocol, printExperimentMenuItem)
+	self.settings_frame.Bind(wx.EVT_MENU, self.onCloseWindow, exitMenuItem)
 	
 	self.temp_filename = 'temp_experiment.txt'	
 
@@ -100,7 +102,6 @@ class ProtocolNavigator(wx.App):
 	    self.settings_frame.SetTitle('ProtocolNavigator - %s'%meta.get_field('Overview|Project|Title'))
 	meta.save_as_file_dialogue() 	
     
-            
     def on_load_settings(self, evt):
 	meta = ExperimentSettings.getInstance()
         dlg = wx.FileDialog(None, "Select the file containing your ProtocolNavigator workspace...",
@@ -116,28 +117,30 @@ class ProtocolNavigator(wx.App):
             and print both together in a single file"""
 
         rect = self.lineage_frame.GetRect()
-        
         PrintProtocol(rect)
         
     def onCloseWindow(self, event):
+	ctrl = event.GetEventObject() # can be from the x button or from the Close menu
         if ExperimentSettings.global_settings:
             dlg = wx.MessageDialog(None,
                    "Do you want to save changes before exiting ProtocolNavigator?", "Confirm Exit", 
                    wx.YES|wx.NO|wx.CANCEL|wx.ICON_EXCLAMATION)
-           
 	    try:
 		selection = dlg.ShowModal()
 		if  selection == wx.ID_YES:
 		    self.on_save_settings(self)
-		    event.Skip()
+		    self.Exit()
 		elif selection == wx.ID_NO:
-		    event.Skip()	
+		    self.Exit()
 		elif selection == wx.ID_CANCEL:
-		    event.Veto()
+		    if isinstance(ctrl, wx.Frame):
+			return
+		    else:
+			event.Veto()
 	    finally:
 		dlg.Destroy()
 	else:
-	    event.Skip()
+	    self.Exit()
     
 		
 if __name__ == '__main__':

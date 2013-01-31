@@ -95,7 +95,7 @@ class LineageFrame(wx.ScrolledWindow):
                        'AddProcess|Wash|Wells|0|',
                        'AddProcess|Dry|Wells|0|',
                        'AddProcess|Spin|Wells|0|',
-                       'Perturbation|Chem|Wells|0|',
+                       'Perturbation|Chemical|Wells|0|',
                        'Perturbation|Bio|Wells|0|',
                        'DataAcquis|TLM|Wells|0|',
                        'DataAcquis|FCS|Wells|0|',
@@ -793,12 +793,17 @@ class LineagePanel(wx.Panel):
 		                             style=wx.SAVE|wx.FD_OVERWRITE_PROMPT)
 		    if file_dlg.ShowModal() == wx.ID_OK:
 			os.chdir(os.path.split(file_dlg.GetPath())[0])
-			myfile = open(file_dlg.GetPath(), 'wb')
-			wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
-			for row in dia.listctrl.get_selected_urls():
-			    wr.writerow(row)
-			myfile.close()	
-			file_dlg.Destroy()
+			try:
+			    myfile = open(file_dlg.GetPath(), 'wb')
+			    wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
+			    for row in dia.get_selected_urls():
+				wr.writerow(row)
+			    myfile.close()	
+			    file_dlg.Destroy()
+			except:
+			    err_dlg = wx.MessageDialog(None, 'Cant open file for writing', 'Error', wx.OK | wx.ICON_ERROR)
+			    err_dlg.ShowModal()			    
+			    
 		if dia.output_options.GetSelection() == 1:
 		    file_dlg = wx.FileDialog(None, message='Exporting Data URL...', 
 		                            defaultDir=os.getcwd(), defaultFile='data urls', 
@@ -808,25 +813,23 @@ class LineagePanel(wx.Panel):
 			os.chdir(os.path.split(file_dlg.GetPath())[0])
 			myfile = open(file_dlg.GetPath(), 'wb')
 			wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
-			for row in dia.listctrl.get_all_urls():
+			for row in dia.get_all_urls():
 			    wr.writerow(row)
 			myfile.close()	
 			file_dlg.Destroy()
 		
 		if dia.output_options.GetSelection() == 2:
 		    image_urls = []
-		    for row in dia.listctrl.get_selected_urls():
-			image_urls.append(row[2])
+		    for row in dia.get_selected_urls():
+			image_urls.append(row[3])
 		    if os.path.isfile('C:\Program Files\ImageJ\ImageJ.exe') is False:
-			#err_dlg = wx.lib.dialogs.ScrolledMessageDialog(self, str("\n".join(urls)), "ERROR!! ImageJ was not found in C\Program Files directory to show following images")
 			err_dlg = wx.MessageDialog(None, 'ImageJ was not found in C\Program Files directory to show images!!', 'Error', wx.OK | wx.ICON_ERROR)
 			err_dlg.ShowModal()			 
 			return 			
 		    else:
-			#TO DO: check the image format to be shown in ImageJ    
+			#TO DO: check the image format and image path are compatible with mageJ    
 			ImageJPath = 'C:\Program Files\ImageJ\ImageJ.exe'
 			subprocess.Popen("%s %s" % (ImageJPath, ' '.join(image_urls)))		    
-			
 	    dia.Destroy()	
 	    
       

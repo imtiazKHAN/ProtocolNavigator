@@ -270,7 +270,6 @@ class ExperimentSettings(Singleton):
                 self.timeline.add_event(welltag, platewell_ids)
 		
     def save_file_dialogue(self):
-	print self.save_file_path
 	if self.save_file_path.endswith('temporary_experiment.txt'):
 	    exp_date = self.get_field('Overview|Project|ExptDate')
 	    exp_num = self.get_field('Overview|Project|ExptNum')

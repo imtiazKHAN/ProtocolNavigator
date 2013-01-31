@@ -26,34 +26,30 @@ class DataLinkListDialog(wx.Dialog):
                     self.data_acquis_well[row] = (get_tag_well(tag), str(get_tag_timepoint(tag)), url)
                     row += 1
 
-        self.ultimateList.InsertColumn(0, 'Location')
-        self.ultimateList.InsertColumn(1, 'Time')
-        self.ultimateList.InsertColumn(2, 'URL')
-        self.ultimateList.InsertColumn(3, 'Provenance')
+        self.ultimateList.InsertColumn(0, 'Where')
+        self.ultimateList.InsertColumn(1, 'When')
+        self.ultimateList.InsertColumn(2, 'Provenance')
+        self.ultimateList.InsertColumn(3, 'Data')
         self.ultimateList.InsertColumn(4, 'Metadata')
+        self.ultimateList.SetColumnWidth(4, 250)
           
-        items = self.data_acquis_well.items()
-         
-        
-        for key, data in items:  
+        for key, data in self.data_acquis_well.items():  
             index = self.ultimateList.InsertStringItem(sys.maxint, data[0])
             self.ultimateList.SetStringItem(index, 1, format_time_string(data[1]), wx.LIST_FORMAT_CENTER)
-            self.ultimateList.SetStringItem(index, 2, data[2], wx.LIST_FORMAT_RIGHT)
-            button = wx.Button(self.ultimateList, id=wx.ID_ANY, label="Attach")
-            self.ultimateList.SetItemWindow(index, 4, wnd=button, expand=True)  
+            self.ultimateList.SetStringItem(index, 3, data[2][0], wx.LIST_FORMAT_RIGHT)
+            self.ultimateList.SetStringItem(index, 4, data[2][1], wx.LIST_FORMAT_RIGHT)
+            
             r = 1
             for well in well_ids:
                 if well in eval(data[0]) and data[1] == str(time_point): 
                     provenance_description = self.decode_tags(ancestor_tags)  # better to provide ancestor tags for all rows 
-                    self.ultimateList.SetStringItem(index, 3, provenance_description, wx.LIST_FORMAT_RIGHT)
-                    self.select_data_acquis_well[r] = (data[0], data[1], data[2], provenance_description)                        
+                    self.ultimateList.SetStringItem(index, 2, provenance_description, wx.LIST_FORMAT_RIGHT)
+                    self.select_data_acquis_well[r] = (data[0], data[1], provenance_description, data[2][0], data[2][1])                        
                     self.ultimateList.Select(index)
                     r +=1
                   
-
         outputs = ('Export Selected', 'Export All', 'Show in ImageJ')
         self.output_options = wx.RadioBox(self, -1, "Output Choices", choices=outputs)
-        
         
         self.ok_btn = wx.Button(self, wx.ID_OK)
         self.close_btn = wx.Button(self, wx.ID_CANCEL)
@@ -63,12 +59,12 @@ class DataLinkListDialog(wx.Dialog):
         hbox2 = wx.BoxSizer(wx.HORIZONTAL) 
         hbox3 = wx.BoxSizer(wx.HORIZONTAL)
         hbox1.Add(self.ultimateList, 1, wx.EXPAND)
-        hbox2.Add(self.output_options, 1)
+        hbox2.Add(self.output_options, 1, wx.ALIGN_LEFT)
         hbox3.Add(self.ok_btn, 1)
         hbox3.AddSpacer((10,-1))
         hbox3.Add(self.close_btn, 1)
         vbox.Add(hbox1, 1, wx.ALL|wx.EXPAND|wx.ALIGN_CENTER, 5)
-        vbox.Add(hbox2, 0, wx.ALL|wx.EXPAND|wx.ALIGN_CENTER, 5)
+        vbox.Add(hbox2, 0, wx.ALL|wx.EXPAND, 5)
         vbox.Add(hbox3, 0, wx.ALL|wx.ALIGN_RIGHT, 5)
         self.SetSizer(vbox)
         self.Center()
@@ -78,16 +74,16 @@ class DataLinkListDialog(wx.Dialog):
         i = -1
         selections = []
         while 1:
-            i = self.GetNextItem(i, wx.LIST_NEXT_ALL, wx.LIST_STATE_SELECTED)
+            i = self.ultimateList.GetNextItem(i, wx.LIST_NEXT_ALL, wx.LIST_STATE_SELECTED)
             if i == -1:
                 break
-            selections.append([self.GetItem(i, col).GetText() for col in range(self.GetColumnCount())])
+            selections.append([self.ultimateList.GetItem(i, col).GetText() for col in range(self.ultimateList.GetColumnCount())])
         return selections        
         
     def get_all_urls(self):
         selections = []
-        for row in range(self.GetItemCount()):
-            selections.append([self.GetItem(row, col).GetText() for col in range(self.GetColumnCount())])
+        for row in range(self.ultimateList.GetItemCount()):
+            selections.append([self.ultimateList.GetItem(row, col).GetText() for col in range(self.ultimateList.GetColumnCount())])
         return selections
     
     def decode_tags(self, tags):

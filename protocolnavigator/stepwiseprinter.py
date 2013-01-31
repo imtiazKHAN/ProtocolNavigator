@@ -83,9 +83,7 @@ class PrintProtocol(wx.Frame):
 	timepoints = timeline.get_unique_timepoints()
         self.events_by_timepoint = timeline.get_events_by_timepoint()
         
-        
-        
-        #---- Overview Secion ---#
+        #---- Overview ---#
         protocol_info =  self.decode_event_description('Overview|Project|1') #this 1 is psedo to make it coherent with other instance based tabs
     
         self.printfile.write('<html><head><title>Experiment Protocol</title></head>'
@@ -95,19 +93,26 @@ class PrintProtocol(wx.Frame):
         for element in protocol_info[1]:
             self.printfile.write('<code><font size="2"><b>'+element[0]+': </b></font></code><code><font size="1">'+element[1]+'</font></code><br />')
         
-        #---- Stock Culture ----#
-	stockcultures = meta.get_field_instances('Sample|CellLine')
-	self.printfile.write('<h3>2. Stock Culture</h3>')	
-	if stockcultures:
-	    for instance in stockcultures:
+        #---- Sample ----#
+	cellline = meta.get_field_instances('Sample|CellLine')
+	self.printfile.write('<h3>2. Cell Line (stock culture)</h3>')	
+	if cellline:
+	    for instance in cellline:
 		protocol_info = self.decode_event_description('Sample|CellLine|%s'%instance)
 		self.printfile.write('<br /><table border="0"><tr><th colspan="2" align="center"><i>'+protocol_info[0]+'</i></th></tr>')
 		for element in protocol_info[1]:
 		    self.printfile.write('<tr><td width=10% align="center"><code><font size="2"><b>'+element[0]+'</b></font></code></td>')
 		    self.printfile.write('<td  width=90%  align="left"><code><font size="1">'+element[1]+'</font></code></td></tr>')
+		if protocol_info[2]:
+		    self.printfile.write('<tr><td width=10% align="center"><code><font size="2"><b>Maintenance History</b></font></code></td>')
+		    self.printfile.write('<td  width=90%  align="left"><code><font size="1"></font></code></td></tr>')	
+		    for pass_info in protocol_info[2]:
+			self.printfile.write('<tr><td width=10% align="center"></td>')
+			self.printfile.write('<td  width=90%  align="left"><code><font size="1">'+pass_info+'</font></code></td></tr>')				
 		self.printfile.write('</table><p></p>')
+		    
 	else:
-	    self.printfile.write('<code>No stock culture was used for this experiment</code>')
+	    self.printfile.write('<code>No cell line was used for this experiment</code>')
           	
         #---- Instrument Secion ---#
         self.printfile.write('<h3>3. Instrument Settings</h3>')
@@ -156,7 +161,7 @@ class PrintProtocol(wx.Frame):
 		self.printfile.write('<tr>')
 		
 		instance = exp.get_tag_attribute(protocol)
-		# protocol info includes the description of the attributes for each of the protocol e.g. Perturbation|Chem|1 is passed
+		# protocol info includes the description of the attributes for each of the protocol e.g. Perturbation|Chemical|1 is passed
 		protocol_info = self.decode_event_description(protocol)
 		# spatial info includes plate well inforamtion for this event well tag e.g. Perturbation|Bio|Wells|1|793
 		####spatial_info = self.decode_event_location(ev.get_welltag())  ##THIS THING DOES NOT WORK WHEN SAME EVENT AT SAME TIME POINT HAPPENS
@@ -175,10 +180,20 @@ class PrintProtocol(wx.Frame):
 		    #self.printfile.write('<code>'+protocol_info[0]+'</code><br />')
 		    self.printCellTransfer(instance, timepoint)
 		    
-                if exp.get_tag_event(protocol) == 'Chem': 
+                if exp.get_tag_event(protocol) == 'Chemical': 
 		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
 		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Chemical Perturbation</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
-                    self.printfile.write('<code><font size="1">'+protocol_info[0]+'</font></code><br />')
+                    self.printfile.write('<code><font size="1">'+protocol_info[0]+'</font></code>')
+		    if protocol_info[1]:
+			self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"><b>Additive</b></font></code></th></tr>')
+			for row in protocol_info[1]:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')
+			self.printfile.write('</table>')
+		    if protocol_info[2]:
+			self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"><b>Procedure</b></font></code></th></tr>')
+			for row in protocol_info[2]:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')
+			self.printfile.write('</table>')		   
 		    self.printlocation(spatial_info) 
 		    
                 if exp.get_tag_event(protocol) == 'Bio':  
@@ -373,11 +388,11 @@ class PrintProtocol(wx.Frame):
     def decode_event_description(self, protocol):
 	meta = ExperimentSettings.getInstance()
 	instance = exp.get_tag_attribute(protocol)
-	header = ''
-	footer = []
-	info = []
 	
         if exp.get_tag_type(protocol) == 'Overview':
+	    header = ''
+	    info = []
+	    
             header += meta.get_field('Overview|Project|Title', default='Not specified')
             info.append(('Aims', meta.get_field('Overview|Project|Aims', default='Not specified')))
 	    info.append(('Funding Code', meta.get_field('Overview|Project|Fund', default='Not specified')))
@@ -394,7 +409,11 @@ class PrintProtocol(wx.Frame):
             return (header, info)
 	
 	if exp.get_tag_event(protocol) == 'CellLine':
-	    header += '%s cell line (Authority %s, Ref: %s) was used. This will be referred as Stock Instance %s' %(meta.get_field('Sample|CellLine|Name|%s'%instance, default='Not specified'),
+	    header = ''
+	    info = []
+	    footer = []	   
+	    
+	    header += '%s cell line (Authority %s, Ref: %s) was used. This will be referred as Cell Line Instance %s' %(meta.get_field('Sample|CellLine|Name|%s'%instance, default='Not specified'),
 	                                                meta.get_field('Sample|CellLine|Authority|%s'%instance, default='Not specified'),	                                                
 	                                                 meta.get_field('Sample|CellLine|CatalogueNo|%s'%instance, default='Not specified'),
 	                                                 str(instance))
@@ -426,10 +445,10 @@ class PrintProtocol(wx.Frame):
 	    
 	    passages = [attr for attr in meta.get_attribute_list_by_instance('Sample|CellLine', instance)
 			                        if attr.startswith('Passage')]
-	    
 	    if passages:
-		footer += '%s passages were carried out according to the specifications' %str(len(passages))
-		
+		for passage in passages:
+		    footer.append('%s was done by %s'%(passage, self.get_passage_admin_info(meta.get_field('Sample|CellLine|%s|%s'%(passage,instance)))))
+		    
 	    return (header, info, footer)	    	    
 	
 	if exp.get_tag_event(protocol) == 'Microscope':	    
@@ -612,21 +631,32 @@ class PrintProtocol(wx.Frame):
 	    
 	    return (header, info)
 	
-	if exp.get_tag_event(protocol) == 'Chem':
-	    if meta.get_field('Perturbation|Chem|ChemName|%s'%instance) is not None:                    
-		header += meta.get_field('Perturbation|Chem|ChemName|%s'%instance)
-		subtext = '%s,%s' %(meta.get_field('Perturbation|Chem|Manufacturer|%s'%instance, default=''), meta.get_field('Perturbation|Chem|CatNum|%s'%instance, default=''))
+	if exp.get_tag_event(protocol) == 'Chemical':
+	    header = ''
+	    additives = []
+	    process = []
+	    
+	    if meta.get_field('Perturbation|Chemical|Name|%s'%instance) is not None:                    
+		header += meta.get_field('Perturbation|Chemical|Name|%s'%instance)
+		subtext = '%s,%s' %(meta.get_field('Perturbation|Chemical|Manufacturer|%s'%instance, default=''), meta.get_field('Perturbation|Chemical|CatNum|%s'%instance, default=''))
 		if re.search('\w+', subtext): #if the mfg and or cat number of the chemical is mentioned
 		    header += '[%s]'%subtext
 		header += ' was added'
-	    if meta.get_field('Perturbation|Chem|Conc|%s'%instance) is not None: 
-		header += ' with a concentration of %s %s' %(meta.get_field('Perturbation|Chem|Conc|%s'%instance)[0], meta.get_field('Perturbation|Chem|Conc|%s'%instance)[1]) 
-	    if meta.get_field('Perturbation|Chem|Additives|%s'%instance) is not None:    
-		header += '.  Following additives were included: %s' %meta.get_field('Perturbation|Chem|Additives|%s'%instance)
-	    if meta.get_field('Perturbation|Chem|Other|%s'%instance) is not None: 
-		header += '.  Other information: %s'%meta.get_field('Perturbation|Chem|Other|%s'%instance) 
+	    if meta.get_field('Perturbation|Chemical|PerturbConc|%s'%instance) is not None: 
+		header += ' at a concentration of %s %s' %(meta.get_field('Perturbation|Chemical|PerturbConc|%s'%instance)[0], meta.get_field('Perturbation|Chemical|PerturbConc|%s'%instance)[1]) 
+	    if meta.get_field('Perturbation|Chemical|StockConc|%s'%instance) is not None:    
+		header += '.  Stock concentration was: %s %s' %(meta.get_field('Perturbation|Chemical|StockConc|%s'%instance)[0], meta.get_field('Perturbation|Chemical|StockConc|%s'%instance)[1])
+	    if meta.get_field('Perturbation|Chemical|Storage|%s'%instance) is not None: 
+		header += '.  Storage information: %s'%meta.get_field('Perturbation|Chemical|Storage|%s'%instance) 
+	    if meta.get_field('Perturbation|Chemical|Other|%s'%instance) is not None: 
+		header += '.  Other information: %s'%meta.get_field('Perturbation|Chemical|Other|%s'%instance) 	  
 		
-	    return (header, info) 		    
+	    if meta.get_field('Perturbation|Chemical|Additive1|%s'%instance) is not None: # At least one step/additive is present
+		additives = self.decode_subprocess(protocol, 'Additive')
+	    if meta.get_field('Perturbation|Chemical|Step1|%s'%instance) is not None: # At least one step/additive is present
+		process = self.decode_subprocess(protocol, 'Step')	
+		
+	    return (header, additives, process) 		    
 
         if exp.get_tag_event(protocol) == 'Bio':
 	    header += 'Attributes of Biological agent'	    
@@ -829,7 +859,32 @@ class PrintProtocol(wx.Frame):
 	    else:
 		d[plate] += [well]
 		
-	return d  
+	return d 
+    
+    def get_passage_admin_info(self, passage):
+	for stp in passage:
+	    if stp[0] == 'ADMIN':
+		return '%s on %s. Cells were splited at a ratio of 1:%s, and the seeding density was %s cells per %s'%(stp[1][0], stp[1][1], stp[1][2], stp[1][3], stp[1][4])
+    
+    #----------------------------------------------------------------------
+    def decode_subprocess(self, protocol, token):
+	"""This method organize the steps of a subprocess and format it for printing"""
+	tag_stump = exp.get_tag_stump(protocol, 2)
+	instance = exp.get_tag_attribute(protocol)
+	process_info = []
+	rows = meta.get_Row_Numbers(protocol, token)
+	
+	if rows:    
+	    for row in rows:
+		# according to token this text needs to be customized
+		rowTAG = tag_stump+'|%s|%s' %(row, instance)
+		row_info =  meta.get_field(rowTAG)
+		text = row+': '
+		for e in row_info:
+		    text += e+' '
+		process_info.append(text)
+	return process_info
+	
     
     def printlocation(self, spatial_info):
 	for plate, wells in spatial_info.iteritems():

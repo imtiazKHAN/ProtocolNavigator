@@ -16,6 +16,8 @@ class ShowMetaDataLinkListDialog(wx.Dialog):
 
         self.ultimateList.InsertColumn(0, 'Data URL')
         self.ultimateList.InsertColumn(1, 'Metadata')
+	self.ultimateList.SetColumnWidth(0, 190)
+	self.ultimateList.SetColumnWidth(1, 300)
 	
 	self.settings_controls = {}
         self.files_metadata = {}

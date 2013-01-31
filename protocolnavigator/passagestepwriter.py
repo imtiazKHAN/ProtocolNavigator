@@ -4,7 +4,7 @@ import datetime
 import experimentsettings as exp
 from experimentsettings import ExperimentSettings
 from wx.lib.masked import NumCtrl
-# test comment
+# TO DO: make the onSavingData coherent with experimentsettings file method. Also Step builder should use addrow.py ; Finally check current passage date is later than last passage date.
 
 meta = exp.ExperimentSettings.getInstance()
 
@@ -40,20 +40,24 @@ class PassageStepBuilder(wx.Dialog):
 
 	if meta.get_field(self.tag_stump+'|Passage%s|%s' %(str(self.currpassageNo-1), self.instance)) is None:
 	    self.curr_protocol = Default_Protocol
-	    today = datetime.date.today()
-	    self.curr_protocol['ADMIN'][1] = '%02d/%02d/%4d'%(today.day, today.month+1, today.year)
-	    self.passage_date = wx.DateTimeFromDMY(int(today.day), int(today.day)-1, int(today.year))		    
 	else:
+	    d =  meta.get_field(self.tag_stump+'|Passage%s|%s' %(str(self.currpassageNo-1), self.instance))
+	    for k, v in d:
+		self.curr_protocol[k] = v	    
+		    
+	self.settings_controls['Admin|0'] = wx.TextCtrl(self.top_panel, size=(70,-1), value=self.curr_protocol['ADMIN'][0])
+	self.settings_controls['Admin|1'] = wx.DatePickerCtrl(self.top_panel, style = wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
+	if meta.get_field(self.tag_stump+'|Passage%s|%s' %(str(self.currpassageNo-1), self.instance)) is not None:
 	    d =  meta.get_field(self.tag_stump+'|Passage%s|%s' %(str(self.currpassageNo-1), self.instance))
 	    for k, v in d:
 		self.curr_protocol[k] = v
 		if k == 'ADMIN':
 		    day, month, year = v[1].split('/')
-		    self.passage_date = wx.DateTimeFromDMY(int(day), int(month)-1, int(year))		
-		    
-	self.settings_controls['Admin|0'] = wx.TextCtrl(self.top_panel, size=(70,-1), value=self.curr_protocol['ADMIN'][0])
-	self.settings_controls['Admin|1'] = wx.DatePickerCtrl(self.top_panel, style = wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
-	self.settings_controls['Admin|1'].SetValue(self.passage_date)
+		    this_date = wx.DateTimeFromDMY(int(day), int(month)-1, int(year))	    		
+	else:
+	    today = datetime.date.today()
+	    this_date = wx.DateTimeFromDMY(int(today.day), int(today.month)-1, int(today.year))
+	self.settings_controls['Admin|1'].SetValue(this_date)
 	self.settings_controls['Admin|2'] = wx.TextCtrl(self.top_panel, size=(20,-1), value=self.curr_protocol['ADMIN'][2])
 	self.settings_controls['Admin|3'] = wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)
 	if isinstance(self.curr_protocol['ADMIN'][3], int): #it had value
@@ -243,21 +247,20 @@ class PassageStepBuilder(wx.Dialog):
 
 
     def OnSavingData(self, event):
-	#TO DO: make this method coherent with other instances of this method
 	ctrl = event.GetEventObject()
 	tag = [t for t, c in self.settings_controls.items() if c==ctrl][0]
 	
 	if tag.startswith('Admin'): # if this is an Admin 
-	    if isinstance(ctrl, wx.DatePickerCtrl):
-		date = ctrl.GetValue()
-		self.passage_date = '%02d/%02d/%4d'%(date.Day, date.Month+1, date.Year)
 	    if isinstance(ctrl, wx.ListBox) and ctrl.GetStringSelection() == 'Other':
 		other = wx.GetTextFromUser('Insert Other', 'Other')
 		ctrl.Append(other)
-		ctrl.SetStringSelection(other)	    
+		ctrl.SetStringSelection(other)	
+	    
+	    date = self.settings_controls['Admin|1'].GetValue()
+	    passage_date = '%02d/%02d/%4d'%(date.Day, date.Month+1, date.Year)
 			
 	    self.curr_protocol['ADMIN'] = [self.settings_controls['Admin|0'].GetValue(), 
-	                                   self.passage_date, 
+	                                   passage_date, 
 	                                   self.settings_controls['Admin|2'].GetValue(),
 	                                   self.settings_controls['Admin|3'].GetValue(),
 	                                   self.settings_controls['Admin|4'].GetStringSelection()]
