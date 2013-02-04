@@ -282,6 +282,9 @@ class VesselPanel(wx.Panel):
                 for pos in self.selection]
     
     def get_selected_platewell_ids(self):
+	#print self.get_current_timepoint()
+	#print [(self.vessel.vessel_id, PlateDesign.get_well_id_at_pos(self.vessel.shape, pos)) 
+                #for pos in self.selection]
         return [(self.vessel.vessel_id, PlateDesign.get_well_id_at_pos(self.vessel.shape, pos)) 
                 for pos in self.selection]
     

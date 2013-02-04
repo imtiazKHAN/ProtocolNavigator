@@ -124,13 +124,13 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
 	if get_tag_type(tag) == 'Perturbation' and get_tag_event(tag) == 'Physical':
 	    self.settings_panel = PhysicalSettingPanel(self.settings_container)
 	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)	    
-	if get_tag_type(tag) == 'Labeling Process' and get_tag_event(tag) == 'Dye':
+	if get_tag_type(tag) == 'Labeling' and get_tag_event(tag) == 'Dye':
 	    self.settings_panel = DyeSettingPanel(self.settings_container)
 	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)
-	if get_tag_type(tag) == 'Labeling Process' and get_tag_event(tag) == 'Immuno':
+	if get_tag_type(tag) == 'Labeling' and get_tag_event(tag) == 'Immuno':
 	    self.settings_panel = ImmunoSettingPanel(self.settings_container)
 	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)
-	if get_tag_type(tag) == 'Labeling Process' and get_tag_event(tag) == 'Genetic':
+	if get_tag_type(tag) == 'Labeling' and get_tag_event(tag) == 'Genetic':
 	    self.settings_panel = GeneticSettingPanel(self.settings_container)
 	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)
 	    
@@ -5003,7 +5003,7 @@ class DyePanel(wx.Panel):
         self.tab_number = tab_number
 	self.tag_stump = tag_stump
 	self.protocol = self.tag_stump+'|'+str(self.tab_number)
-	self.mandatory_tags = [self.tag_stump+'|Name|'+str(self.tab_number), self.tag_stump+'|LabellingConc|'+str(self.tab_number)]
+	self.mandatory_tags = [self.tag_stump+'|DyeName|'+str(self.tab_number), self.tag_stump+'|LabelingConc|'+str(self.tab_number)]
 		
 	# Panel
 	self.sw = wx.ScrolledWindow(self)
@@ -5091,7 +5091,7 @@ class DyePanel(wx.Panel):
         attributesizer.Add(self.settings_controls[chemnamTAG], 0, wx.EXPAND)
         attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)
 	
-	perturbconcTAG = self.tag_stump+'|LabellingConc|'+str(self.tab_number)
+	perturbconcTAG = self.tag_stump+'|LabelingConc|'+str(self.tab_number)
 	conc = meta.get_field(perturbconcTAG, [])
 	self.settings_controls[perturbconcTAG+'|0'] = wx.TextCtrl(self.sw, size=(20,-1), style=wx.TE_PROCESS_ENTER)
 	if len(conc) > 0:
@@ -7152,11 +7152,19 @@ class CentrifugationPanel(wx.Panel):
         showInstBut.Bind (wx.EVT_BUTTON, self.ShowInstrumentInstances)
         self.settings_controls[self.selectinstTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
         self.settings_controls[self.selectinstTAG].SetToolTipString('Oven used for data acquisition')
-	self.labels[self.selectinstTAG] = wx.StaticText(self.sw, -1, 'Select Oven')
+	self.labels[self.selectinstTAG] = wx.StaticText(self.sw, -1, 'Select Centrifuge')
         attributesizer.Add(self.labels[self.selectinstTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         attributesizer.Add(self.settings_controls[self.selectinstTAG], 0, wx.EXPAND) 
         attributesizer.Add(showInstBut, 0) 
 	
+	#RPM profile
+	staticbox = wx.StaticBox(self.sw, -1, "RPM Profile")
+	rpmprofilesizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)	
+	COLUMN_DETAILS = OrderedDict([('RPM', ['TextCtrl', 50, -1, '']), 
+                                    ('Duration\n(Min)', ['TextCtrl', 50, -1, ''])
+                                    ])	
+	rpm_profile = RowBuilder(self.sw, self.protocol, 'RPM', COLUMN_DETAILS, self.mandatory_tags)	
+	rpmprofilesizer.Add(rpm_profile, 0, wx.ALL, 5)	
 	# Procedure
 	staticbox = wx.StaticBox(self.sw, -1, "Procedure")
 	proceduresizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
@@ -7176,6 +7184,7 @@ class CentrifugationPanel(wx.Panel):
 	self.swsizer.Add(titlesizer,0,wx.ALL, 5)
 	self.swsizer.Add((-1,10))
 	self.swsizer.Add(attributesizer, 0, wx.EXPAND|wx.ALL, 5)
+	self.swsizer.Add(rpmprofilesizer, 0, wx.EXPAND|wx.ALL, 5)
 	self.swsizer.Add(proceduresizer,0,wx.EXPAND|wx.ALL, 5)
 	self.sw.SetSizer(self.swsizer)
 	self.sw.SetScrollbars(20, 20, self.Size[0]+10, self.Size[1]+10, 0, 0)

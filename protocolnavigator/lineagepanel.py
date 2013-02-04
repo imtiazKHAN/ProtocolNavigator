@@ -783,7 +783,7 @@ class LineagePanel(wx.Panel):
 		data_acquis = True
 		break
 	    
-	if data_acquis:
+	if data_acquis: 
 	    dia = DataLinkListDialog(self, self.current_node.get_well_ids(), self.current_node.get_timepoint(), self.find_ancestral_tags(self.current_node))
 	    if dia.ShowModal() == wx.ID_OK:
 		if dia.output_options.GetSelection() == 0:
