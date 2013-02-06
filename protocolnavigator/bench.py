@@ -250,12 +250,12 @@ class Bench(wx.Panel):
 	self.page_counter = meta.get_new_protocol_id('Attachments')	
 	if int(self.page_counter) > 1:
 	    lineage_panel.timeline_panel.on_note_icon_add()
-	    
-	dia = FileListDialog(self)
+	attfileTAG = 'Attachments|Files|%s|%s' %(str(self.get_selected_timepoint()), str(self.page_counter))    
+	dia = FileListDialog(self, attfileTAG, meta.get_field(attfileTAG, []))
 	if dia.ShowModal()== wx.ID_OK:
-	    f_list = dia.drop_target.filelist
+	    f_list = dia.file_list
 	    if f_list:
-		meta.set_field('Attachments|Files|%s|%s' %(str(self.get_selected_timepoint()), str(self.page_counter)), f_list)  	    
+		meta.set_field(attfileTAG, f_list)  	    
 		lineage_panel.timeline_panel.on_note_icon_add()		
 		
     def on_del_event(self, evt):
@@ -267,9 +267,11 @@ class Bench(wx.Panel):
         
         protocol = protocols[0]
         prefix, instance = protocol.rsplit('|',1)   
-	
-        wells_tag = '%s|Wells|%s|%s'%(prefix, instance, self.get_selected_timepoint())
-        meta.remove_field(wells_tag)
+	wells_tag = '%s|Wells|%s|%s'%(prefix, instance, self.get_selected_timepoint())
+	meta.remove_field(wells_tag) 
+	if prefix.startswith('DataAcquis'):
+	    for images_tag in  meta.get_matching_tags('%s|Images|%s|%s|*'%(prefix, instance, self.get_selected_timepoint())):
+		meta.remove_field(images_tag)
         self.update_well_selections()
 	self.del_evt_button.Disable()
         
@@ -315,24 +317,13 @@ class Bench(wx.Panel):
             return
         
         protocol = protocols[0]
-        prefix, instance = protocol.rsplit('|',1)
-        
+        prefix, instance = protocol.rsplit('|',1)    
         wells_tag = '%s|Wells|%s|%s'%(prefix, instance, self.get_selected_timepoint())
-        #platewell_ids = set(meta.get_field(wells_tag, [])) 
-        
-        
+
         # SPECIAL CASE: For harvesting, we prompt the user to specify the 
         # destination well(s) for each harvested well.
         if prefix == 'Transfer|Harvest':
             if selected:
-                #
-                # TODO:
-                #
-##                dlg = TimepointSelectionPopup(self)
-##                if dlg.ShowModal() != wx.ID_OK:
-##                    self.vesselscroller.get_vessel(platewell_id[0]).deselect_well_id(platewell_id)
-##                    return
-##                new_timepoint = dlg.get_timepoint()
                 dlg = VesselSelectionPopup(self)
                 if dlg.ShowModal() == wx.ID_OK:
                     destination_wells = dlg.get_selected_platewell_ids()
@@ -350,9 +341,7 @@ class Bench(wx.Panel):
                         s_density[1]= h_density[1]
                     meta.set_field('Transfer|Seed|SeedingDensity|%s'%(new_id), s_density)
                     if meta.get_field('Transfer|Harvest|MediumAddatives|%s'%instance) is not None:
-                        meta.set_field('Transfer|Seed|MediumAddatives|%s'%(new_id), meta.get_field('Transfer|Harvest|MediumAddatives|%s'%instance))  
-                    
-                    
+                        meta.set_field('Transfer|Seed|MediumAddatives|%s'%(new_id), meta.get_field('Transfer|Harvest|MediumAddatives|%s'%instance))        
                 else:
                     self.vesselscroller.get_vessel(platewell_id[0]).deselect_well_id(platewell_id)
                     return
@@ -370,50 +359,22 @@ class Bench(wx.Panel):
                         for seed_tag in seed_tags:
                             meta.remove_field(seed_tag)
                 
-        
-        # GENERIC CASE: Associate or dissociate event with selected wells
-        wells_tag = '%s|Wells|%s|%s'%(prefix, instance, self.get_selected_timepoint())
-        platewell_ids = set(meta.get_field(wells_tag, []))
-        
-        if selected:
-            platewell_ids.update(platewell_id)
-            meta.set_field(wells_tag, list(platewell_ids))
-        #else:
-            #platewell_ids.discard(platewell_id)  
-            #if len(platewell_ids) > 0:
-                #meta.set_field(wells_tag, list(platewell_ids))
-            #else:
-                #meta.remove_field(wells_tag)
 
         # Update the Images tags
-        if selected and prefix.startswith('DataAcquis'):
-            images_tag = '%s|Images|%s|%s|%s'%(prefix, instance, self.get_selected_timepoint(), repr(platewell_id))
-            
-            if prefix == 'DataAcquis|HCS':
-                dlg = wx.FileDialog(self,message='Select the images files',
-                                    defaultDir=os.getcwd(), defaultFile='', style=wx.OPEN|wx.MULTIPLE)
-            elif prefix == 'DataAcquis|FCS':
-                #dlg = wx.FileDialog(self,message='Select the FCS files for flask %s'%(platewell_id[0].strip('[]')),
-                dlg = wx.FileDialog(self,message='Select the FCS files for flask',
-                                    defaultDir=os.getcwd(), defaultFile='', style=wx.OPEN|wx.MULTIPLE)
-            elif prefix == 'DataAcquis|TLM':
-                dlg = wx.FileDialog(self,message='Select the images files',
-                                    defaultDir=os.getcwd(), defaultFile='', style=wx.OPEN|wx.MULTIPLE)
-	    elif prefix == 'DataAcquis|RHE':
-		dlg = wx.FileDialog(self,message='Select the Rheometer files',
-	                            defaultDir=os.getcwd(), defaultFile='', style=wx.OPEN|wx.MULTIPLE)	    
-            else:
-                raise Exception('unrecognized tag prefix')
-	    
-            if dlg.ShowModal() == wx.ID_OK:
-		file_paths = dlg.GetPaths()
-		os.chdir(os.path.split(dlg.GetPath())[0])
-		dlg.Destroy()
-		
-		dia = ShowMetaDataLinkListDialog(self, file_paths)
-		if dia.ShowModal() == wx.ID_OK:
-		    meta.set_field(images_tag, dia.files_metadata.items())
-		    dia.Destroy()
+        if selected and prefix.startswith('DataAcquis'): 
+	    platewell_ids = set(meta.get_field(wells_tag, []))	
+	    selected_pw_id = list(set(platewell_id)-platewell_ids)	    
+            images_tag = '%s|Images|%s|%s|%s'%(prefix, instance, self.get_selected_timepoint(), selected_pw_id)
+	    dia = FileListDialog(self, images_tag, meta.get_field(images_tag, []))
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.file_list
+		if f_list:		    
+		    meta_dia = ShowMetaDataLinkListDialog(self, f_list)
+		    if meta_dia.ShowModal() == wx.ID_OK:
+			platewell_ids.update(platewell_id)
+			meta.set_field(wells_tag, list(platewell_ids))			
+			meta.set_field(images_tag, meta_dia.files_metadata.items())
+
             else:   
                 meta.remove_field(wells_tag)
 		self.update_well_selections()

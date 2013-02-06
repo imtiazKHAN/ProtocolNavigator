@@ -138,7 +138,7 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
 	    self.settings_panel = RheometerSettingPanel(self.settings_container)
 	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)    
 	if get_tag_type(tag) == 'InstProcess' and get_tag_event(tag) == 'Drying':
-	    self.settings_panel = DrySettingPanel(self.settings_container)
+	    self.settings_panel = DryingSettingPanel(self.settings_container)
 	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)
 	if get_tag_type(tag) == 'InstProcess' and get_tag_event(tag) == 'Incubation':
 	    self.settings_panel = IncubationSettingPanel(self.settings_container)
@@ -546,11 +546,11 @@ class CellLinePanel(wx.Panel):
 	text = wx.StaticText(self.top_panel, -1, exp.get_tag_event(tag_stump))
 	font = wx.Font(12, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
 	text.SetFont(font)	
-	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
+	self.attfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
 	attach_bmp = icons.clip.Scale(16.0, 16.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
 	attach_btn = wx.BitmapButton(self.top_panel, -1, attach_bmp)
 	attach_btn.SetToolTipString("Attach file links.")
-	self.attach_file_num = wx.StaticText(self.top_panel, -1, '(%s)' %str(len(meta.get_field(self.propfileTAG, default=[]))))
+	self.attach_file_num = wx.StaticText(self.top_panel, -1, '(%s)' %str(len(meta.get_field(self.attfileTAG, default=[]))))
 	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)	
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)	
 	titlesizer.Add(text, 0)
@@ -943,16 +943,13 @@ class CellLinePanel(wx.Panel):
 	return 'Operator %s Date %s Split 1:%s Cell Count %s/%s' %(admin_info[0], admin_info[1], admin_info[2], admin_info[3], admin_info[4])
     
     def OnAttachPropFile(self, event):
-	    if meta.checkMandatoryTags(self.mandatory_tags):	
-		dia = FileListDialog(self)
-		if meta.get_field(self.propfileTAG):
-		    for file in meta.get_field(self.propfileTAG):
-			dia.drop_target.window.AppendText("%s\n" % file)		
-		if dia.ShowModal()== wx.ID_OK:
-		    f_list = dia.drop_target.filelist
-		    if f_list:
-			meta.set_field(self.propfileTAG, f_list)
-			self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))    
+	if meta.checkMandatoryTags(self.mandatory_tags):	
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.file_list
+		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+		if f_list:
+		    meta.set_field(self.attfileTAG, f_list)   
 			
     def OnSavingSettings(self, event):
 	meta.saving_settings(self.protocol, self.nameTAG, self.mandatory_tags)    
@@ -1068,11 +1065,11 @@ class MicroscopePanel(wx.Panel):
 	text = wx.StaticText(self.sw, -1, exp.get_tag_event(self.tag_stump))
 	font = wx.Font(12, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
 	text.SetFont(font)
-	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
+	self.attfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
 	attach_bmp = icons.clip.Scale(16.0, 16.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
 	attach_btn = wx.BitmapButton(self.sw, -1, attach_bmp)
 	attach_btn.SetToolTipString("Attach file links.")
-	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.propfileTAG, default=[]))))
+	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.attfileTAG, default=[]))))
 	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)	
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)		
 	titlesizer.Add(text, 0)
@@ -1864,16 +1861,13 @@ class MicroscopePanel(wx.Panel):
 	meta.saving_settings(self.protocol, self.nameTAG, self.mandatory_tags) 
 		
     def OnAttachPropFile(self, event):
-	    if meta.checkMandatoryTags(self.mandatory_tags):	
-		dia = FileListDialog(self)
-		if meta.get_field(self.propfileTAG):
-		    for file in meta.get_field(self.propfileTAG):
-			dia.drop_target.window.AppendText("%s\n" % file)		
-		if dia.ShowModal()== wx.ID_OK:
-		    f_list = dia.drop_target.filelist
-		    if f_list:
-			meta.set_field(self.propfileTAG, f_list)
-			self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+	if meta.checkMandatoryTags(self.mandatory_tags):	
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.file_list
+		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+		if f_list:
+		    meta.set_field(self.attfileTAG, f_list)
 		    
     def OnSavingData(self, event):
 	ctrl = event.GetEventObject()
@@ -2074,11 +2068,11 @@ class FlowcytometerPanel(wx.Panel):
 	text = wx.StaticText(self.top_panel, -1, exp.get_tag_event(self.tag_stump))
 	font = wx.Font(12, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
 	text.SetFont(font)
-	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
+	self.attfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
 	attach_bmp = icons.clip.Scale(16.0, 16.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
 	attach_btn = wx.BitmapButton(self.top_panel, -1, attach_bmp)
 	attach_btn.SetToolTipString("Attach file links.")
-	self.attach_file_num = wx.StaticText(self.top_panel, -1, '(%s)' %str(len(meta.get_field(self.propfileTAG, default=[]))))
+	self.attach_file_num = wx.StaticText(self.top_panel, -1, '(%s)' %str(len(meta.get_field(self.attfileTAG, default=[]))))
 	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)	
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)		
 	titlesizer.Add(text, 0)
@@ -2286,16 +2280,13 @@ class FlowcytometerPanel(wx.Panel):
 	self.showChannels()
 	    
     def OnAttachPropFile(self, event):
-	    if meta.checkMandatoryTags(self.mandatory_tags):	
-		dia = FileListDialog(self)
-		if meta.get_field(self.propfileTAG):
-		    for file in meta.get_field(self.propfileTAG):
-			dia.drop_target.window.AppendText("%s\n" % file)		
-		if dia.ShowModal()== wx.ID_OK:
-		    f_list = dia.drop_target.filelist
-		    if f_list:
-			meta.set_field(self.propfileTAG, f_list)
-			self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+	if meta.checkMandatoryTags(self.mandatory_tags):	
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.file_list
+		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+		if f_list:
+		    meta.set_field(self.attfileTAG, f_list)
 
     def OnSavingSettings(self, event):
 	meta.saving_settings(self.protocol, self.nameTAG, self.mandatory_tags) 		
@@ -3933,11 +3924,11 @@ class ChemicalAgentPanel(wx.Panel):
 	self.save_btn.SetToolTipString("Save instance for future reuse.")	
 	#self.save_btn = wx.Button(self.sw, -1, "Save Instance")
 	self.save_btn.Bind(wx.EVT_BUTTON, self.OnSavingSettings)	
-	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
+	self.attfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
 	attach_bmp = icons.clip.Scale(16.0, 16.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
 	attach_btn = wx.BitmapButton(self.sw, -1, attach_bmp)
 	attach_btn.SetToolTipString("Attach file links.")
-	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.propfileTAG, default=[]))))
+	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.attfileTAG, default=[]))))
 	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)	
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)	
 	titlesizer.Add(pic, 0)
@@ -4073,16 +4064,13 @@ class ChemicalAgentPanel(wx.Panel):
 	self.SetSizer(self.Sizer)
     
     def OnAttachPropFile(self, event):
-	    if meta.checkMandatoryTags(self.mandatory_tags):	
-		dia = FileListDialog(self)
-		if meta.get_field(self.propfileTAG):
-		    for file in meta.get_field(self.propfileTAG):
-			dia.drop_target.window.AppendText("%s\n" % file)		
-		if dia.ShowModal()== wx.ID_OK:
-		    f_list = dia.drop_target.filelist
-		    if f_list:
-			meta.set_field(self.propfileTAG, f_list)
-			self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+	if meta.checkMandatoryTags(self.mandatory_tags):	
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.file_list
+		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+		if f_list:
+		    meta.set_field(self.attfileTAG, f_list)
 			
     def OnSavingSettings(self, event):
 	meta.saving_settings(self.protocol, self.nameTAG, self.mandatory_tags)     
@@ -4169,11 +4157,11 @@ class BiologicalAgentPanel(wx.Panel):
 	text.SetFont(font)
 	pic=wx.StaticBitmap(self.sw)
 	pic.SetBitmap(icons.dna.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
-	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
+	self.attfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
 	attach_bmp = icons.clip.Scale(16.0, 16.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
 	attach_btn = wx.BitmapButton(self.sw, -1, attach_bmp)
 	attach_btn.SetToolTipString("Attach file links.")
-	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.propfileTAG, default=[]))))
+	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.attfileTAG, default=[]))))
 	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)	
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)	
 	titlesizer.Add(pic, 0)
@@ -4254,16 +4242,13 @@ class BiologicalAgentPanel(wx.Panel):
 	self.SetSizer(self.Sizer)
     
     def OnAttachPropFile(self, event):
-	    if meta.checkMandatoryTags(self.mandatory_tags):	
-		dia = FileListDialog(self)
-		if meta.get_field(self.propfileTAG):
-		    for file in meta.get_field(self.propfileTAG):
-			dia.drop_target.window.AppendText("%s\n" % file)		
-		if dia.ShowModal()== wx.ID_OK:
-		    f_list = dia.drop_target.filelist
-		    if f_list:
-			meta.set_field(self.propfileTAG, f_list)
-			self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+	if meta.checkMandatoryTags(self.mandatory_tags):	
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.file_list
+		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+		if f_list:
+		    meta.set_field(self.attfileTAG, f_list)
 			
     def OnSavingSettings(self, event):
 	if meta.checkMandatoryTags(self.mandatory_tags) is None:
@@ -4361,11 +4346,11 @@ class PhysicalAgentPanel(wx.Panel):
 	text.SetFont(font)
 	pic=wx.StaticBitmap(self.sw)
 	pic.SetBitmap(icons.physical.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
-	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
+	self.attfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
 	attach_bmp = icons.clip.Scale(16.0, 16.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
 	attach_btn = wx.BitmapButton(self.sw, -1, attach_bmp)
 	attach_btn.SetToolTipString("Attach file links.")
-	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.propfileTAG, default=[]))))
+	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.attfileTAG, default=[]))))
 	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)	
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)	
 	titlesizer.Add(pic, 0)
@@ -4419,16 +4404,13 @@ class PhysicalAgentPanel(wx.Panel):
 	self.SetSizer(self.Sizer)
     
     def OnAttachPropFile(self, event):
-	    if meta.checkMandatoryTags(self.mandatory_tags):	
-		dia = FileListDialog(self)
-		if meta.get_field(self.propfileTAG):
-		    for file in meta.get_field(self.propfileTAG):
-			dia.drop_target.window.AppendText("%s\n" % file)		
-		if dia.ShowModal()== wx.ID_OK:
-		    f_list = dia.drop_target.filelist
-		    if f_list:
-			meta.set_field(self.propfileTAG, f_list)
-			self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+	if meta.checkMandatoryTags(self.mandatory_tags):	
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.file_list
+		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+		if f_list:
+		    meta.set_field(self.attfileTAG, f_list)
 			
     def OnSavingSettings(self, event):
 	if meta.checkMandatoryTags(self.mandatory_tags) is None:
@@ -4558,11 +4540,11 @@ class ImmunoPanel(wx.Panel):
 	text.SetFont(font)
 	pic=wx.StaticBitmap(self.sw)
 	pic.SetBitmap(icons.antibody.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())	
-	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
+	self.attfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
 	attach_bmp = icons.clip.Scale(16.0, 16.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
 	attach_btn = wx.BitmapButton(self.sw, -1, attach_bmp)
 	attach_btn.SetToolTipString("Attach file links.")
-	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.propfileTAG, default=[]))))
+	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.attfileTAG, default=[]))))
 	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)	
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)	
 	titlesizer.Add(pic, 0)
@@ -4662,16 +4644,13 @@ class ImmunoPanel(wx.Panel):
 	    return  
 	
     def OnAttachPropFile(self, event):
-	    if meta.checkMandatoryTags(self.mandatory_tags):	
-		dia = FileListDialog(self)
-		if meta.get_field(self.propfileTAG):
-		    for file in meta.get_field(self.propfileTAG):
-			dia.drop_target.window.AppendText("%s\n" % file)		
-		if dia.ShowModal()== wx.ID_OK:
-		    f_list = dia.drop_target.filelist
-		    if f_list:
-			meta.set_field(self.propfileTAG, f_list)
-			self.attach_file_num.SetLabel('(%s)'%str(len(f_list))) 
+	if meta.checkMandatoryTags(self.mandatory_tags):	
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.file_list
+		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+		if f_list:
+		    meta.set_field(self.attfileTAG, f_list)
 			
     def OnSavingSettings(self, event):
 	meta.saving_settings(self.protocol, self.nameTAG, self.mandatory_tags)     
@@ -4787,11 +4766,11 @@ class GeneticPanel(wx.Panel):
 	text.SetFont(font)
 	pic=wx.StaticBitmap(self.sw)
 	pic.SetBitmap(icons.primer.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())	
-	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
+	self.attfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
 	attach_bmp = icons.clip.Scale(16.0, 16.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
 	attach_btn = wx.BitmapButton(self.sw, -1, attach_bmp)
 	attach_btn.SetToolTipString("Attach file links.")
-	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.propfileTAG, default=[]))))
+	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.attfileTAG, default=[]))))
 	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)	
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)	
 	titlesizer.Add(pic, 0)
@@ -4889,16 +4868,13 @@ class GeneticPanel(wx.Panel):
 	    return  
 	
     def OnAttachPropFile(self, event):
-	    if meta.checkMandatoryTags(self.mandatory_tags):	
-		dia = FileListDialog(self)
-		if meta.get_field(self.propfileTAG):
-		    for file in meta.get_field(self.propfileTAG):
-			dia.drop_target.window.AppendText("%s\n" % file)		
-		if dia.ShowModal()== wx.ID_OK:
-		    f_list = dia.drop_target.filelist
-		    if f_list:
-			meta.set_field(self.propfileTAG, f_list)
-			self.attach_file_num.SetLabel('(%s)'%str(len(f_list))) 
+	if meta.checkMandatoryTags(self.mandatory_tags):	
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.file_list
+		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+		if f_list:
+		    meta.set_field(self.attfileTAG, f_list)
 			
     def OnSavingSettings(self, event):
 	meta.saving_settings(self.protocol, self.nameTAG, self.mandatory_tags)      
@@ -5015,11 +4991,11 @@ class DyePanel(wx.Panel):
 	text.SetFont(font)
 	pic=wx.StaticBitmap(self.sw)
 	pic.SetBitmap(icons.stain.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())	
-	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
+	self.attfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
 	attach_bmp = icons.clip.Scale(16.0, 16.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
 	attach_btn = wx.BitmapButton(self.sw, -1, attach_bmp)
 	attach_btn.SetToolTipString("Attach file links.")
-	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.propfileTAG, default=[]))))
+	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.attfileTAG, default=[]))))
 	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)	
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)	
 	titlesizer.Add(pic, 0)
@@ -5188,17 +5164,14 @@ class DyePanel(wx.Panel):
 	    return  
 	
     def OnAttachPropFile(self, event):
-	    if meta.checkMandatoryTags(self.mandatory_tags):	
-		dia = FileListDialog(self)
-		if meta.get_field(self.propfileTAG):
-		    for file in meta.get_field(self.propfileTAG):
-			dia.drop_target.window.AppendText("%s\n" % file)		
-		if dia.ShowModal()== wx.ID_OK:
-		    f_list = dia.drop_target.filelist
-		    if f_list:
-			meta.set_field(self.propfileTAG, f_list)
-			self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
-			
+	if meta.checkMandatoryTags(self.mandatory_tags):	
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.file_list
+		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+		if f_list:
+		    meta.set_field(self.attfileTAG, f_list)
+	
 			
     def OnSavingSettings(self, event):
 	meta.saving_settings(self.protocol, self.nameTAG, self.mandatory_tags)     
@@ -5316,11 +5289,11 @@ class DryingPanel(wx.Panel):
 	text.SetFont(font)
 	pic=wx.StaticBitmap(self.sw)
 	pic.SetBitmap(icons.drying.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())	
-	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
+	self.attfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
 	attach_bmp = icons.clip.Scale(16.0, 16.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
 	attach_btn = wx.BitmapButton(self.sw, -1, attach_bmp)
 	attach_btn.SetToolTipString("Attach file links.")
-	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.propfileTAG, default=[]))))
+	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.attfileTAG, default=[]))))
 	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)	
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)	
 	titlesizer.Add(pic, 0)
@@ -5450,17 +5423,13 @@ class DryingPanel(wx.Panel):
 	meta.saving_settings(self.protocol, self.nameTAG, self.mandatory_tags) 	
 	
     def OnAttachPropFile(self, event):
-	    if meta.checkMandatoryTags(self.mandatory_tags):	
-		dia = FileListDialog(self)
-		if meta.get_field(self.propfileTAG):
-		    for file in meta.get_field(self.propfileTAG):
-			dia.drop_target.window.AppendText("%s\n" % file)		
-		if dia.ShowModal()== wx.ID_OK:
-		    f_list = dia.drop_target.filelist
-		    if f_list:
-			meta.set_field(self.propfileTAG, f_list)
-			self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))   
-
+	if meta.checkMandatoryTags(self.mandatory_tags):	
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.file_list
+		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+		if f_list:
+		    meta.set_field(self.attfileTAG, f_list)
     
 
     def OnSavingData(self, event):
@@ -5575,11 +5544,11 @@ class IncubationPanel(wx.Panel):
 	text.SetFont(font)
 	pic=wx.StaticBitmap(self.sw)
 	pic.SetBitmap(icons.incubator.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())	
-	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
+	self.attfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
 	attach_bmp = icons.clip.Scale(16.0, 16.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
 	attach_btn = wx.BitmapButton(self.sw, -1, attach_bmp)
 	attach_btn.SetToolTipString("Attach file links.")
-	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.propfileTAG, default=[]))))
+	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.attfileTAG, default=[]))))
 	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)	
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)	
 	titlesizer.Add(pic, 0)
@@ -5709,16 +5678,13 @@ class IncubationPanel(wx.Panel):
 	meta.saving_settings(self.protocol, self.nameTAG, self.mandatory_tags)     
 	
     def OnAttachPropFile(self, event):
-	    if meta.checkMandatoryTags(self.mandatory_tags):	
-		dia = FileListDialog(self)
-		if meta.get_field(self.propfileTAG):
-		    for file in meta.get_field(self.propfileTAG):
-			dia.drop_target.window.AppendText("%s\n" % file)		
-		if dia.ShowModal()== wx.ID_OK:
-		    f_list = dia.drop_target.filelist
-		    if f_list:
-			meta.set_field(self.propfileTAG, f_list)
-			self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))  
+	if meta.checkMandatoryTags(self.mandatory_tags):	
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.file_list
+		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+		if f_list:
+		    meta.set_field(self.attfileTAG, f_list)  
 
     def OnSavingData(self, event):
 	ctrl = event.GetEventObject()
@@ -5908,13 +5874,13 @@ class AddMediumPanel(wx.Panel):
 	    return  
 	
     def OnAttachPropFile(self, event):
-	    if meta.checkMandatoryTags(self.mandatory_tags):	
-		dia = FileListDialog(self)
-		if dia.ShowModal()== wx.ID_OK:
-		    f_list = dia.drop_target.filelist
-		    if f_list:
-			meta.set_field(self.propfileTAG, f_list)
-			self.fileURL_container.SetStrings(f_list) 
+	if meta.checkMandatoryTags(self.mandatory_tags):	
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.file_list
+		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+		if f_list:
+		    meta.set_field(self.attfileTAG, f_list) 
 			
     def OnSavingSettings(self, event):
 	meta.saving_settings(self.protocol, self.nameTAG, self.mandatory_tags)      
@@ -6172,11 +6138,11 @@ class IncubatorPanel(wx.Panel):
 	text = wx.StaticText(self.sw, -1, exp.get_tag_event(self.tag_stump))
 	font = wx.Font(12, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
 	text.SetFont(font)
-	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
+	self.attfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
 	attach_bmp = icons.clip.Scale(16.0, 16.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
 	attach_btn = wx.BitmapButton(self.sw, -1, attach_bmp)
 	attach_btn.SetToolTipString("Attach file links.")
-	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.propfileTAG, default=[]))))
+	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.attfileTAG, default=[]))))
 	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)	
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)		
 	titlesizer.Add(text, 0)
@@ -6232,16 +6198,13 @@ class IncubatorPanel(wx.Panel):
 	meta.saving_settings(self.protocol, self.nameTAG, self.mandatory_tags)  
 	    
     def OnAttachPropFile(self, event):
-	    if meta.checkMandatoryTags(self.mandatory_tags):	
-		dia = FileListDialog(self)
-		if meta.get_field(self.propfileTAG):
-		    for file in meta.get_field(self.propfileTAG):
-			dia.drop_target.window.AppendText("%s\n" % file)		
-		if dia.ShowModal()== wx.ID_OK:
-		    f_list = dia.drop_target.filelist
-		    if f_list:
-			meta.set_field(self.propfileTAG, f_list)
-			self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+	if meta.checkMandatoryTags(self.mandatory_tags):	
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.file_list
+		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+		if f_list:
+		    meta.set_field(self.attfileTAG, f_list)
 		
     def OnSavingData(self, event):
 	ctrl = event.GetEventObject()
@@ -6322,11 +6285,11 @@ class RheometerPanel(wx.Panel):
 	text = wx.StaticText(self.sw, -1, exp.get_tag_event(self.tag_stump))
 	font = wx.Font(12, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
 	text.SetFont(font)
-	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
+	self.attfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
 	attach_bmp = icons.clip.Scale(16.0, 16.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
 	attach_btn = wx.BitmapButton(self.sw, -1, attach_bmp)
 	attach_btn.SetToolTipString("Attach file links.")
-	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.propfileTAG, default=[]))))
+	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.attfileTAG, default=[]))))
 	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)	
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)		
 	titlesizer.Add(text, 0)
@@ -6516,16 +6479,13 @@ class RheometerPanel(wx.Panel):
 	meta.saving_settings(self.protocol, self.nameTAG, self.mandatory_tags)  
 	    
     def OnAttachPropFile(self, event):
-	    if meta.checkMandatoryTags(self.mandatory_tags):	
-		dia = FileListDialog(self)
-		if meta.get_field(self.propfileTAG):
-		    for file in meta.get_field(self.propfileTAG):
-			dia.drop_target.window.AppendText("%s\n" % file)		
-		if dia.ShowModal()== wx.ID_OK:
-		    f_list = dia.drop_target.filelist
-		    if f_list:
-			meta.set_field(self.propfileTAG, f_list)
-			self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+	if meta.checkMandatoryTags(self.mandatory_tags):	
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.file_list
+		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+		if f_list:
+		    meta.set_field(self.attfileTAG, f_list)
 		
     def OnSavingData(self, event):
 	ctrl = event.GetEventObject()
@@ -6601,11 +6561,11 @@ class RheoManipulationPanel(wx.Panel):
 	text.SetFont(font)
 	pic=wx.StaticBitmap(self.sw)
 	pic.SetBitmap(icons.rheometer.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())		
-	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
+	self.attfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
 	attach_bmp = icons.clip.Scale(16.0, 16.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
 	attach_btn = wx.BitmapButton(self.sw, -1, attach_bmp)
 	attach_btn.SetToolTipString("Attach file links.")
-	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.propfileTAG, default=[]))))
+	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.attfileTAG, default=[]))))
 	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)	
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)	
 	titlesizer.Add(pic, 0)
@@ -6697,16 +6657,13 @@ class RheoManipulationPanel(wx.Panel):
         dia.Destroy()
 	
     def OnAttachPropFile(self, event):
-	    if meta.checkMandatoryTags(self.mandatory_tags):	
-		dia = FileListDialog(self)
-		if meta.get_field(self.propfileTAG):
-		    for file in meta.get_field(self.propfileTAG):
-			dia.drop_target.window.AppendText("%s\n" % file)		
-		if dia.ShowModal()== wx.ID_OK:
-		    f_list = dia.drop_target.filelist
-		    if f_list:
-			meta.set_field(self.propfileTAG, f_list)
-			self.attach_file_num.SetLabel('(%s)'%str(len(f_list))) 
+	if meta.checkMandatoryTags(self.mandatory_tags):	
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.file_list
+		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+		if f_list:
+		    meta.set_field(self.attfileTAG, f_list)
 
     def OnSavingData(self, event):
         ctrl = event.GetEventObject()
@@ -6848,7 +6805,7 @@ class RHEPanel(wx.Panel):
 	    if dia.ShowModal()== wx.ID_OK:
 		f_list = dia.drop_target.filelist
 		if f_list:
-		    meta.set_field(self.propfileTAG, f_list)
+		    meta.set_field(self.attfileTAG, f_list)
 		    self.propfiles.SetStrings(f_list)    
 
     def OnSavingData(self, event):
@@ -6925,11 +6882,11 @@ class CentrifugePanel(wx.Panel):
 	text = wx.StaticText(self.sw, -1, exp.get_tag_event(self.tag_stump))
 	font = wx.Font(12, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
 	text.SetFont(font)
-	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
+	self.attfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
 	attach_bmp = icons.clip.Scale(16.0, 16.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
 	attach_btn = wx.BitmapButton(self.sw, -1, attach_bmp)
 	attach_btn.SetToolTipString("Attach file links.")
-	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.propfileTAG, default=[]))))
+	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.attfileTAG, default=[]))))
 	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)	
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)		
 	titlesizer.Add(text, 0)
@@ -6989,16 +6946,13 @@ class CentrifugePanel(wx.Panel):
 	meta.saving_settings(self.protocol, self.nameTAG, self.mandatory_tags)  
 	    
     def OnAttachPropFile(self, event):
-	    if meta.checkMandatoryTags(self.mandatory_tags):	
-		dia = FileListDialog(self)
-		if meta.get_field(self.propfileTAG):
-		    for file in meta.get_field(self.propfileTAG):
-			dia.drop_target.window.AppendText("%s\n" % file)		
-		if dia.ShowModal()== wx.ID_OK:
-		    f_list = dia.drop_target.filelist
-		    if f_list:
-			meta.set_field(self.propfileTAG, f_list)
-			self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+	if meta.checkMandatoryTags(self.mandatory_tags):	
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.file_list
+		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+		if f_list:
+		    meta.set_field(self.attfileTAG, f_list)
 		
     def OnSavingData(self, event):
 	ctrl = event.GetEventObject()
@@ -7112,11 +7066,11 @@ class CentrifugationPanel(wx.Panel):
 	text.SetFont(font)
 	pic=wx.StaticBitmap(self.sw)
 	pic.SetBitmap(icons.spin.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())	
-	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
+	self.attfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
 	attach_bmp = icons.clip.Scale(16.0, 16.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
 	attach_btn = wx.BitmapButton(self.sw, -1, attach_bmp)
 	attach_btn.SetToolTipString("Attach file links.")
-	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.propfileTAG, default=[]))))
+	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.attfileTAG, default=[]))))
 	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)	
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)	
 	titlesizer.Add(pic, 0)
@@ -7210,16 +7164,13 @@ class CentrifugationPanel(wx.Panel):
         dia.Destroy()
 	
     def OnAttachPropFile(self, event):
-	    if meta.checkMandatoryTags(self.mandatory_tags):	
-		dia = FileListDialog(self)
-		if meta.get_field(self.propfileTAG):
-		    for file in meta.get_field(self.propfileTAG):
-			dia.drop_target.window.AppendText("%s\n" % file)		
-		if dia.ShowModal()== wx.ID_OK:
-		    f_list = dia.drop_target.filelist
-		    if f_list:
-			meta.set_field(self.propfileTAG, f_list)
-			self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))   
+	if meta.checkMandatoryTags(self.mandatory_tags):	
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.file_list
+		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+		if f_list:
+		    meta.set_field(self.attfileTAG, f_list)   
 
     def OnSavingSettings(self, event):
 	meta.saving_settings(self.protocol, self.nameTAG, self.mandatory_tags)     
@@ -7303,11 +7254,11 @@ class OvenPanel(wx.Panel):
 	text = wx.StaticText(self.sw, -1, exp.get_tag_event(self.tag_stump))
 	font = wx.Font(12, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
 	text.SetFont(font)
-	self.propfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
+	self.attfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
 	attach_bmp = icons.clip.Scale(16.0, 16.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
 	attach_btn = wx.BitmapButton(self.sw, -1, attach_bmp)
 	attach_btn.SetToolTipString("Attach file links.")
-	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.propfileTAG, default=[]))))
+	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.attfileTAG, default=[]))))
 	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)	
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)		
 	titlesizer.Add(text, 0)
@@ -7354,16 +7305,13 @@ class OvenPanel(wx.Panel):
 	meta.saving_settings(self.protocol, self.nameTAG, self.mandatory_tags)  
 	    
     def OnAttachPropFile(self, event):
-	    if meta.checkMandatoryTags(self.mandatory_tags):	
-		dia = FileListDialog(self)
-		if meta.get_field(self.propfileTAG):
-		    for file in meta.get_field(self.propfileTAG):
-			dia.drop_target.window.AppendText("%s\n" % file)		
-		if dia.ShowModal()== wx.ID_OK:
-		    f_list = dia.drop_target.filelist
-		    if f_list:
-			meta.set_field(self.propfileTAG, f_list)
-			self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+	if meta.checkMandatoryTags(self.mandatory_tags):	
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.file_list
+		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+		if f_list:
+		    meta.set_field(self.attfileTAG, f_list)
 		
     def OnSavingData(self, event):
 	ctrl = event.GetEventObject()

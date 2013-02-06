@@ -421,7 +421,7 @@ class VesselPanel(wx.Panel):
 	    selected = self.toggle_selected(well)
 	    for handler in self.well_selection_handlers:
 		handler(self.get_selected_platewell_ids(), selected) 	
-
+	
     def _on_click(self, evt):
         if self.selection_enabled == False:
             return
@@ -431,7 +431,7 @@ class VesselPanel(wx.Panel):
         selected = self.toggle_selected(well)
         for handler in self.well_selection_handlers:
             handler(self.get_platewell_id_at_xy(evt.X, evt.Y), selected)   
-            
+          
             
 class VesselScroller(wx.ScrolledWindow):
     '''Scrolled window that displays a set of vessel panels with text labels

@@ -362,13 +362,12 @@ class TimelinePanel(wx.Panel):
 		    # Notes|<type>|<timepoint>|<instance> = value
 		    meta.set_field('Notes|%s|%s|%s' %(note_dia.noteType, timepoint, str(self.page_counter)), note_dia.noteDescrip.GetValue())  
 	    elif exp.get_tag_type(self.curr_note_tag) == 'Attachments':
-		attach_dia = FileListDialog(self)
-		for file in meta.get_field(self.curr_note_tag):
-		    attach_dia.drop_target.window.AppendText("%s\n" % file)
-		if attach_dia.ShowModal()== wx.ID_OK:
-		    f_list = attach_dia.drop_target.filelist
+		attfileTAG = 'Attachments|Files|%s|%s' %(timepoint, str(self.page_counter))
+		dia = FileListDialog(self, attfileTAG, meta.get_field(attfileTAG, []))
+		if dia.ShowModal()== wx.ID_OK:
+		    f_list = dia.file_list
 		    if f_list:
-			meta.set_field('Attachments|Files|%s|%s' %(timepoint, str(self.page_counter)), f_list)  
+			meta.set_field(attfileTAG, f_list) 	    
 		
 
 class LineagePanel(wx.Panel):

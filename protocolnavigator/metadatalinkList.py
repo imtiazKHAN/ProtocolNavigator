@@ -25,8 +25,11 @@ class ShowMetaDataLinkListDialog(wx.Dialog):
         for fp in file_paths:
             index = self.ultimateList.InsertStringItem(sys.maxint, fp)
 	    self.files_metadata[fp] = ''
-	    self.settings_controls[fp] = wx.TextCtrl(self.ultimateList,  value='', style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER)
-	    self.settings_controls[fp].Bind(wx.EVT_TEXT, self.SavingMetadata)
+	    
+	    #self.settings_controls[fp] = wx.TextCtrl(self.ultimateList,  value='', style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER)
+	    self.settings_controls[fp] = wx.TextCtrl(self.ultimateList, -1, "",style=wx.TE_MULTILINE|wx.HSCROLL|wx.TE_READONLY)
+	    self.drop_target = MyFileDropTarget(self.settings_controls[fp])
+	    #self.settings_controls[fp].Bind(wx.EVT_TEXT, self.SavingMetadata)
 	    self.ultimateList.SetItemWindow(index, 1, wnd=self.settings_controls[fp], expand=True)
         
         self.ok_btn = wx.Button(self, wx.ID_OK)
@@ -49,4 +52,20 @@ class ShowMetaDataLinkListDialog(wx.Dialog):
 	ctrl = event.GetEventObject()
 	file_path = [fp for fp, c in self.settings_controls.items() if c==ctrl][0]
 	self.files_metadata[file_path] = ctrl.GetValue()
-	    
+
+class MyFileDropTarget(wx.FileDropTarget):
+    def __init__(self, window):
+        wx.FileDropTarget.__init__(self)
+        self.window = window
+        
+    def OnDropFiles(self, x, y, filenames):
+        list = []
+        for file in filenames:
+            list.append(file)
+        self.window.GetParent().file_list.extend(list)    
+        self.showFiles()
+    
+    def showFiles(self): 
+        self.window.Clear()
+        for f in self.window.GetParent().file_list:
+            self.window.AppendText("%s\n" % f)	    
