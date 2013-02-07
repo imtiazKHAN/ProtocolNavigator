@@ -373,7 +373,7 @@ class Bench(wx.Panel):
 		    if meta_dia.ShowModal() == wx.ID_OK:
 			platewell_ids.update(platewell_id)
 			meta.set_field(wells_tag, list(platewell_ids))			
-			meta.set_field(images_tag, meta_dia.files_metadata.items())
+			meta.set_field(images_tag, meta_dia.data_metadata.items())
 
             else:   
                 meta.remove_field(wells_tag)

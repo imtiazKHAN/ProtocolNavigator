@@ -33,7 +33,7 @@ class FileListDialog(wx.Dialog):
         vbox.Add(hbox, 0, wx.ALIGN_RIGHT|wx.ALL, 5)
         
         self.SetSizer(vbox)
-        self.Center()
+        self.Show()
         self.drop_target.showFiles()
         
     def clearList(self, event):
