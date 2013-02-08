@@ -18,36 +18,38 @@ class DataLinkListDialog(wx.Dialog):
 
         ## get all data acquisition tags
         self.data_acquis_well = {}
-        self.select_data_acquis_well = {}
-        row = 1
+        #self.select_data_acquis_well = {}
+        self.data_metadata = {}
+        
         for tag in meta.global_settings:
             if len(tag.split('|')) == 6:
-                for url in meta.get_field(tag):
-                    self.data_acquis_well[row] = (get_tag_well(tag), str(get_tag_timepoint(tag)), url)
-                    row += 1
+                for dm in meta.get_field(tag):
+                    pw = (tag.split('|')[5]).strip('[]')
+                    self.data_metadata[dm] = pw+'_'+str(get_tag_timepoint(tag))  # dictionary [data_metadata tuple] = plate_well 
 
         self.ultimateList.InsertColumn(0, 'Where')
         self.ultimateList.InsertColumn(1, 'When')
         self.ultimateList.InsertColumn(2, 'Provenance')
         self.ultimateList.InsertColumn(3, 'Data')
         self.ultimateList.InsertColumn(4, 'Metadata')
-        self.ultimateList.SetColumnWidth(4, 250)
-          
-        for key, data in self.data_acquis_well.items():  
-            index = self.ultimateList.InsertStringItem(sys.maxint, data[0])
-            self.ultimateList.SetStringItem(index, 1, format_time_string(data[1]), wx.LIST_FORMAT_CENTER)
-            self.ultimateList.SetStringItem(index, 3, data[2][0], wx.LIST_FORMAT_RIGHT)
-            self.ultimateList.SetStringItem(index, 4, data[2][1], wx.LIST_FORMAT_RIGHT)
-            
-            r = 1
+        self.ultimateList.SetColumnWidth(2, 250)
+        
+        for dm, pw_t in self.data_metadata.iteritems():
+            pw = pw_t.split('_')[0]
+            t = pw_t.split('_')[1]
+            d = dm[0]
+            m = dm[1]
+            index = self.ultimateList.InsertStringItem(sys.maxint, pw)
+            self.ultimateList.SetStringItem(index, 1, format_time_string(t), wx.LIST_FORMAT_CENTER)
+            self.ultimateList.SetStringItem(index, 3, d , wx.LIST_FORMAT_RIGHT)
+            self.ultimateList.SetStringItem(index, 4, m, wx.LIST_FORMAT_RIGHT)
+   
             for well in well_ids:
-                if well in eval(data[0]) and data[1] == str(time_point): 
+                if str(well)+'_'+str(time_point) == pw_t: 
                     provenance_description = self.decode_tags(ancestor_tags)  # better to provide ancestor tags for all rows 
                     self.ultimateList.SetStringItem(index, 2, provenance_description, wx.LIST_FORMAT_RIGHT)
-                    self.select_data_acquis_well[r] = (data[0], data[1], provenance_description, data[2][0], data[2][1])                        
                     self.ultimateList.Select(index)
-                    r +=1
-                  
+                    
         outputs = ('Export Selected', 'Export All', 'Show in ImageJ')
         self.output_options = wx.RadioBox(self, -1, "Output Choices", choices=outputs)
         
@@ -68,8 +70,7 @@ class DataLinkListDialog(wx.Dialog):
         vbox.Add(hbox3, 0, wx.ALL|wx.ALIGN_RIGHT, 5)
         self.SetSizer(vbox)
         self.Center()
-
-                
+ 
     def get_selected_urls(self):
         i = -1
         selections = []

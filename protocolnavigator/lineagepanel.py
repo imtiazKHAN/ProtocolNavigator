@@ -813,7 +813,7 @@ class LineagePanel(wx.Panel):
 			myfile = open(file_dlg.GetPath(), 'wb')
 			wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
 			for row in dia.get_all_urls():
-			    wr.writerow(row)
+			    wr.writerow(filter(None, row))
 			myfile.close()	
 			file_dlg.Destroy()
 		
