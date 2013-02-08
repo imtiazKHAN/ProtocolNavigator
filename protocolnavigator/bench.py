@@ -319,6 +319,7 @@ class Bench(wx.Panel):
         protocol = protocols[0]
         prefix, instance = protocol.rsplit('|',1)    
         wells_tag = '%s|Wells|%s|%s'%(prefix, instance, self.get_selected_timepoint())
+	platewell_ids = set(meta.get_field(wells_tag, []))	
 
         # SPECIAL CASE: For harvesting, we prompt the user to specify the 
         # destination well(s) for each harvested well.
@@ -362,7 +363,6 @@ class Bench(wx.Panel):
 
         # Update the Images tags
         if selected and prefix.startswith('DataAcquis'): 
-	    platewell_ids = set(meta.get_field(wells_tag, []))	
 	    selected_pw_id = list(set(platewell_id)-platewell_ids)	    
             images_tag = '%s|Images|%s|%s|%s'%(prefix, instance, self.get_selected_timepoint(), selected_pw_id)
 	    dia = FileListDialog(self, images_tag, meta.get_field(images_tag, []))
@@ -379,6 +379,12 @@ class Bench(wx.Panel):
                 meta.remove_field(wells_tag)
 		self.update_well_selections()
 		dlg.Destroy()
+		
+	# GENERIC CASE: Associate or dissociate event with selected wells
+        if selected:
+            platewell_ids.update(platewell_id)
+            meta.set_field(wells_tag, list(platewell_ids))
+	    
      
         # NOTE: None of the code needs to use the EventTimepoint tag,
         #       it's redundant with the timepoints encoded in the tags
