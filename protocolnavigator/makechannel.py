@@ -199,27 +199,30 @@ class ChannelBuilder(wx.Dialog):
 	    return
 	# Set the Laser colour    
 	ctrl.SetBackgroundColour(meta.nmToRGB(int(ctrl.GetValue())))
-	emSpect =[]
+	emSpect =[380,800]  
 	
-	for dye in FLUOR_SPECTRUM:
-	    extLow, extHgh = meta.getNM(FLUOR_SPECTRUM[dye][0])	    
-	    emtLow, emtHgh = meta.getNM(FLUOR_SPECTRUM[dye][1])
+	# Following code assumes that the emission range is always higher than the excitation range
+	# but later it was revealed that for some channel making it causes problem, and therefore this logic was taken off and the emission remains the same before
+	
+	#for dye in FLUOR_SPECTRUM:
+	    #extLow, extHgh = meta.getNM(FLUOR_SPECTRUM[dye][0])	    
+	    #emtLow, emtHgh = meta.getNM(FLUOR_SPECTRUM[dye][1])
 	    
-	    # according to the inserted excitation laser select the emission range
-	    if meta.belongsTo(int(ctrl.GetValue()), extLow, extHgh):
-		emSpect.append(emtLow)
-		emSpect.append(emtHgh)
-		emSpect.append(int(ctrl.GetValue())-15) # Also add the scattered light from the laser
-		emSpect.append(int(ctrl.GetValue())+15)		    
-	    # adjust the emission range with previous laser emission range
-	    for component in self.componentList:
-		if  self.componentList[component][0].startswith('LSR'):
-		    emSpect.append(int(self.componentList[component][0].split('LSR')[1])-15) # Also add the scattered light from the laser
-		    emSpect.append(int(self.componentList[component][0].split('LSR')[1])+15)
+	    ## according to the inserted excitation laser select the emission range
+	    #if meta.belongsTo(int(ctrl.GetValue()), extLow, extHgh):
+		#emSpect.append(emtLow)
+		#emSpect.append(emtHgh)
+		#emSpect.append(int(ctrl.GetValue())-15) # Also add the scattered light from the laser
+		#emSpect.append(int(ctrl.GetValue())+15)		    
+	    ## adjust the emission range with previous laser emission range 
+	    #for component in self.componentList:
+		#if  self.componentList[component][0].startswith('LSR'):
+		    #emSpect.append(int(self.componentList[component][0].split('LSR')[1])-15) # Also add the scattered light from the laser
+		    #emSpect.append(int(self.componentList[component][0].split('LSR')[1])+15)
 		    
-		    if meta.belongsTo(int(self.componentList[component][0].split('LSR')[1]),extLow, extHgh):                
-			emSpect.append(emtLow)
-			emSpect.append(emtHgh)
+		    #if meta.belongsTo(int(self.componentList[component][0].split('LSR')[1]),extLow, extHgh):                
+			#emSpect.append(emtLow)
+			#emSpect.append(emtHgh)
 	    
 	self.componentList[self.componentCount] = ['LSR%s'%ctrl.GetValue(), str(min(emSpect))+'-'+str(max(emSpect))]	   
 	    

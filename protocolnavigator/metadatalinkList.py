@@ -51,5 +51,9 @@ class MyFileDropTarget(wx.FileDropTarget):
         self.fp = fp
 	
     def OnDropFiles(self, x, y, filenames):
+	if len(filenames)>1:
+	    error_dia = wx.MessageDialog(None, 'Only 1 metadata file can be linked per data file' %filenames[0], 'Error', wx.OK | wx.ICON_ERROR)
+	    if error_dia.ShowModal() == wx.ID_OK:	 
+		return
 	self.window.AppendText("%s" % filenames[0]) # single metadata file url per image/data
 	DATA_METADATA[self.fp] = filenames[0]
