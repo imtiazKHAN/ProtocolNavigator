@@ -359,9 +359,12 @@ class Bench(wx.Panel):
                         seed_tags = meta.get_field_tags('Transfer|Seed', get_tag_instance(t))
                         for seed_tag in seed_tags:
                             meta.remove_field(seed_tag)
-                
+	
+	# GENERIC CASE: Associate or dissociate event with selected wells  
+	platewell_ids.update(platewell_id)
+	meta.set_field(wells_tag, list(platewell_ids))                
 
-        # Update the Images tags
+        # SPECIAL CASE: for data/image association or dissociation
         if selected and prefix.startswith('DataAcquis'): 
 	    selected_pw_id = list(set(platewell_id)-platewell_ids)	    
             images_tag = '%s|Images|%s|%s|%s'%(prefix, instance, self.get_selected_timepoint(), selected_pw_id)
@@ -374,18 +377,16 @@ class Bench(wx.Panel):
 			platewell_ids.update(platewell_id)
 			meta.set_field(wells_tag, list(platewell_ids))			
 			meta.set_field(images_tag, meta_dia.data_metadata.items())
-
+		    else:   
+			meta.remove_field(wells_tag)
+			self.update_well_selections()		    
+		else:   
+		    meta.remove_field(wells_tag)
+		    self.update_well_selections()		
             else:   
                 meta.remove_field(wells_tag)
 		self.update_well_selections()
-		dlg.Destroy()
 		
-	# GENERIC CASE: Associate or dissociate event with selected wells
-        if selected:
-            platewell_ids.update(platewell_id)
-            meta.set_field(wells_tag, list(platewell_ids))
-	    
-     
         # NOTE: None of the code needs to use the EventTimepoint tag,
         #       it's redundant with the timepoints encoded in the tags
         #       so we don't set it anymore.
