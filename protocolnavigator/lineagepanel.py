@@ -88,29 +88,29 @@ class LineageFrame(wx.ScrolledWindow):
             self.lineage_panel.set_x_spacing(SPACE_EVEN)
             self.timeline_panel.set_x_spacing(SPACE_EVEN)
     
-    def generate_random_data(self, evt=None):
-        exp.PlateDesign.add_plate('test', PLATE_TYPE)
-        allwells = exp.PlateDesign.get_well_ids(exp.PlateDesign.get_plate_format('test'))
-        event_types = ['AddProcess|Stain|Wells|0|',
-                       'AddProcess|Wash|Wells|0|',
-                       'AddProcess|Dry|Wells|0|',
-                       'AddProcess|Spin|Wells|0|',
-                       'Perturbation|Chemical|Wells|0|',
-                       'Perturbation|Bio|Wells|0|',
-                       'DataAcquis|TLM|Wells|0|',
-                       'DataAcquis|FCS|Wells|0|',
-                       'DataAcquis|HCS|Wells|0|',
-	               'DataAcquis|RHE|Wells|0|',
-                       'Transfer|Seed|Wells|0|',
-                       'Transfer|Harvest|Wells|0|']
-        # GENERATE RANDOM EVENTS ON RANDOM WELLS
-        for t in list(np.random.random_integers(0, MAX_TIMEPOINT, N_TIMEPOINTS)):
-            for j in range(np.random.randint(1, N_FURCATIONS)):
-                np.random.shuffle(allwells)
-                well_ids = [('test', well) for well in allwells[:np.random.randint(1, len(allwells)+1)]]
-                #timeline.add_event(t, 'event%d'%(t), well_ids)
-                etype = event_types[np.random.randint(0,len(event_types))]
-                meta.set_field('%s%s'%(etype, t), well_ids)
+    #def generate_random_data(self, evt=None):
+        #exp.PlateDesign.add_plate('test', PLATE_TYPE)
+        #allwells = exp.PlateDesign.get_well_ids(exp.PlateDesign.get_plate_format('test'))
+        #event_types = ['AddProcess|Stain|Wells|0|',
+                       #'AddProcess|Wash|Wells|0|',
+                       #'AddProcess|Dry|Wells|0|',
+                       #'AddProcess|Spin|Wells|0|',
+                       #'Perturbation|Chemical|Wells|0|',
+                       #'Perturbation|Bio|Wells|0|',
+                       #'DataAcquis|TLM|Wells|0|',
+                       #'DataAcquis|FCS|Wells|0|',
+                       #'DataAcquis|HCS|Wells|0|',
+	               #'DataAcquis|RHE|Wells|0|',
+                       #'Transfer|Seed|Wells|0|',
+                       #'Transfer|Harvest|Wells|0|']
+        ## GENERATE RANDOM EVENTS ON RANDOM WELLS
+        #for t in list(np.random.random_integers(0, MAX_TIMEPOINT, N_TIMEPOINTS)):
+            #for j in range(np.random.randint(1, N_FURCATIONS)):
+                #np.random.shuffle(allwells)
+                #well_ids = [('test', well) for well in allwells[:np.random.randint(1, len(allwells)+1)]]
+                ##timeline.add_event(t, 'event%d'%(t), well_ids)
+                #etype = event_types[np.random.randint(0,len(event_types))]
+                #meta.set_field('%s%s'%(etype, t), well_ids)
 		
     def set_hover_timepoint(self, hover_timepoint):
 	self.timeline_panel.hover_timepoint = hover_timepoint

@@ -17,6 +17,7 @@ class ChannelBuilder(wx.Dialog):
 
         self.componentList = {}
         self.componentCount = 0
+	self.component_parts = [] # list that holds parts (e.g. slider, button etc.) of each component
               
         # Header row
         choices =['FSC', 'SSC', 'FL-1', 'FL-2','FL-3','FL-4','FL-5','FL-6','FL-7','FL-8', 'Other']
@@ -39,7 +40,8 @@ class ChannelBuilder(wx.Dialog):
 	self.top_sizer.Add((500, -1))
 	#self.top_sizer.Add(self.select_btn, 1, wx.ALIGN_RIGHT|wx.RIGHT, 5)
 	
-	self.fgs = wx.FlexGridSizer(cols=30, hgap=10)	
+	#self.fgs = wx.FlexGridSizer(cols=30, hgap=10)
+	self.fgs = wx.BoxSizer(wx.HORIZONTAL)
 
         self.top_panel.SetSizer(self.top_sizer)
 	self.bot_panel.SetSizer(self.fgs)
@@ -70,11 +72,12 @@ class ChannelBuilder(wx.Dialog):
 	
 	self.laser = wx.TextCtrl(self.bot_panel, value='', style= wx.TE_PROCESS_ENTER)
 	self.laser.Bind(wx.EVT_TEXT_ENTER, self.setLaserColor)  # increament the component count when users entered the value of Laser beam
+	self.component_parts.append(self.laser)
 	#self.laser = wx.lib.masked.NumCtrl(self.bot_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)
 	#self.laser.Bind(wx.EVT_TEXT, self.setLaserColor)
 	laserSizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
-	laserSizer.Add(self.laser, 0) 	    
-	self.fgs.Add(laserSizer,  0)	
+	laserSizer.Add(self.laser, 1, wx.ALIGN_CENTER|wx.EXPAND|wx.ALL, 5) 	    
+	self.fgs.Add(laserSizer,  0, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALL, 5)	
 	
 	#Add to sizers-------
 	self.bot_panel.SetSizer(self.fgs)
@@ -95,7 +98,10 @@ class ChannelBuilder(wx.Dialog):
 	    dial.ShowModal() 
 	    self.componentCount -=1
 	    return
-		  
+	if self.component_parts:
+	    for part in self.component_parts:
+		part.Disable()
+	    
 	startNM, endNM = meta.getNM(self.componentList[self.componentCount-1][1])
 	
         if self.select_component.GetStringSelection() == 'Dichroic Mirror':	    
@@ -109,6 +115,12 @@ class ChannelBuilder(wx.Dialog):
             self.Bind(wx.EVT_BUTTON, self.OnToggleMirror, self.passrefBut)
             self.dmtTsld.Bind(wx.EVT_SCROLL, self.OnScrollMirror)
             self.dmtBsld.Bind(wx.EVT_SCROLL, self.OnScrollMirror)
+	    
+	    self.component_parts.append(self.dmtTsld)
+	    self.component_parts.append(self.dmtBsld)
+	    self.component_parts.append(self.mirrspectrum)
+	    self.component_parts.append(self.passrefBut)
+	    
             
             #Sizers
 	    mirrorSizer = wx.BoxSizer(wx.VERTICAL)
@@ -117,8 +129,8 @@ class ChannelBuilder(wx.Dialog):
             mirrorSizer.Add(self.dmtBsld,0) 
             dichrosetSizer = wx.StaticBoxSizer(staticbox, wx.HORIZONTAL)
             dichrosetSizer.Add(mirrorSizer, 0)
-            dichrosetSizer.Add(self.passrefBut, 0, wx.EXPAND)
-            self.fgs.Add(dichrosetSizer, 0)   
+            dichrosetSizer.Add(self.passrefBut, 0, wx.EXPAND|wx.ALL, 5)
+            self.fgs.Add(dichrosetSizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALL, 5)   
 	    
 	if self.select_component.GetStringSelection() == 'Beam Splitter':     
 	    staticbox = wx.StaticBox(self.bot_panel, -1, "Beam Splitter")
@@ -126,13 +138,15 @@ class ChannelBuilder(wx.Dialog):
 	    self.splitSpectrum = SplitterSpectrum(self.bot_panel)
 	    self.sltTsld.Bind(wx.EVT_SCROLL, self.OnScrollSplitter)
 	    
+	    self.component_parts.append(self.sltTsld)
+	    self.component_parts.append(self.splitSpectrum)
 	    #Sizers
 	    splitterSizer = wx.BoxSizer(wx.VERTICAL)
 	    splitterSizer.Add(self.sltTsld,0)
 	    splitterSizer.Add(self.splitSpectrum, 0)
 	    mainSizer = wx.StaticBoxSizer(staticbox, wx.HORIZONTAL)
 	    mainSizer.Add(splitterSizer, 0)
-	    self.fgs.Add(mainSizer, 0)   	
+	    self.fgs.Add(mainSizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALL, 5)   	
         
         if self.select_component.GetStringSelection() == 'Filter':
 	    staticbox = wx.StaticBox(self.bot_panel, -1, "Filter")
@@ -142,12 +156,16 @@ class ChannelBuilder(wx.Dialog):
             self.fltTsld.Bind(wx.EVT_SCROLL, self.OnScrollFilter)
             self.fltBsld.Bind(wx.EVT_SCROLL, self.OnScrollFilter)
 	    
+	    self.component_parts.append(self.fltTsld)
+	    self.component_parts.append(self.fltBsld)
+	    self.component_parts.append(self.fltrspectrum)
+	    
             #Sizers
             fltrSizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
             fltrSizer.Add(self.fltTsld,0)
             fltrSizer.Add(self.fltrspectrum, 0)
             fltrSizer.Add(self.fltBsld,0)             
-            self.fgs.Add(fltrSizer, 0)           
+            self.fgs.Add(fltrSizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALL, 5)           
             
 	if self.select_component.GetStringSelection() == 'Dye':
 	    staticbox = wx.StaticBox(self.bot_panel, -1, "Dye List")
@@ -156,23 +174,27 @@ class ChannelBuilder(wx.Dialog):
 	    self.dyeListBox = wx.ListBox(self.bot_panel, -1, wx.DefaultPosition, (150, 100), dyeList, wx.LB_SINGLE)
 	    self.Bind(wx.EVT_LISTBOX, self.OnDyeSelect, self.dyeListBox)
 	    self.Bind(wx.EVT_LISTBOX_DCLICK, self.OnMyDyeSelect, self.dyeListBox)
+	    
+	    self.component_parts.append(self.dyeListBox)
             
             #Sizers
 	    dye_sizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
-	    dye_sizer.Add(self.dyeListBox, 0)               
-	    self.fgs.Add(dye_sizer, 0) 	    
+	    dye_sizer.Add(self.dyeListBox, 0)              
+	    self.fgs.Add(dye_sizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALL, 5) 	    
 	    
         if self.select_component.GetStringSelection() == 'Detector':
             staticbox = wx.StaticBox(self.bot_panel, -1, "Detector Voltage")
 	    self.detector = wx.SpinCtrl(self.bot_panel, -1, "", (30, 50))
-	    self.detector.SetRange(1,1000)
-	    self.detector.SetValue(500)
-	    self.Bind(wx.EVT_SPINCTRL, self.OnDetectorVoltSet, self.detector)	    
+	    self.detector.SetRange(0,10000)
+	    #self.detector.SetValue(500)
+	    self.Bind(wx.EVT_SPINCTRL, self.OnDetectorVoltSet, self.detector)
+	    
+	    self.component_parts.append(self.detector)
             
             #Sizers
             detector_sizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
             detector_sizer.Add(self.detector, 0)
-            self.fgs.Add(detector_sizer, 0)
+            self.fgs.Add(detector_sizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALL, 5)
         
         
         #--- Sizers -------
@@ -235,7 +257,7 @@ class ChannelBuilder(wx.Dialog):
 	cell_image = wx.BitmapButton(self.bot_panel, -1, bmp, (32, 32), style = wx.NO_BORDER)
 	
 	# sizers
-	self.fgs.Add(cell_image, 0)
+	self.fgs.Add(cell_image, 0, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALL, 5)
 	self.bot_panel.SetSizer(self.fgs)
 	self.bot_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
 	
@@ -352,7 +374,6 @@ class ChannelBuilder(wx.Dialog):
 	
 	meta = ExperimentSettings.getInstance()
         volt = self.detector.GetValue()
-        #self.voltageValue.SetLabel(str(volt)+" Volts")
 	emLow, emHgh = meta.getNM(self.componentList[self.componentCount-1][1])
 	self.componentList[self.componentCount]= ['DTC%s'%str(volt), str(emLow)+'-'+str(emHgh)] 
     

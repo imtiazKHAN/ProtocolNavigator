@@ -2062,7 +2062,8 @@ class FlowcytometerPanel(wx.Panel):
 	self.bot_panel = wx.ScrolledWindow(self)	
   
 	self.top_fgs = wx.BoxSizer(wx.VERTICAL)
-	self.bot_fgs = wx.FlexGridSizer(cols=1, hgap=5, vgap=5)
+	#self.bot_fgs = wx.FlexGridSizer(cols=1, hgap=5, vgap=5)
+	self.bot_fgs = wx.BoxSizer(wx.HORIZONTAL)
 	
 	# Title
 	text = wx.StaticText(self.top_panel, -1, exp.get_tag_event(self.tag_stump))
@@ -2233,7 +2234,7 @@ class FlowcytometerPanel(wx.Panel):
 	
 	#-- Sizers --#
 	#self.top_panel.SetSizer(self.top_fgs)
-	self.bot_fgs.Add(ch_sizer, 0, wx.EXPAND)
+	self.bot_fgs.Add(ch_sizer, 1, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALL, 5)
 	self.bot_panel.SetSizer(self.bot_fgs)
         self.bot_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
 
@@ -2336,7 +2337,7 @@ class DrawSpectrum(wx.Panel):
 
 #########################################################################        
 ###################     PLATE SETTING PANEL          ####################
-#########################################################################	    
+#########################################################################
 class PlateSettingPanel(wx.Panel):
     """
     Panel that holds parameter input panel and the buttons for more additional panel
@@ -2382,34 +2383,36 @@ class PlateSettingPanel(wx.Panel):
 	self.notebook.AddPage(panel, 'Instance No: %s'%stack_id, True) 
 	#Prevent users from clicking the 'Create Instance' button
 	self.createTabBtn.Disable()
-        
+
 ##---- Plate Configuration Panel --------#         
 class PlatePanel(wx.Panel):
     '''
     Panel that displays the instance
     '''
-    def __init__(self, parent, page_counter):
+    def __init__(self, parent, tab_number):
 
 	self.settings_controls = {}
+	self.labels = {}
 	meta = ExperimentSettings.getInstance()
-	
+
+	self.tag_stump = 'ExptVessel|Plate'	
+	self.tab_number = tab_number
+
 	wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
 	self.sw = wx.ScrolledWindow(self)
 
-	self.page_counter = page_counter
 	fgs = wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
 	
-	self.protocol = 'ExptVessel|Plate'
-	
 	new_stack = True
-	stack_ids = meta.get_stack_ids(self.protocol)
+	stack_ids = meta.get_stack_ids(self.tag_stump)
 	rep_vessel_instance = None
 	for stack_id in stack_ids:
-	    if stack_id == self.page_counter:
-		rep_vessel_instance = meta.get_rep_vessel_instance(self.protocol, stack_id) #Since all vessels for a given stack have same specifications, so single instance will be used to fill the information
+	    if stack_id == self.tab_number:
+		rep_vessel_instance = meta.get_rep_vessel_instance(self.tag_stump, stack_id) #Since all vessels for a given stack have same specifications, so single instance will be used to fill the information
 	if rep_vessel_instance is not None:
 	    new_stack = False
-
+	    
+	self.mandatory_tags = [self.tag_stump+'|Number|%s'%rep_vessel_instance, self.tag_stump+'|StackName|%s'%rep_vessel_instance, self.tag_stump+'|Design|%s'%rep_vessel_instance]
         # Heading
 	text = wx.StaticText(self.sw, -1, 'Plate Specifications')
 	font = wx.Font(9, wx.SWISS, wx.NORMAL, wx.BOLD)
@@ -2425,92 +2428,113 @@ class PlatePanel(wx.Panel):
 	titlesizer.Add(self.createBtn, 0, wx.EXPAND) 	
 	
         # Vessel number
+	numberTAG = self.tag_stump+'|Number|%s'%rep_vessel_instance
         self.vessnum = wx.Choice(self.sw, -1,  choices= map(str, range(1,51)), style=wx.TE_PROCESS_ENTER)
         if new_stack is True:
             self.vessnum.Enable() 
         else:
-            self.vessnum.SetStringSelection(meta.get_field('ExptVessel|Plate|Number|%s'%rep_vessel_instance))
-            self.vessnum.Disable()      
-	fgs.Add(wx.StaticText(self.sw, -1, 'Number of Plate in Stack'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+            self.vessnum.SetStringSelection(meta.get_field(numberTAG))
+            self.vessnum.Disable()  
+	self.labels[numberTAG] = wx.StaticText(self.sw, -1, 'Number of Plate in Stack')
+	fgs.Add(self.labels[numberTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         fgs.Add(self.vessnum, 0, wx.EXPAND)                
-        # Group name
+        # Stack name
+	nameTAG = self.tag_stump+'|StackName|%s'%rep_vessel_instance
         self.stkname= wx.TextCtrl(self.sw, -1, value='', style=wx.TE_PROCESS_ENTER)
         if new_stack is True:
             self.stkname.Enable()
         else:
-            self.stkname.SetValue(meta.get_field('ExptVessel|Plate|StackName|%s'%rep_vessel_instance, default=''))
+            self.stkname.SetValue(meta.get_field(nameTAG))
             self.stkname.Disable()
-        fgs.Add(wx.StaticText(self.sw, -1, 'Stack Name'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[nameTAG] = wx.StaticText(self.sw, -1, 'Stack Name')
+        fgs.Add(self.labels[nameTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         fgs.Add(self.stkname, 0, wx.EXPAND) 
 	#--Design--# **** This is different as it include different plate formats *****
+	designTAG = self.tag_stump+'|Design|%s'%rep_vessel_instance
 	self.vessdesign = wx.Choice(self.sw, -1, choices=WELL_NAMES_ORDERED, name='PlateDesign')
 	for i, format in enumerate([WELL_NAMES[name] for name in WELL_NAMES_ORDERED]):
 		self.vessdesign.SetClientData(i, format)
 	if new_stack is True:
 	    self.vessdesign.Enable()            
 	else:
-	    self.vessdesign.SetStringSelection(meta.get_field('ExptVessel|Plate|Design|%s'%rep_vessel_instance))
-	    self.vessdesign.Disable()  
-	fgs.Add(wx.StaticText(self.sw, -1, 'Plate Design'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	    self.vessdesign.SetStringSelection(meta.get_field(designTAG))
+	    self.vessdesign.Disable() 
+	self.labels[designTAG] = wx.StaticText(self.sw, -1, 'Plate Design')
+	fgs.Add(self.labels[designTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vessdesign, 0, wx.EXPAND)	
 	# Manufacturer
+	mfgTAG = self.tag_stump+'|Manufacturer|%s'%rep_vessel_instance
 	self.vessmfg = wx.TextCtrl(self.sw, -1, value='', style=wx.TE_PROCESS_ENTER)
 	if new_stack is True:
 	    self.vessmfg.Enable()
 	else:
-	    self.vessmfg.SetValue(meta.get_field('ExptVessel|Plate|Manufacturer|%s'%rep_vessel_instance, default=''))
+	    self.vessmfg.SetValue(meta.get_field(mfgTAG, default=''))
 	    self.vessmfg.Disable()
-	fgs.Add(wx.StaticText(self.sw, -1, 'Manufacturer'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[mfgTAG] = wx.StaticText(self.sw, -1, 'Manufacturer') 
+	fgs.Add(self.labels[mfgTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vessmfg, 0, wx.EXPAND) 
 	# Catalogue Number
+	catnoTAG = self.tag_stump+'|CatalogueNo|%s'%rep_vessel_instance
 	self.vesscat = wx.TextCtrl(self.sw, -1, value='', style=wx.TE_PROCESS_ENTER)
 	if new_stack is True:
 	    self.vesscat.Enable()
 	else:
-	    self.vesscat.SetValue(meta.get_field('ExptVessel|Plate|CatalogueNo|%s'%rep_vessel_instance, default=''))
+	    self.vesscat.SetValue(meta.get_field(catnoTAG, default=''))
 	    self.vesscat.Disable()
-	fgs.Add(wx.StaticText(self.sw, -1, 'Catalogue Number'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[catnoTAG] = wx.StaticText(self.sw, -1, 'Catalogue Number')
+	fgs.Add(self.labels[catnoTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vesscat, 0, wx.EXPAND) 	
 	# Shape
+	shapeTAG = self.tag_stump+'|Shape|%s'%rep_vessel_instance
 	self.vessshape = wx.TextCtrl(self.sw, -1, value='', style=wx.TE_PROCESS_ENTER)
 	if new_stack is True:
 	    self.vessshape.Enable()
 	else:
-	    self.vessshape.SetValue(meta.get_field('ExptVessel|Plate|Shape|%s'%rep_vessel_instance, default=''))
+	    self.vessshape.SetValue(meta.get_field(shapeTAG, default=''))
 	    self.vessshape.Disable()
-	fgs.Add(wx.StaticText(self.sw, -1, 'Shape'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[shapeTAG] = wx.StaticText(self.sw, -1, 'Shape')
+	fgs.Add(self.labels[shapeTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vessshape, 0, wx.EXPAND)		
 	# Size
+	sizeTAG = self.tag_stump+'|Size|%s'%rep_vessel_instance
 	self.vesssize = wx.TextCtrl(self.sw, -1, value='', style=wx.TE_PROCESS_ENTER)
 	if new_stack is True:
 	    self.vesssize.Enable()
 	else:
-	    self.vesssize.SetValue(meta.get_field('ExptVessel|Plate|Size|%s'%rep_vessel_instance))
+	    self.vesssize.SetValue(meta.get_field(sizeTAG))
 	    self.vesssize.Disable()
-	fgs.Add(wx.StaticText(self.sw, -1, 'Size (mm x mm)'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[sizeTAG] = wx.StaticText(self.sw, -1, 'Size (mm x mm)')
+	fgs.Add(self.labels[sizeTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vesssize, 0, wx.EXPAND)
         # Coating
+	coatTAG = self.tag_stump+'|Coat|%s'%rep_vessel_instance
 	choices=['None','Collagen IV','Gelatin','Poly-L-Lysine','Poly-D-Lysine', 'Fibronectin', 'Laminin','Poly-D-Lysine + Laminin', 'Poly-L-Ornithine+Laminin', 'Other']
 	self.vesscoat = wx.ListBox(self.sw, -1, wx.DefaultPosition, (120,30), choices, wx.LB_SINGLE)
 	if new_stack is True:
 	    self.vesscoat.Enable()
 	else:	
-	    self.vesscoat.Append(meta.get_field('ExptVessel|Plate|Coat|%s'%rep_vessel_instance))
-	    self.vesscoat.SetStringSelection(meta.get_field('ExptVessel|Plate|Coat|%s'%rep_vessel_instance))
+	    self.vesscoat.Append(meta.get_field(coatTAG))
+	    self.vesscoat.SetStringSelection(meta.get_field(coatTAG))
 	    self.vesscoat.Disable()
 	self.vesscoat.Bind(wx.EVT_LISTBOX, self.onSelectOther)
-	fgs.Add(wx.StaticText(self.sw, -1, 'Coating'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[coatTAG] = wx.StaticText(self.sw, -1, 'Coating')
+	fgs.Add(self.labels[coatTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vesscoat, 0, wx.EXPAND)
 	# Other Information
+	otherTAG = self.tag_stump+'|OtherInfo|%s'%rep_vessel_instance
 	self.vessother = wx.TextCtrl(self.sw, -1, value='', style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER)
 	self.vessother.SetInitialSize((-1,100))
 	if new_stack is True:
 	    self.vessother.Enable()
 	else:
-	    self.vessother.SetValue(meta.get_field('ExptVessel|Plate|OtherInfo|%s'%rep_vessel_instance, default=''))
+	    self.vessother.SetValue(meta.get_field(otherTAG, default=''))
 	    self.vessother.Disable()
-	fgs.Add(wx.StaticText(self.sw, -1, 'Other Information'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	fgs.Add(self.vessother, 0, wx.EXPAND) 	            
+	self.labels[otherTAG] = wx.StaticText(self.sw, -1, 'Other Information')
+	fgs.Add(self.labels[otherTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	fgs.Add(self.vessother, 0, wx.EXPAND) 	   
+	
+	# Set Mandatory Label colour
+	meta.setLabelColour(self.mandatory_tags, self.labels)		
 
 	#---  Layout with sizers  -------
 	swsizer = wx.BoxSizer(wx.VERTICAL)
@@ -2531,15 +2555,15 @@ class PlatePanel(wx.Panel):
     
     def onCreateStack(self, event):
 	# Checks 
-	if self.vessnum.GetStringSelection() is "":
+	if not self.vessnum.GetStringSelection():
 	    dial = wx.MessageDialog(None, 'Please select the number of vessels', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()  
 	    return
-	if self.stkname.GetValue() is "":
+	if not self.stkname.GetValue():
 	    dial = wx.MessageDialog(None, 'Please select the Stack Name', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()  
 	    return
-	if self.vessdesign.GetStringSelection() is "":
+	if not self.vessdesign.GetStringSelection():
 	    dial = wx.MessageDialog(None, 'Please select the vessel design', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()  
 	    return	
@@ -2561,7 +2585,7 @@ class PlatePanel(wx.Panel):
             else:
                 PlateDesign.set_plate_format(id, plate_design)
         
-            meta.set_field('ExptVessel|Plate|StackNo|%s'%str(v_id),    self.page_counter, notify_subscribers =False)
+            meta.set_field('ExptVessel|Plate|StackNo|%s'%str(v_id),    self.tab_number, notify_subscribers =False)
             meta.set_field('ExptVessel|Plate|Number|%s'%str(v_id),     self.vessnum.GetStringSelection(), notify_subscribers =False)
             meta.set_field('ExptVessel|Plate|StackName|%s'%str(v_id),  self.stkname.GetValue(), notify_subscribers =False)
 	    meta.set_field('ExptVessel|Plate|Design|%s'%str(v_id),     self.vessdesign.GetStringSelection(), notify_subscribers =False)
@@ -2762,11 +2786,11 @@ class DishPanel(wx.Panel):
     
     def onCreateStack(self, event):
 	# Checks 
-	if self.vessnum.GetStringSelection() is "":
+	if not self.vessnum.GetStringSelection():
 	    dial = wx.MessageDialog(None, 'Please select the number of vessels', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()  
 	    return
-	if self.stkname.GetValue() is "":
+	if not self.stkname.GetValue():
 	    dial = wx.MessageDialog(None, 'Please select the Stack Name', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()  
 	    return
@@ -2997,11 +3021,11 @@ class CoverslipPanel(wx.Panel):
     
     def onCreateStack(self, event):
 	# Checks 
-	if self.vessnum.GetStringSelection() is "":
+	if not self.vessnum.GetStringSelection:
 	    dial = wx.MessageDialog(None, 'Please select the number of vessels', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()  
 	    return
-	if self.stkname.GetValue() is "":
+	if not self.stkname.GetValue():
 	    dial = wx.MessageDialog(None, 'Please select the Stack Name', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()  
 	    return
@@ -3225,19 +3249,15 @@ class FlaskPanel(wx.Panel):
     
     def onCreateStack(self, event):
 	# Checks 
-	if self.vessnum.GetStringSelection() is "":
+	if not self.vessnum.GetStringSelection():
 	    dial = wx.MessageDialog(None, 'Please select the number of vessels', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()  
 	    return
-	if self.stkname.GetValue() is "":
+	if not self.stkname.GetValue():
 	    dial = wx.MessageDialog(None, 'Please select the Stack Name', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()  
 	    return
-	#vess_design = self.vessdesign.GetStringSelection()
-	#if vess_design is None:
-	    #dial = wx.MessageDialog(None, 'Please select the vessel design', 'Error', wx.OK | wx.ICON_ERROR)
-	    #dial.ShowModal()  
-	    #return	
+
 	self.createBtn.Disable()
 	
         vess_list = meta.get_field_instances('ExptVessel|Flask')
@@ -3454,11 +3474,11 @@ class TubePanel(wx.Panel):
     
     def onCreateStack(self, event):
 	# Checks 
-	if self.vessnum.GetStringSelection() is "":
+	if not self.vessnum.GetStringSelection():
 	    dial = wx.MessageDialog(None, 'Please select the number of vessels', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()  
 	    return
-	if self.stkname.GetValue() is "":
+	if not self.stkname.GetValue():
 	    dial = wx.MessageDialog(None, 'Please select the Stack Name', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()  
 	    return

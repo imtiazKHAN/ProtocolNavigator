@@ -314,13 +314,25 @@ class Bench(wx.Panel):
         '''
         protocols = self.taglistctrl.get_selected_protocols()
         if protocols == []:
+	    err_dia = wx.MessageDialog(None, 'No instance selected, select an instance from the list', 'Error', wx.OK|wx.ICON_ERROR)
+	    err_dia.ShowModal() 	    
             return
         
         protocol = protocols[0]
-        prefix, instance = protocol.rsplit('|',1)    
+        prefix, instance = protocol.rsplit('|',1)     
         wells_tag = '%s|Wells|%s|%s'%(prefix, instance, self.get_selected_timepoint())
-	platewell_ids = set(meta.get_field(wells_tag, []))	
-
+	platewell_ids = set(meta.get_field(wells_tag, [])) 
+	selected_pw_id = list(set(platewell_id)-platewell_ids)
+	
+	if selected_pw_id:
+	    affected_pw_ids = []
+	    for curr_tag in meta.get_matching_tags('*|*|Wells|*|%s'%self.get_selected_timepoint()):
+		affected_pw_ids.extend(meta.get_field(curr_tag))
+	    if selected_pw_id[0] in affected_pw_ids:
+		err_dia = wx.MessageDialog(None, 'Multiple events at same time and location is not permissible', 'Error', wx.OK|wx.ICON_ERROR)
+		err_dia.ShowModal()  
+		return	    
+	    
         # SPECIAL CASE: For harvesting, we prompt the user to specify the 
         # destination well(s) for each harvested well.
         if prefix == 'Transfer|Harvest':
@@ -365,8 +377,7 @@ class Bench(wx.Panel):
 	meta.set_field(wells_tag, list(platewell_ids))                
 
         # SPECIAL CASE: for data/image association or dissociation
-        if selected and prefix.startswith('DataAcquis'): 
-	    selected_pw_id = list(set(platewell_id)-platewell_ids)	    
+        if selected and prefix.startswith('DataAcquis'):	    
             images_tag = '%s|Images|%s|%s|%s'%(prefix, instance, self.get_selected_timepoint(), selected_pw_id)
 	    dia = FileListDialog(self, images_tag, meta.get_field(images_tag, []))
 	    if dia.ShowModal()== wx.ID_OK:

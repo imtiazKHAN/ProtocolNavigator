@@ -282,10 +282,7 @@ class VesselPanel(wx.Panel):
                 for pos in self.selection]
     
     def get_selected_platewell_ids(self):
-	#print self.get_current_timepoint()
-	#print [(self.vessel.vessel_id, PlateDesign.get_well_id_at_pos(self.vessel.shape, pos)) 
-                #for pos in self.selection]
-        return [(self.vessel.vessel_id, PlateDesign.get_well_id_at_pos(self.vessel.shape, pos)) 
+	return [(self.vessel.vessel_id, PlateDesign.get_well_id_at_pos(self.vessel.shape, pos)) 
                 for pos in self.selection]
     
     def get_current_timepoint(self):
@@ -300,7 +297,7 @@ class VesselPanel(wx.Panel):
 	timeline = meta.get_timeline()
 	
 	return [set(timeline.get_well_ids(utp)) & set(all_pw_ids) for utp in timeline.get_unique_timepoints()
-	 if utp <= self.get_current_timepoint()]
+	 if utp == self.get_current_timepoint()]
 
     
     def _on_paint(self, evt=None):
