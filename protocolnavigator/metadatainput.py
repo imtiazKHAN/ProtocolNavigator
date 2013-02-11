@@ -2571,7 +2571,7 @@ class PlatePanel(wx.Panel):
 	# if all checks are passed
 	self.createBtn.Disable()
 	
-        vess_list = meta.get_field_instances('ExptVessel|Plate')
+        vess_list = meta.get_field_instances(self.tag_stump)
         if vess_list:
             max_id =  max(map(int, vess_list))+1
         else:
@@ -2585,16 +2585,16 @@ class PlatePanel(wx.Panel):
             else:
                 PlateDesign.set_plate_format(id, plate_design)
         
-            meta.set_field('ExptVessel|Plate|StackNo|%s'%str(v_id),    self.tab_number, notify_subscribers =False)
-            meta.set_field('ExptVessel|Plate|Number|%s'%str(v_id),     self.vessnum.GetStringSelection(), notify_subscribers =False)
-            meta.set_field('ExptVessel|Plate|StackName|%s'%str(v_id),  self.stkname.GetValue(), notify_subscribers =False)
-	    meta.set_field('ExptVessel|Plate|Design|%s'%str(v_id),     self.vessdesign.GetStringSelection(), notify_subscribers =False)
-	    meta.set_field('ExptVessel|Plate|Manufacturer|%s'%str(v_id),  self.vessmfg.GetValue(), notify_subscribers =False)
-	    meta.set_field('ExptVessel|Plate|CatalogueNo|%s'%str(v_id),  self.vesscat.GetValue(), notify_subscribers =False)
-	    meta.set_field('ExptVessel|Plate|Shape|%s'%str(v_id),       self.vessshape.GetValue(), notify_subscribers =False)
-	    meta.set_field('ExptVessel|Plate|Size|%s'%str(v_id),       self.vesssize.GetValue(), notify_subscribers =False)
-            meta.set_field('ExptVessel|Plate|Coat|%s'%str(v_id),       self.vesscoat.GetStringSelection(), notify_subscribers =False)
-	    meta.set_field('ExptVessel|Plate|OtherInfo|%s'%str(v_id),  self.vessother.GetValue())
+            meta.set_field(self.tag_stump+'|StackNo|%s'%str(v_id),    self.tab_number, notify_subscribers =False)
+            meta.set_field(self.tag_stump+'|Number|%s'%str(v_id),     self.vessnum.GetStringSelection(), notify_subscribers =False)
+            meta.set_field(self.tag_stump+'|StackName|%s'%str(v_id),  self.stkname.GetValue(), notify_subscribers =False)
+	    meta.set_field(self.tag_stump+'|Design|%s'%str(v_id),     self.vessdesign.GetStringSelection(), notify_subscribers =False)
+	    meta.set_field(self.tag_stump+'|Manufacturer|%s'%str(v_id),  self.vessmfg.GetValue(), notify_subscribers =False)
+	    meta.set_field(self.tag_stump+'|CatalogueNo|%s'%str(v_id),  self.vesscat.GetValue(), notify_subscribers =False)
+	    meta.set_field(self.tag_stump+'|Shape|%s'%str(v_id),       self.vessshape.GetValue(), notify_subscribers =False)
+	    meta.set_field(self.tag_stump+'|Size|%s'%str(v_id),       self.vesssize.GetValue(), notify_subscribers =False)
+            meta.set_field(self.tag_stump+'|Coat|%s'%str(v_id),       self.vesscoat.GetStringSelection(), notify_subscribers =False)
+	    meta.set_field(self.tag_stump+'|OtherInfo|%s'%str(v_id),  self.vessother.GetValue())
         
 	#make all input fields disable
         self.vessnum.Disable()
@@ -2663,27 +2663,30 @@ class DishPanel(wx.Panel):
     '''
     Panel that displays the instance
     '''
-    def __init__(self, parent, page_counter):
+    def __init__(self, parent, tab_number):
 
 	self.settings_controls = {}
+	self.labels = {}
 	meta = ExperimentSettings.getInstance()
 	
 	wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
 	self.sw = wx.ScrolledWindow(self)
 
-	self.page_counter = page_counter
+	self.tab_number = tab_number
 	fgs = wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
 	
-	self.protocol = 'ExptVessel|Dish'
+	self.tag_stump = 'ExptVessel|Dish'
 	
 	new_stack = True
-	stack_ids = meta.get_stack_ids(self.protocol)
+	stack_ids = meta.get_stack_ids(self.tag_stump)
 	rep_vessel_instance = None
 	for stack_id in stack_ids:
-	    if stack_id == self.page_counter:
-		rep_vessel_instance = meta.get_rep_vessel_instance(self.protocol, stack_id) #Since all vessels for a given stack have same specifications, so single instance will be used to fill the information
+	    if stack_id == self.tab_number:
+		rep_vessel_instance = meta.get_rep_vessel_instance(self.tag_stump, stack_id) #Since all vessels for a given stack have same specifications, so single instance will be used to fill the information
 	if rep_vessel_instance is not None:
 	    new_stack = False
+	    
+	self.mandatory_tags = [self.tag_stump+'|Number|%s'%rep_vessel_instance, self.tag_stump+'|StackName|%s'%rep_vessel_instance]
 
         # Heading
 	text = wx.StaticText(self.sw, -1, 'Dish Specifications')
@@ -2700,72 +2703,89 @@ class DishPanel(wx.Panel):
 	titlesizer.Add(self.createBtn, 0, wx.EXPAND) 	
 	
         # Vessel number
+	numberTAG = self.tag_stump+'|Number|%s'%rep_vessel_instance
         self.vessnum = wx.Choice(self.sw, -1,  choices= map(str, range(1,51)), style=wx.TE_PROCESS_ENTER)
         if new_stack is True:
             self.vessnum.Enable() 
         else:
-            self.vessnum.SetStringSelection(meta.get_field('ExptVessel|Dish|Number|%s'%rep_vessel_instance))
-            self.vessnum.Disable()      
-	fgs.Add(wx.StaticText(self.sw, -1, 'Number of Dish in Stack'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+            self.vessnum.SetStringSelection(meta.get_field(numberTAG))
+            self.vessnum.Disable()   
+	self.labels[numberTAG] = wx.StaticText(self.sw, -1, 'Number of Dish in Stack')
+	fgs.Add(self.labels[numberTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         fgs.Add(self.vessnum, 0, wx.EXPAND)                
         # Group name
+	nameTAG = self.tag_stump+'|StackName|%s'%rep_vessel_instance
         self.stkname= wx.TextCtrl(self.sw, -1, value='', style=wx.TE_PROCESS_ENTER)
         if new_stack is True:
             self.stkname.Enable()
         else:
-            self.stkname.SetValue(meta.get_field('ExptVessel|Dish|StackName|%s'%rep_vessel_instance))
+            self.stkname.SetValue(meta.get_field(nameTAG))
             self.stkname.Disable()
-        fgs.Add(wx.StaticText(self.sw, -1, 'Stack Name'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[nameTAG] = wx.StaticText(self.sw, -1, 'Stack Name')
+        fgs.Add(self.labels[nameTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         fgs.Add(self.stkname, 0, wx.EXPAND) 
 	# Manufacturer
+	mfgTAG = self.tag_stump+'|Manufacturer|%s'%rep_vessel_instance
 	self.vessmfg = wx.TextCtrl(self.sw, -1, value='', style=wx.TE_PROCESS_ENTER)
 	if new_stack is True:
 	    self.vessmfg.Enable()
 	else:
-	    self.vessmfg.SetValue(meta.get_field('ExptVessel|Dish|Manufacturer|%s'%rep_vessel_instance, default=''))
+	    self.vessmfg.SetValue(meta.get_field(mfgTAG, default=''))
 	    self.vessmfg.Disable()
-	fgs.Add(wx.StaticText(self.sw, -1, 'Manufacturer'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[mfgTAG] = wx.StaticText(self.sw, -1, 'Manufacturer')
+	fgs.Add(self.labels[mfgTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vessmfg, 0, wx.EXPAND) 
 	# Catalogue Number
+	catnoTAG = self.tag_stump+'|CatalogueNo|%s'%rep_vessel_instance
 	self.vesscat = wx.TextCtrl(self.sw, -1, value='', style=wx.TE_PROCESS_ENTER)
 	if new_stack is True:
 	    self.vesscat.Enable()
 	else:
-	    self.vesscat.SetValue(meta.get_field('ExptVessel|Dish|CatalogueNo|%s'%rep_vessel_instance, default=''))
+	    self.vesscat.SetValue(meta.get_field(catnoTAG, default=''))
 	    self.vesscat.Disable()
-	fgs.Add(wx.StaticText(self.sw, -1, 'Catalogue Number'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[catnoTAG] = wx.StaticText(self.sw, -1, 'Catalogue Number')
+	fgs.Add(self.labels[catnoTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vesscat, 0, wx.EXPAND) 	
 	# Size
+	sizeTAG = self.tag_stump+'|Size|%s'%rep_vessel_instance
 	self.vesssize = wx.TextCtrl(self.sw, -1, value='', style=wx.TE_PROCESS_ENTER)
 	if new_stack is True:
 	    self.vesssize.Enable()
 	else:
-	    self.vesssize.SetValue(meta.get_field('ExptVessel|Dish|Size|%s'%rep_vessel_instance, default=''))
+	    self.vesssize.SetValue(meta.get_field(sizeTAG, default=''))
 	    self.vesssize.Disable()
-	fgs.Add(wx.StaticText(self.sw, -1, 'Size (mm)'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[sizeTAG] = wx.StaticText(self.sw, -1, 'Size (mm)')
+	fgs.Add(self.labels[sizeTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vesssize, 0, wx.EXPAND)
         # Coating
+	coatTAG = self.tag_stump+'|Coat|%s'%rep_vessel_instance
 	choices=['None','Collagen IV','Gelatin','Poly-L-Lysine','Poly-D-Lysine', 'Fibronectin', 'Laminin','Poly-D-Lysine + Laminin', 'Poly-L-Ornithine+Laminin', 'Other']
 	self.vesscoat = wx.ListBox(self.sw, -1, wx.DefaultPosition, (120,30), choices, wx.LB_SINGLE)
 	if new_stack is True:
 	    self.vesscoat.Enable()
 	else:	
-	    self.vesscoat.Append(meta.get_field('ExptVessel|Dish|Coat|%s'%rep_vessel_instance, default=''))
-	    self.vesscoat.SetStringSelection(meta.get_field('ExptVessel|Dish|Coat|%s'%rep_vessel_instance))
+	    self.vesscoat.Append(meta.get_field(self.tag_stump+'|Coat|%s'%rep_vessel_instance, default=''))
+	    self.vesscoat.SetStringSelection(meta.get_field(coatTAG))
 	    self.vesscoat.Disable()
 	self.vesscoat.Bind(wx.EVT_LISTBOX, self.onSelectOther)
-	fgs.Add(wx.StaticText(self.sw, -1, 'Coating'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[coatTAG] = wx.StaticText(self.sw, -1, 'Coating')
+	fgs.Add(self.labels[coatTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vesscoat, 0, wx.EXPAND)
 	# Other Information
+	otherTAG = self.tag_stump+'|OtherInfo|%s'%rep_vessel_instance
 	self.vessother = wx.TextCtrl(self.sw, -1, value='', style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER)
 	self.vessother.SetInitialSize((-1,100))
 	if new_stack is True:
 	    self.vessother.Enable()
 	else:
-	    self.vessother.SetValue(meta.get_field('ExptVessel|Dish|OtherInfo|%s'%rep_vessel_instance, default=''))
+	    self.vessother.SetValue(meta.get_field(otherTAG, default=''))
 	    self.vessother.Disable()
-	fgs.Add(wx.StaticText(self.sw, -1, 'Other Information'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[otherTAG] = wx.StaticText(self.sw, -1, 'Other Information')
+	fgs.Add(self.labels[otherTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vessother, 0, wx.EXPAND) 	
+
+	# Set Mandatory Label colour
+	meta.setLabelColour(self.mandatory_tags, self.labels)
 
 	#---  Layout with sizers  -------
 	swsizer = wx.BoxSizer(wx.VERTICAL)
@@ -2801,7 +2821,7 @@ class DishPanel(wx.Panel):
 	    #return	
 	self.createBtn.Disable()
 	
-        vess_list = meta.get_field_instances('ExptVessel|Dish')
+        vess_list = meta.get_field_instances(self.tag_stump)
         if vess_list:
             max_id =  max(map(int, vess_list))+1
         else:
@@ -2815,14 +2835,14 @@ class DishPanel(wx.Panel):
             else:
                 PlateDesign.set_plate_format(id, plate_design)
         
-            meta.set_field('ExptVessel|Dish|StackNo|%s'%str(v_id),    self.page_counter, notify_subscribers =False)
-            meta.set_field('ExptVessel|Dish|Number|%s'%str(v_id),     self.vessnum.GetStringSelection(), notify_subscribers =False)
-            meta.set_field('ExptVessel|Dish|StackName|%s'%str(v_id),  self.stkname.GetValue(), notify_subscribers =False)
-	    meta.set_field('ExptVessel|Dish|Manufacturer|%s'%str(v_id),  self.vessmfg.GetValue(), notify_subscribers =False)
-	    meta.set_field('ExptVessel|Dish|CatalogueNo|%s'%str(v_id),  self.vesscat.GetValue(), notify_subscribers =False)
-	    meta.set_field('ExptVessel|Dish|Size|%s'%str(v_id),       self.vesssize.GetValue(), notify_subscribers =False)
-            meta.set_field('ExptVessel|Dish|Coat|%s'%str(v_id),       self.vesscoat.GetStringSelection(), notify_subscribers =False)
-	    meta.set_field('ExptVessel|Dish|OtherInfo|%s'%str(v_id),  self.vessother.GetValue())
+            meta.set_field(self.tag_stump+'|StackNo|%s'%str(v_id),    self.tab_number, notify_subscribers =False)
+            meta.set_field(self.tag_stump+'|Number|%s'%str(v_id),     self.vessnum.GetStringSelection(), notify_subscribers =False)
+            meta.set_field(self.tag_stump+'|StackName|%s'%str(v_id),  self.stkname.GetValue(), notify_subscribers =False)
+	    meta.set_field(self.tag_stump+'|Manufacturer|%s'%str(v_id),  self.vessmfg.GetValue(), notify_subscribers =False)
+	    meta.set_field(self.tag_stump+'|CatalogueNo|%s'%str(v_id),  self.vesscat.GetValue(), notify_subscribers =False)
+	    meta.set_field(self.tag_stump+'|Size|%s'%str(v_id),       self.vesssize.GetValue(), notify_subscribers =False)
+            meta.set_field(self.tag_stump+'|Coat|%s'%str(v_id),       self.vesscoat.GetStringSelection(), notify_subscribers =False)
+	    meta.set_field(self.tag_stump+'|OtherInfo|%s'%str(v_id),  self.vessother.GetValue())
         
 	#make all input fields disable
         self.vessnum.Disable()
@@ -2889,27 +2909,30 @@ class CoverslipPanel(wx.Panel):
     '''
     Panel that displays the instance
     '''
-    def __init__(self, parent, page_counter):
+    def __init__(self, parent, tab_number):
 
 	self.settings_controls = {}
+	self.labels = {}
 	meta = ExperimentSettings.getInstance()
 	
 	wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
 	self.sw = wx.ScrolledWindow(self)
 
-	self.page_counter = page_counter
+	self.tab_number = tab_number
 	fgs = wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
 	
-	self.protocol = 'ExptVessel|Coverslip'
+	self.tag_stump = 'ExptVessel|Coverslip'
 	
 	new_stack = True
-	stack_ids = meta.get_stack_ids(self.protocol)
+	stack_ids = meta.get_stack_ids(self.tag_stump)
 	rep_vessel_instance = None
 	for stack_id in stack_ids:
-	    if stack_id == self.page_counter:
-		rep_vessel_instance = meta.get_rep_vessel_instance(self.protocol, stack_id) #Since all vessels for a given stack have same specifications, so single instance will be used to fill the information
+	    if stack_id == self.tab_number:
+		rep_vessel_instance = meta.get_rep_vessel_instance(self.tag_stump, stack_id) #Since all vessels for a given stack have same specifications, so single instance will be used to fill the information
 	if rep_vessel_instance is not None:
 	    new_stack = False
+	    
+	self.mandatory_tags = [self.tag_stump+'|Number|%s'%rep_vessel_instance, self.tag_stump+'|StackName|%s'%rep_vessel_instance]	
 
         # Heading
 	text = wx.StaticText(self.sw, -1, 'Coverslip Specifications')
@@ -2926,81 +2949,100 @@ class CoverslipPanel(wx.Panel):
 	titlesizer.Add(self.createBtn, 0, wx.EXPAND) 	
 	
         # Vessel number
+	numberTAG = self.tag_stump+'|Number|%s'%rep_vessel_instance
         self.vessnum = wx.Choice(self.sw, -1,  choices= map(str, range(1,51)), style=wx.TE_PROCESS_ENTER)
         if new_stack is True:
             self.vessnum.Enable() 
         else:
-            self.vessnum.SetStringSelection(meta.get_field('ExptVessel|Coverslip|Number|%s'%rep_vessel_instance))
-            self.vessnum.Disable()      
-	fgs.Add(wx.StaticText(self.sw, -1, 'Number of Coverslip in Stack'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+            self.vessnum.SetStringSelection(meta.get_field(numberTAG))
+            self.vessnum.Disable() 
+	self.labels[numberTAG] = wx.StaticText(self.sw, -1, 'Number of Coverslip in Stack')
+	fgs.Add(self.labels[numberTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         fgs.Add(self.vessnum, 0, wx.EXPAND)                
         # Group name
+	nameTAG = self.tag_stump+'|StackName|%s'%rep_vessel_instance	
         self.stkname= wx.TextCtrl(self.sw, -1, value='', style=wx.TE_PROCESS_ENTER)
         if new_stack is True:
             self.stkname.Enable()
         else:
-            self.stkname.SetValue(meta.get_field('ExptVessel|Coverslip|StackName|%s'%rep_vessel_instance))
+            self.stkname.SetValue(meta.get_field(nameTAG))
             self.stkname.Disable()
-        fgs.Add(wx.StaticText(self.sw, -1, 'Stack Name'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[nameTAG] = wx.StaticText(self.sw, -1, 'Stack Name')
+        fgs.Add(self.labels[nameTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         fgs.Add(self.stkname, 0, wx.EXPAND) 
 	# Manufacturer
+	mfgTAG = self.tag_stump+'|Manufacturer|%s'%rep_vessel_instance
 	self.vessmfg = wx.TextCtrl(self.sw, -1, value='', style=wx.TE_PROCESS_ENTER)
 	if new_stack is True:
 	    self.vessmfg.Enable()
 	else:
-	    self.vessmfg.SetValue(meta.get_field('ExptVessel|Coverslip|Manufacturer|%s'%rep_vessel_instance, default=''))
+	    self.vessmfg.SetValue(meta.get_field(mfgTAG, default=''))
 	    self.vessmfg.Disable()
-	fgs.Add(wx.StaticText(self.sw, -1, 'Manufacturer'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[mfgTAG] = wx.StaticText(self.sw, -1, 'Manufacturer')
+	fgs.Add(self.labels[mfgTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vessmfg, 0, wx.EXPAND) 
 	# Catalogue Number
+	catnoTAG = self.tag_stump+'|CatalogueNo|%s'%rep_vessel_instance
 	self.vesscat = wx.TextCtrl(self.sw, -1, value='', style=wx.TE_PROCESS_ENTER)
 	if new_stack is True:
 	    self.vesscat.Enable()
 	else:
-	    self.vesscat.SetValue(meta.get_field('ExptVessel|Coverslip|CatalogueNo|%s'%rep_vessel_instance, default=''))
+	    self.vesscat.SetValue(meta.get_field(catnoTAG, default=''))
 	    self.vesscat.Disable()
-	fgs.Add(wx.StaticText(self.sw, -1, 'Catalogue Number'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[catnoTAG] = wx.StaticText(self.sw, -1, 'Catalogue Number')
+	fgs.Add(self.labels[catnoTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vesscat, 0, wx.EXPAND) 	
 	# Size
+	sizeTAG = self.tag_stump+'|Size|%s'%rep_vessel_instance
 	self.vesssize = wx.TextCtrl(self.sw, -1, value='', style=wx.TE_PROCESS_ENTER)
 	if new_stack is True:
 	    self.vesssize.Enable()
 	else:
-	    self.vesssize.SetValue(meta.get_field('ExptVessel|Coverslip|Size|%s'%rep_vessel_instance, default=''))
+	    self.vesssize.SetValue(meta.get_field(sizeTAG, default=''))
 	    self.vesssize.Disable()
-	fgs.Add(wx.StaticText(self.sw, -1, 'Size (mm x mm)'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[sizeTAG] = wx.StaticText(self.sw, -1, 'Size (mm x mm)')
+	fgs.Add(self.labels[sizeTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vesssize, 0, wx.EXPAND)
 	# Thickness
+	thickTAG = self.tag_stump+'|Thickness|%s'%rep_vessel_instance
 	self.vessthick = wx.TextCtrl(self.sw, -1, value='', style=wx.TE_PROCESS_ENTER)
 	if new_stack is True:
 	    self.vessthick.Enable()
 	else:
-	    self.vessthick.SetValue(meta.get_field('ExptVessel|Coverslip|Thickness|%s'%rep_vessel_instance, default=''))
+	    self.vessthick.SetValue(meta.get_field(thickTAG, default=''))
 	    self.vessthick.Disable()
-	fgs.Add(wx.StaticText(self.sw, -1, 'Thickness'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[thickTAG] = wx.StaticText(self.sw, -1, 'Thickness') 
+	fgs.Add(self.labels[thickTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vessthick, 0, wx.EXPAND)	
         # Coating
+	coatTAG = self.tag_stump+'|Coat|%s'%rep_vessel_instance
 	choices=['None','Collagen IV','Gelatin','Poly-L-Lysine','Poly-D-Lysine', 'Fibronectin', 'Laminin','Poly-D-Lysine + Laminin', 'Poly-L-Ornithine+Laminin', 'Other']
 	self.vesscoat = wx.ListBox(self.sw, -1, wx.DefaultPosition, (120,30), choices, wx.LB_SINGLE)
 	if new_stack is True:
 	    self.vesscoat.Enable()
 	else:	
-	    self.vesscoat.Append(meta.get_field('ExptVessel|Coverslip|Coat|%s'%rep_vessel_instance))
-	    self.vesscoat.SetStringSelection(meta.get_field('ExptVessel|Coverslip|Coat|%s'%rep_vessel_instance))
+	    self.vesscoat.Append(meta.get_field(coatTAG))
+	    self.vesscoat.SetStringSelection(meta.get_field(coatTAG))
 	    self.vesscoat.Disable()
 	self.vesscoat.Bind(wx.EVT_LISTBOX, self.onSelectOther)
-	fgs.Add(wx.StaticText(self.sw, -1, 'Coating'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[coatTAG] = wx.StaticText(self.sw, -1, 'Coating')
+	fgs.Add(self.labels[coatTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vesscoat, 0, wx.EXPAND)
 	# Other Information
+	otherTAG = self.tag_stump+'|OtherInfo|%s'%rep_vessel_instance
 	self.vessother = wx.TextCtrl(self.sw, -1, value='', style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER)
 	self.vessother.SetInitialSize((-1,100))
 	if new_stack is True:
 	    self.vessother.Enable()
 	else:
-	    self.vessother.SetValue(meta.get_field('ExptVessel|Coverslip|OtherInfo|%s'%rep_vessel_instance, default=''))
+	    self.vessother.SetValue(meta.get_field(otherTAG, default=''))
 	    self.vessother.Disable()
-	fgs.Add(wx.StaticText(self.sw, -1, 'Other Information'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[otherTAG] = wx.StaticText(self.sw, -1, 'Other Information')
+	fgs.Add(self.labels[otherTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vessother, 0, wx.EXPAND) 	            
+	
+	# Set Mandatory Label colour
+	meta.setLabelColour(self.mandatory_tags, self.labels)	
 
 	#---  Layout with sizers  -------
 	swsizer = wx.BoxSizer(wx.VERTICAL)
@@ -3036,7 +3078,7 @@ class CoverslipPanel(wx.Panel):
 	    #return	
 	self.createBtn.Disable()
 	
-        vess_list = meta.get_field_instances('ExptVessel|Coverslip')
+        vess_list = meta.get_field_instances(self.tag_stump)
         if vess_list:
             max_id =  max(map(int, vess_list))+1
         else:
@@ -3050,15 +3092,15 @@ class CoverslipPanel(wx.Panel):
             else:
                 PlateDesign.set_plate_format(id, plate_design)
         
-            meta.set_field('ExptVessel|Coverslip|StackNo|%s'%str(v_id),    self.page_counter, notify_subscribers =False)
-            meta.set_field('ExptVessel|Coverslip|Number|%s'%str(v_id),     self.vessnum.GetStringSelection(), notify_subscribers =False)
-            meta.set_field('ExptVessel|Coverslip|StackName|%s'%str(v_id),  self.stkname.GetValue(), notify_subscribers =False)
-	    meta.set_field('ExptVessel|Coverslip|Manufacturer|%s'%str(v_id),  self.vessmfg.GetValue(), notify_subscribers =False)
-	    meta.set_field('ExptVessel|Coverslip|CatalogueNo|%s'%str(v_id),  self.vesscat.GetValue(), notify_subscribers =False)
-	    meta.set_field('ExptVessel|Coverslip|Size|%s'%str(v_id),       self.vesssize.GetValue(), notify_subscribers =False)
-	    meta.set_field('ExptVessel|Coverslip|Thickness|%s'%str(v_id),       self.vessthick.GetValue(), notify_subscribers =False)
-            meta.set_field('ExptVessel|Coverslip|Coat|%s'%str(v_id),       self.vesscoat.GetStringSelection(), notify_subscribers =False)
-	    meta.set_field('ExptVessel|Coverslip|OtherInfo|%s'%str(v_id),  self.vessother.GetValue())
+            meta.set_field(self.tag_stump+'|StackNo|%s'%str(v_id),    self.tab_number, notify_subscribers =False)
+            meta.set_field(self.tag_stump+'|Number|%s'%str(v_id),     self.vessnum.GetStringSelection(), notify_subscribers =False)
+            meta.set_field(self.tag_stump+'|StackName|%s'%str(v_id),  self.stkname.GetValue(), notify_subscribers =False)
+	    meta.set_field(self.tag_stump+'|Manufacturer|%s'%str(v_id),  self.vessmfg.GetValue(), notify_subscribers =False)
+	    meta.set_field(self.tag_stump+'|CatalogueNo|%s'%str(v_id),  self.vesscat.GetValue(), notify_subscribers =False)
+	    meta.set_field(self.tag_stump+'|Size|%s'%str(v_id),       self.vesssize.GetValue(), notify_subscribers =False)
+	    meta.set_field(self.tag_stump+'|Thickness|%s'%str(v_id),       self.vessthick.GetValue(), notify_subscribers =False)
+            meta.set_field(self.tag_stump+'|Coat|%s'%str(v_id),       self.vesscoat.GetStringSelection(), notify_subscribers =False)
+	    meta.set_field(self.tag_stump+'|OtherInfo|%s'%str(v_id),  self.vessother.GetValue())
         
 	#make all input fields disable
         self.vessnum.Disable()
@@ -3126,27 +3168,30 @@ class FlaskPanel(wx.Panel):
     '''
     Panel that displays the instance
     '''
-    def __init__(self, parent, page_counter):
+    def __init__(self, parent, tab_number):
 
 	self.settings_controls = {}
+	self.labels = {}
 	meta = ExperimentSettings.getInstance()
 	
 	wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
 	self.sw = wx.ScrolledWindow(self)
 
-	self.page_counter = page_counter
+	self.tab_number = tab_number
 	fgs = wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
 	
-	self.protocol = 'ExptVessel|Flask'
+	self.tag_stump = 'ExptVessel|Flask'
 	
 	new_stack = True
-	stack_ids = meta.get_stack_ids(self.protocol)
+	stack_ids = meta.get_stack_ids(self.tag_stump)
 	rep_vessel_instance = None
 	for stack_id in stack_ids:
-	    if stack_id == self.page_counter:
-		rep_vessel_instance = meta.get_rep_vessel_instance(self.protocol, stack_id) #Since all vessels for a given stack have same specifications, so single instance will be used to fill the information
+	    if stack_id == self.tab_number:
+		rep_vessel_instance = meta.get_rep_vessel_instance(self.tag_stump, stack_id) #Since all vessels for a given stack have same specifications, so single instance will be used to fill the information
 	if rep_vessel_instance is not None:
 	    new_stack = False
+	
+	self.mandatory_tags = [self.tag_stump+'|Number|%s'%rep_vessel_instance, self.tag_stump+'|StackName|%s'%rep_vessel_instance]
 
         # Heading
 	text = wx.StaticText(self.sw, -1, 'Flask Specifications')
@@ -3163,72 +3208,89 @@ class FlaskPanel(wx.Panel):
 	titlesizer.Add(self.createBtn, 0, wx.EXPAND) 	
 	
         # Vessel number
+	numberTAG = self.tag_stump+'|Number|%s'%rep_vessel_instance
         self.vessnum = wx.Choice(self.sw, -1,  choices= map(str, range(1,51)), style=wx.TE_PROCESS_ENTER)
         if new_stack is True:
             self.vessnum.Enable() 
         else:
-            self.vessnum.SetStringSelection(meta.get_field('ExptVessel|Flask|Number|%s'%rep_vessel_instance))
-            self.vessnum.Disable()      
-	fgs.Add(wx.StaticText(self.sw, -1, 'Number of Flask in Stack'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+            self.vessnum.SetStringSelection(meta.get_field(numberTAG))
+            self.vessnum.Disable()    
+	self.labels[numberTAG] = wx.StaticText(self.sw, -1, 'Number of Flask in Stack')
+	fgs.Add(self.labels[numberTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         fgs.Add(self.vessnum, 0, wx.EXPAND)                
         # Group name
+	nameTAG = self.tag_stump+'|StackName|%s'%rep_vessel_instance
         self.stkname= wx.TextCtrl(self.sw, -1, value='', style=wx.TE_PROCESS_ENTER)
         if new_stack is True:
             self.stkname.Enable()
         else:
-            self.stkname.SetValue(meta.get_field('ExptVessel|Flask|StackName|%s'%rep_vessel_instance))
+            self.stkname.SetValue(meta.get_field(nameTAG))
             self.stkname.Disable()
-        fgs.Add(wx.StaticText(self.sw, -1, 'Stack Name'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[nameTAG] = wx.StaticText(self.sw, -1, 'Stack Name')
+        fgs.Add(self.labels[nameTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         fgs.Add(self.stkname, 0, wx.EXPAND) 
 	# Manufacturer
+	mfgTAG = self.tag_stump+'|Manufacturer|%s'%rep_vessel_instance
 	self.vessmfg = wx.TextCtrl(self.sw, -1, value='', style=wx.TE_PROCESS_ENTER)
 	if new_stack is True:
 	    self.vessmfg.Enable()
 	else:
-	    self.vessmfg.SetValue(meta.get_field('ExptVessel|Flask|Manufacturer|%s'%rep_vessel_instance, default=''))
+	    self.vessmfg.SetValue(meta.get_field(mfgTAG, default=''))
 	    self.vessmfg.Disable()
-	fgs.Add(wx.StaticText(self.sw, -1, 'Manufacturer'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[mfgTAG] = wx.StaticText(self.sw, -1, 'Manufacturer')
+	fgs.Add(self.labels[mfgTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vessmfg, 0, wx.EXPAND) 
 	# Catalogue Number
+	catnoTAG = self.tag_stump+'|CatalogueNo|%s'%rep_vessel_instance
 	self.vesscat = wx.TextCtrl(self.sw, -1, value='', style=wx.TE_PROCESS_ENTER)
 	if new_stack is True:
 	    self.vesscat.Enable()
 	else:
-	    self.vesscat.SetValue(meta.get_field('ExptVessel|Flask|CatalogueNo|%s'%rep_vessel_instance, default=''))
+	    self.vesscat.SetValue(meta.get_field(catnoTAG, default=''))
 	    self.vesscat.Disable()
-	fgs.Add(wx.StaticText(self.sw, -1, 'Catalogue Number'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[catnoTAG] = wx.StaticText(self.sw, -1, 'Catalogue Number')
+	fgs.Add(self.labels[catnoTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vesscat, 0, wx.EXPAND) 	
 	# Size
+	sizeTAG = self.tag_stump+'|Size|%s'%rep_vessel_instance
 	self.vesssize = wx.TextCtrl(self.sw, -1, value='', style=wx.TE_PROCESS_ENTER)
 	if new_stack is True:
 	    self.vesssize.Enable()
 	else:
-	    self.vesssize.SetValue(meta.get_field('ExptVessel|Flask|Size|%s'%rep_vessel_instance, default=''))
+	    self.vesssize.SetValue(meta.get_field(sizeTAG, default=''))
 	    self.vesssize.Disable()
-	fgs.Add(wx.StaticText(self.sw, -1, 'Size (cm2)'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[sizeTAG] = wx.StaticText(self.sw, -1, 'Size (cm2)')
+	fgs.Add(self.labels[sizeTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vesssize, 0, wx.EXPAND)
         # Coating
+	coatTAG = self.tag_stump+'|Coat|%s'%rep_vessel_instance
 	choices=['None','Collagen IV','Gelatin','Poly-L-Lysine','Poly-D-Lysine', 'Fibronectin', 'Laminin','Poly-D-Lysine + Laminin', 'Poly-L-Ornithine+Laminin', 'Other']
 	self.vesscoat = wx.ListBox(self.sw, -1, wx.DefaultPosition, (120,30), choices, wx.LB_SINGLE)
 	if new_stack is True:
 	    self.vesscoat.Enable()
 	else:	
-	    self.vesscoat.Append(meta.get_field('ExptVessel|Flask|Coat|%s'%rep_vessel_instance))
-	    self.vesscoat.SetStringSelection(meta.get_field('ExptVessel|Flask|Coat|%s'%rep_vessel_instance))
+	    self.vesscoat.Append(meta.get_field(coatTAG))
+	    self.vesscoat.SetStringSelection(meta.get_field(coatTAG))
 	    self.vesscoat.Disable()
 	self.vesscoat.Bind(wx.EVT_LISTBOX, self.onSelectOther)
-	fgs.Add(wx.StaticText(self.sw, -1, 'Coating'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[coatTAG] = wx.StaticText(self.sw, -1, 'Coating')
+	fgs.Add(self.labels[coatTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vesscoat, 0, wx.EXPAND)
 	# Other Information
+	otherTAG = self.tag_stump+'|OtherInfo|%s'%rep_vessel_instance
 	self.vessother = wx.TextCtrl(self.sw, -1, value='', style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER)
 	self.vessother.SetInitialSize((-1,100))
 	if new_stack is True:
 	    self.vessother.Enable()
 	else:
-	    self.vessother.SetValue(meta.get_field('ExptVessel|Flask|OtherInfo|%s'%rep_vessel_instance, default=''))
+	    self.vessother.SetValue(meta.get_field(otherTAG, default=''))
 	    self.vessother.Disable()
-	fgs.Add(wx.StaticText(self.sw, -1, 'Other Information'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[otherTAG] = wx.StaticText(self.sw, -1, 'Other Information')
+	fgs.Add(self.labels[otherTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vessother, 0, wx.EXPAND) 	            
+	
+	# Set Mandatory Label colour
+	meta.setLabelColour(self.mandatory_tags, self.labels)		
 
 	#---  Layout with sizers  -------
 	swsizer = wx.BoxSizer(wx.VERTICAL)
@@ -3260,7 +3322,7 @@ class FlaskPanel(wx.Panel):
 
 	self.createBtn.Disable()
 	
-        vess_list = meta.get_field_instances('ExptVessel|Flask')
+        vess_list = meta.get_field_instances(self.tag_stump)
         if vess_list:
             max_id =  max(map(int, vess_list))+1
         else:
@@ -3274,14 +3336,14 @@ class FlaskPanel(wx.Panel):
             else:
                 PlateDesign.set_plate_format(id, plate_design)
         
-            meta.set_field('ExptVessel|Flask|StackNo|%s'%str(v_id),    self.page_counter, notify_subscribers =False)
-            meta.set_field('ExptVessel|Flask|Number|%s'%str(v_id),     self.vessnum.GetStringSelection(), notify_subscribers =False)
-            meta.set_field('ExptVessel|Flask|StackName|%s'%str(v_id),  self.stkname.GetValue(), notify_subscribers =False)
-	    meta.set_field('ExptVessel|Flask|Manufacturer|%s'%str(v_id),  self.vessmfg.GetValue(), notify_subscribers =False)
-	    meta.set_field('ExptVessel|Flask|CatalogueNo|%s'%str(v_id),  self.vesscat.GetValue(), notify_subscribers =False)
-	    meta.set_field('ExptVessel|Flask|Size|%s'%str(v_id),       self.vesssize.GetValue(), notify_subscribers =False)
-            meta.set_field('ExptVessel|Flask|Coat|%s'%str(v_id),       self.vesscoat.GetStringSelection(), notify_subscribers =False)
-	    meta.set_field('ExptVessel|Flask|OtherInfo|%s'%str(v_id),  self.vessother.GetValue())
+            meta.set_field(self.tag_stump+'|StackNo|%s'%str(v_id),    self.tab_number, notify_subscribers =False)
+            meta.set_field(self.tag_stump+'|Number|%s'%str(v_id),     self.vessnum.GetStringSelection(), notify_subscribers =False)
+            meta.set_field(self.tag_stump+'|StackName|%s'%str(v_id),  self.stkname.GetValue(), notify_subscribers =False)
+	    meta.set_field(self.tag_stump+'|Manufacturer|%s'%str(v_id),  self.vessmfg.GetValue(), notify_subscribers =False)
+	    meta.set_field(self.tag_stump+'|CatalogueNo|%s'%str(v_id),  self.vesscat.GetValue(), notify_subscribers =False)
+	    meta.set_field(self.tag_stump+'|Size|%s'%str(v_id),       self.vesssize.GetValue(), notify_subscribers =False)
+            meta.set_field(self.tag_stump+'|Coat|%s'%str(v_id),       self.vesscoat.GetStringSelection(), notify_subscribers =False)
+	    meta.set_field(self.tag_stump+'|OtherInfo|%s'%str(v_id),  self.vessother.GetValue())
         
 	#make all input fields disable
         self.vessnum.Disable()
@@ -3349,28 +3411,31 @@ class TubePanel(wx.Panel):
     '''
     Panel that displays the instance
     '''
-    def __init__(self, parent, page_counter):
+    def __init__(self, parent, tab_number):
 
 	self.settings_controls = {}
+	self.labels = {}
 	meta = ExperimentSettings.getInstance()
 	
 	wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
 	self.sw = wx.ScrolledWindow(self)
 
-	self.page_counter = page_counter
+	self.tab_number = tab_number
 	fgs = wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
 	
-	self.protocol = 'ExptVessel|Tube'
+	self.tag_stump = 'ExptVessel|Tube'
 	
 	new_stack = True
-	stack_ids = meta.get_stack_ids(self.protocol)
+	stack_ids = meta.get_stack_ids(self.tag_stump)
 	rep_vessel_instance = None
 	for stack_id in stack_ids:
-	    if stack_id == self.page_counter:
-		rep_vessel_instance = meta.get_rep_vessel_instance(self.protocol, stack_id) #Since all vessels for a given stack have same specifications, so single instance will be used to fill the information
+	    if stack_id == self.tab_number:
+		rep_vessel_instance = meta.get_rep_vessel_instance(self.tag_stump, stack_id) #Since all vessels for a given stack have same specifications, so single instance will be used to fill the information
 	if rep_vessel_instance is not None:
 	    new_stack = False
 
+	self.mandatory_tags = [self.tag_stump+'|Number|%s'%rep_vessel_instance, self.tag_stump+'|StackName|%s'%rep_vessel_instance]
+	
         # Heading
 	text = wx.StaticText(self.sw, -1, 'Tube Specifications')
 	font = wx.Font(9, wx.SWISS, wx.NORMAL, wx.BOLD)
@@ -3386,74 +3451,89 @@ class TubePanel(wx.Panel):
 	titlesizer.Add(self.createBtn, 0, wx.EXPAND) 	
 	
         # Vessel number
+	numberTAG = self.tag_stump+'|Number|%s'%rep_vessel_instance
         self.vessnum = wx.Choice(self.sw, -1,  choices= map(str, range(1,51)), style=wx.TE_PROCESS_ENTER)
         if new_stack is True:
             self.vessnum.Enable() 
         else:
-            self.vessnum.SetStringSelection(meta.get_field('ExptVessel|Tube|Number|%s'%rep_vessel_instance))
-            self.vessnum.Disable()      
-	fgs.Add(wx.StaticText(self.sw, -1, 'Number of Tube in Stack'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+            self.vessnum.SetStringSelection(meta.get_field(numberTAG))
+            self.vessnum.Disable()  
+	self.labels[numberTAG] = wx.StaticText(self.sw, -1, 'Number of Tube in Stack')
+	fgs.Add(self.labels[numberTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         fgs.Add(self.vessnum, 0, wx.EXPAND)                
         # Group name
+	nameTAG = self.tag_stump+'|StackName|%s'%rep_vessel_instance
         self.stkname= wx.TextCtrl(self.sw, -1, value='', style=wx.TE_PROCESS_ENTER)
         if new_stack is True:
             self.stkname.Enable()
         else:
-            self.stkname.SetValue(meta.get_field('ExptVessel|Tube|StackName|%s'%rep_vessel_instance))
+            self.stkname.SetValue(meta.get_field(nameTAG))
             self.stkname.Disable()
-        fgs.Add(wx.StaticText(self.sw, -1, 'Stack Name'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[nameTAG] = wx.StaticText(self.sw, -1, 'Stack Name')
+        fgs.Add(self.labels[nameTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         fgs.Add(self.stkname, 0, wx.EXPAND) 
 	# Manufacturer
+	mfgTAG = self.tag_stump+'|Manufacturer|%s'%rep_vessel_instance
 	self.vessmfg = wx.TextCtrl(self.sw, -1, value='', style=wx.TE_PROCESS_ENTER)
 	if new_stack is True:
 	    self.vessmfg.Enable()
 	else:
-	    self.vessmfg.SetValue(meta.get_field('ExptVessel|Tube|Manufacturer|%s'%rep_vessel_instance, default=''))
+	    self.vessmfg.SetValue(meta.get_field(mfgTAG, default=''))
 	    self.vessmfg.Disable()
-	fgs.Add(wx.StaticText(self.sw, -1, 'Manufacturer'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[mfgTAG] = wx.StaticText(self.sw, -1, 'Manufacturer')
+	fgs.Add(self.labels[mfgTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vessmfg, 0, wx.EXPAND) 
 	# Catalogue Number
+	catnoTAG = self.tag_stump+'|CatalogueNo|%s'%rep_vessel_instance
 	self.vesscat = wx.TextCtrl(self.sw, -1, value='', style=wx.TE_PROCESS_ENTER)
 	if new_stack is True:
 	    self.vesscat.Enable()
 	else:
-	    self.vesscat.SetValue(meta.get_field('ExptVessel|Tube|CatalogueNo|%s'%rep_vessel_instance, default=''))
+	    self.vesscat.SetValue(meta.get_field(catnoTAG, default=''))
 	    self.vesscat.Disable()
-	fgs.Add(wx.StaticText(self.sw, -1, 'Catalogue Number'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[catnoTAG] = wx.StaticText(self.sw, -1, 'Catalogue Number')
+	fgs.Add(self.labels[catnoTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vesscat, 0, wx.EXPAND) 	
 	# Size
+	sizeTAG = self.tag_stump+'|Size|%s'%rep_vessel_instance
 	self.vesssize = wx.TextCtrl(self.sw, -1, value='', style=wx.TE_PROCESS_ENTER)
 	if new_stack is True:
 	    self.vesssize.Enable()
 	else:
-	    self.vesssize.SetValue(meta.get_field('ExptVessel|Tube|Size|%s'%rep_vessel_instance, default=''))
+	    self.vesssize.SetValue(meta.get_field(sizeTAG, default=''))
 	    self.vesssize.Disable()
-	fgs.Add(wx.StaticText(self.sw, -1, 'Size (cm2)'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[sizeTAG] = wx.StaticText(self.sw, -1, 'Size (cm2)')
+	fgs.Add(self.labels[sizeTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vesssize, 0, wx.EXPAND)
         # Coating
+	coatTAG = self.tag_stump+'|Coat|%s'%rep_vessel_instance
 	choices=['None','Collagen IV','Gelatin','Poly-L-Lysine','Poly-D-Lysine', 'Fibronectin', 'Laminin','Poly-D-Lysine + Laminin', 'Poly-L-Ornithine+Laminin', 'Other']
 	self.vesscoat = wx.ListBox(self.sw, -1, wx.DefaultPosition, (120,30), choices, wx.LB_SINGLE)
 	if new_stack is True:
 	    self.vesscoat.Enable()
 	else:	
-	    self.vesscoat.Append(meta.get_field('ExptVessel|Tube|Coat|%s'%rep_vessel_instance))
-	    self.vesscoat.SetStringSelection(meta.get_field('ExptVessel|Tube|Coat|%s'%rep_vessel_instance))
+	    self.vesscoat.Append(meta.get_field(coatTAG))
+	    self.vesscoat.SetStringSelection(meta.get_field(coatTAG))
 	    self.vesscoat.Disable()
 	self.vesscoat.Bind(wx.EVT_LISTBOX, self.onSelectOther)
-	fgs.Add(wx.StaticText(self.sw, -1, 'Coating'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[coatTAG] = wx.StaticText(self.sw, -1, 'Coating')
+	fgs.Add(self.labels[coatTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vesscoat, 0, wx.EXPAND)
 	# Other Information
+	otherTAG = self.tag_stump+'|OtherInfo|%s'%rep_vessel_instance
 	self.vessother = wx.TextCtrl(self.sw, -1, value='', style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER)
 	self.vessother.SetInitialSize((-1,100))
 	if new_stack is True:
 	    self.vessother.Enable()
 	else:
-	    self.vessother.SetValue(meta.get_field('ExptVessel|Tube|OtherInfo|%s'%rep_vessel_instance, default=''))
+	    self.vessother.SetValue(meta.get_field(otherTAG, default=''))
 	    self.vessother.Disable()
-	fgs.Add(wx.StaticText(self.sw, -1, 'Other Information'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.labels[otherTAG] = wx.StaticText(self.sw, -1, 'Other Information')
+	fgs.Add(self.labels[otherTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	fgs.Add(self.vessother, 0, wx.EXPAND) 	
         
-                   
+	# Set Mandatory Label colour
+	meta.setLabelColour(self.mandatory_tags, self.labels)	                           
 
 	#---  Layout with sizers  -------
 	swsizer = wx.BoxSizer(wx.VERTICAL)
@@ -3489,7 +3569,7 @@ class TubePanel(wx.Panel):
 	    #return	
 	self.createBtn.Disable()
 	
-        vess_list = meta.get_field_instances('ExptVessel|Tube')
+        vess_list = meta.get_field_instances(self.tag_stump)
         if vess_list:
             max_id =  max(map(int, vess_list))+1
         else:
@@ -3503,14 +3583,14 @@ class TubePanel(wx.Panel):
             else:
                 PlateDesign.set_plate_format(id, plate_design)
         
-            meta.set_field('ExptVessel|Tube|StackNo|%s'%str(v_id),    self.page_counter, notify_subscribers =False)
-            meta.set_field('ExptVessel|Tube|Number|%s'%str(v_id),     self.vessnum.GetStringSelection(), notify_subscribers =False)
-            meta.set_field('ExptVessel|Tube|StackName|%s'%str(v_id),  self.stkname.GetValue(), notify_subscribers =False)
-	    meta.set_field('ExptVessel|Tube|Manufacturer|%s'%str(v_id),  self.vessmfg.GetValue(), notify_subscribers =False)
-	    meta.set_field('ExptVessel|Tube|CatalogueNo|%s'%str(v_id),  self.vesscat.GetValue(), notify_subscribers =False)
-	    meta.set_field('ExptVessel|Tube|Size|%s'%str(v_id),       self.vesssize.GetValue(), notify_subscribers =False)
-            meta.set_field('ExptVessel|Tube|Coat|%s'%str(v_id),       self.vesscoat.GetStringSelection(), notify_subscribers =False)
-	    meta.set_field('ExptVessel|Tube|OtherInfo|%s'%str(v_id),  self.vessother.GetValue())
+            meta.set_field(self.tag_stump+'|StackNo|%s'%str(v_id),    self.tab_number, notify_subscribers =False)
+            meta.set_field(self.tag_stump+'|Number|%s'%str(v_id),     self.vessnum.GetStringSelection(), notify_subscribers =False)
+            meta.set_field(self.tag_stump+'|StackName|%s'%str(v_id),  self.stkname.GetValue(), notify_subscribers =False)
+	    meta.set_field(self.tag_stump+'|Manufacturer|%s'%str(v_id),  self.vessmfg.GetValue(), notify_subscribers =False)
+	    meta.set_field(self.tag_stump+'|CatalogueNo|%s'%str(v_id),  self.vesscat.GetValue(), notify_subscribers =False)
+	    meta.set_field(self.tag_stump+'|Size|%s'%str(v_id),       self.vesssize.GetValue(), notify_subscribers =False)
+            meta.set_field(self.tag_stump+'|Coat|%s'%str(v_id),       self.vesscoat.GetStringSelection(), notify_subscribers =False)
+	    meta.set_field(self.tag_stump+'|OtherInfo|%s'%str(v_id),  self.vessother.GetValue())
         
 	#make all input fields disable
         self.vessnum.Disable()
