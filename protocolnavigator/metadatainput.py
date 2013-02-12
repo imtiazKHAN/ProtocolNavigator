@@ -1081,11 +1081,13 @@ class MicroscopePanel(wx.Panel):
 	attributesizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)    
 	#  Protocol Name
 	self.nameTAG = self.tag_stump+'|Name|'+str(self.tab_number)
-	self.settings_controls[self.nameTAG] = wx.TextCtrl(self.sw, value=meta.get_field(self.nameTAG, default=''))
+	self.settings_controls[self.nameTAG] = wx.TextCtrl(self.sw, value=meta.get_field(self.nameTAG, default=''))	
 	self.settings_controls[self.nameTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
 	self.settings_controls[self.nameTAG].SetInitialSize((250,20))
 	self.settings_controls[self.nameTAG].SetToolTipString('Type a unique name for the channel')
-	self.save_btn = wx.Button(self.sw, -1, "Save Channel Settings")
+	save_bmp = icons.save.Scale(20.0, 20.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+	self.save_btn = wx.BitmapButton(self.sw, -1, save_bmp)
+	self.save_btn.SetToolTipString("Save instance for future reuse")
 	self.save_btn.Bind(wx.EVT_BUTTON, self.OnSavingSettings)
 	attributesizer.Add(wx.StaticText(self.sw, -1, 'Channel Name'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL) 
 	attributesizer.Add(self.settings_controls[self.nameTAG], 0, wx.EXPAND)
@@ -2062,9 +2064,8 @@ class FlowcytometerPanel(wx.Panel):
 	self.bot_panel = wx.ScrolledWindow(self)	
   
 	self.top_fgs = wx.BoxSizer(wx.VERTICAL)
-	#self.bot_fgs = wx.FlexGridSizer(cols=1, hgap=5, vgap=5)
-	self.bot_fgs = wx.BoxSizer(wx.HORIZONTAL)
-	
+	self.bot_fgs = wx.FlexGridSizer(cols=1, hgap=5, vgap=5)
+
 	# Title
 	text = wx.StaticText(self.top_panel, -1, exp.get_tag_event(self.tag_stump))
 	font = wx.Font(12, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
@@ -2082,8 +2083,7 @@ class FlowcytometerPanel(wx.Panel):
 	titlesizer.AddSpacer((5,-1))
 	titlesizer.Add(self.attach_file_num)
 	# Attributes	
-	attributesizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)    
-	
+	attributesizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)    	
 	self.nameTAG = self.tag_stump+'|Name|'+str(self.tab_number)
 	self.settings_controls[self.nameTAG] = wx.TextCtrl(self.top_panel, value=meta.get_field(self.nameTAG, default=''))
 	self.settings_controls[self.nameTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
@@ -2145,18 +2145,23 @@ class FlowcytometerPanel(wx.Panel):
 	self.Sizer.Add(self.bot_panel, 1, wx.EXPAND|wx.ALL, 10)	          
 
     def onAddChnnel(self, event):
-	meta = ExperimentSettings.getInstance() 
-	self.dlg = ChannelBuilder(self.bot_panel, -1, 'Channel Builder')
-	
-        if self.dlg.ShowModal() == wx.ID_OK:
-	    lightpath = []
-	    for comp in self.dlg.componentList:
-		lightpath.append(self.dlg.componentList[comp])
-	    chName = self.dlg.select_chName.GetStringSelection()
-	    tag = self.tag_stump+'|%s|%s' %(chName, str(self.tab_number))
-	    value = lightpath
-	    self.drawChannel(chName, value)
-	    meta.set_field(tag, value)
+	if meta.checkMandatoryTags(self.mandatory_tags): 
+	    self.dlg = ChannelBuilder(self.bot_panel, -1, 'Channel Builder')
+	    
+	    if self.dlg.ShowModal() == wx.ID_OK:
+		if self.dlg.componentCount != len(self.dlg.componentList):
+		    dial = wx.MessageDialog(None, 'Last component was not configured\nPlease again add %s ch.'%self.dlg.select_chName.GetStringSelection(), 'Error', wx.OK | wx.ICON_ERROR)
+		    dial.ShowModal() 
+		    return	
+		# All are OK
+		lightpath = []
+		for comp in self.dlg.componentList:
+		    lightpath.append(self.dlg.componentList[comp])
+		chName = self.dlg.select_chName.GetStringSelection()
+		tag = self.tag_stump+'|%s|%s' %(chName, str(self.tab_number))
+		value = lightpath
+		self.drawChannel(chName, value)
+		meta.set_field(tag, value)
     
     def showChannels(self):
 	meta = ExperimentSettings.getInstance()	
@@ -2173,9 +2178,10 @@ class FlowcytometerPanel(wx.Panel):
 	    
     
     def drawChannel(self, chName, lightpath):
-	ch_sizer = wx.BoxSizer(wx.HORIZONTAL)
+	#ch_sizer = wx.BoxSizer(wx.HORIZONTAL)
+	ch_sizer = wx.FlexGridSizer(rows=1, hgap=5, vgap=5)  
 	# Add the channel name
-	ch_sizer.Add(wx.StaticText(self.bot_panel, -1, chName), 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
+	ch_sizer.Add(wx.StaticText(self.bot_panel, -1, chName), 0, wx.ALIGN_CENTER_VERTICAL)
 	# Add the components
 	for component in lightpath:
 	    compName = component[0]
@@ -2188,7 +2194,7 @@ class FlowcytometerPanel(wx.Panel):
 		self.laser.SetBackgroundColour(meta.nmToRGB(laserNM))
 		laserSizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
 		laserSizer.Add(self.laser, 0) 	    
-		ch_sizer.Add(laserSizer,  0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
+		ch_sizer.Add(laserSizer,  0, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND)
 	    
 	    if compName.startswith('DMR') or compName.startswith('FLT') or compName.startswith('SLT'):
 		staticbox = wx.StaticBox(self.bot_panel, -1, compName)
@@ -2197,7 +2203,7 @@ class FlowcytometerPanel(wx.Panel):
 		self.spectrum = DrawSpectrum(self.bot_panel, self.startNM, self.endNM)
 		mirrorSizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
 		mirrorSizer.Add(self.spectrum, 0)
-		ch_sizer.Add(mirrorSizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
+		ch_sizer.Add(mirrorSizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND)
 		
 	    if compName.startswith('DYE'):
 		staticbox = wx.StaticBox(self.bot_panel, -1, 'DYE')
@@ -2213,7 +2219,7 @@ class FlowcytometerPanel(wx.Panel):
 		self.dyeListBox.Bind(wx.EVT_LISTBOX_DCLICK, partial(self.onMyDyeSelect, ch = chName, compNo = lightpath.index(component), opticalpath = lightpath))
 		dye_sizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
 		dye_sizer.Add(self.dyeListBox, 0)               
-		ch_sizer.Add(dye_sizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5) 	    		
+		ch_sizer.Add(dye_sizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND) 	    		
 		
 	    if compName.startswith('DTC'):
 		staticbox = wx.StaticBox(self.bot_panel, -1, "Detector")
@@ -2224,17 +2230,17 @@ class FlowcytometerPanel(wx.Panel):
 		self.detector.Bind(wx.EVT_SPINCTRL, partial(self.onEditDetector, ch = chName, compNo = lightpath.index(component), opticalpath = lightpath))
 		detector_sizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
 		detector_sizer.Add(self.detector, 0)
-		ch_sizer.Add(detector_sizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
+		ch_sizer.Add(detector_sizer, 0, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND)
 	
 	
 	##set the delete button at the end
 	self.delete_button = wx.Button(self.bot_panel, wx.ID_DELETE)
 	self.delete_button.Bind(wx.EVT_BUTTON, partial(self.onDeleteCh, cn = chName))
-	ch_sizer.Add(self.delete_button, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
+	ch_sizer.Add(self.delete_button, 0, wx.ALIGN_CENTER_VERTICAL)
 	
 	#-- Sizers --#
 	#self.top_panel.SetSizer(self.top_fgs)
-	self.bot_fgs.Add(ch_sizer, 1, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALL, 5)
+	self.bot_fgs.Add(ch_sizer, 0, wx.ALL, 5)
 	self.bot_panel.SetSizer(self.bot_fgs)
         self.bot_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
 
