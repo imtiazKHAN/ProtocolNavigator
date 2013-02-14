@@ -14,7 +14,7 @@ class FileListDialog(wx.Dialog):
         
         self.file_list = file_list
         self.tag = tag
-        
+
         self.label = wx.StaticText(self, -1, "Drag and drop files in the box bellow")
         self.text_box = wx.TextCtrl(self, -1, "",style=wx.TE_MULTILINE|wx.HSCROLL|wx.TE_READONLY)
         self.drop_target = MyFileDropTarget(self.text_box)

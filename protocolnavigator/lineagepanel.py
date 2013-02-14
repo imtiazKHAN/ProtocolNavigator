@@ -1,6 +1,7 @@
 import experimentsettings as exp
 import wx
 import os
+import re
 import subprocess
 import numpy as np
 import icons
@@ -9,6 +10,7 @@ import  wx.lib.dialogs
 import math
 import bisect
 import csv
+from operator import itemgetter
 from wx.lib.combotreebox import ComboTreeBox
 from PIL import Image
 from time import time
@@ -878,10 +880,19 @@ class LineagePanel(wx.Panel):
 	        for ptag in pnode.tags]
     
     #----------------------------------------------------------------------
+    #def order_nodes(self, node):
+	#"""Sort the node according to the Plate_Well ids"""
+	#x = node.get_well_ids()
+	#return tuple(sorted([("PTFCD".find(item[0][0]), item[0], item[1]) for item in x]))
     def order_nodes(self, node):
 	"""Sort the node according to the Plate_Well ids"""
 	x = node.get_well_ids()
-	return tuple(sorted([("PTFCD".find(item[0][0]), item[0], item[1]) for item in x]))	
+	container_index = ["PTFCD".find(item[0][0]) for item in x]   #P for Plate, T for Tube etc update according to vessel prefix
+	container_number = [int(re.search("([0-9]+)$", item[0]).group(1)) for item in x]
+	container = [item[0] for item in x]
+	well = [item[1] for item in x]
+	return [(item[3], item[2]) for item in sorted(zip(container_index, container_number, well, container))]
+    
 
         
 if __name__ == "__main__":

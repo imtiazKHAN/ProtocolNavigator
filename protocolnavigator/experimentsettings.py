@@ -387,7 +387,8 @@ class ExperimentSettings(Singleton):
 	setting_type = get_tag_event(protocol)
 	f = open(file,'w')
 	f.write(setting_type+'\n')
-	attributes = self.get_attribute_list_by_instance(tag_stump, instance)
+	attributes = list(set(self.get_attribute_list_by_instance(tag_stump, instance)))
+	if 'Wells' in attributes: attributes.remove('Wells')
 	for attr in attributes:
 	    info = self.get_field(tag_stump+'|%s|%s' %(attr, instance))
 	    f.write('%s = %s\n'%(attr, repr(info)))

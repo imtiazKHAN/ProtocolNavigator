@@ -382,12 +382,13 @@ class Bench(wx.Panel):
 	    dia = FileListDialog(self, images_tag, meta.get_field(images_tag, []))
 	    if dia.ShowModal()== wx.ID_OK:
 		f_list = dia.file_list
-		if f_list:		    
+		if f_list:
 		    meta_dia = ShowMetaDataLinkListDialog(self, f_list)
 		    if meta_dia.ShowModal() == wx.ID_OK:
 			platewell_ids.update(platewell_id)
 			meta.set_field(wells_tag, list(platewell_ids))			
 			meta.set_field(images_tag, meta_dia.data_metadata.items())
+			meta_dia.data_metadata.clear()	    
 		    else:   
 			meta.remove_field(wells_tag)
 			self.update_well_selections()		    
