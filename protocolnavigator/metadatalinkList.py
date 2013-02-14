@@ -20,7 +20,7 @@ class ShowMetaDataLinkListDialog(wx.Dialog):
 	self.ultimateList.SetColumnWidth(0, 190)
 	self.ultimateList.SetColumnWidth(1, 300)
 	self.data_metadata = DATA_METADATA
-	print "filepaths %s" %str(file_paths)
+	
         for data_file_path in file_paths:
 	    index = self.ultimateList.InsertStringItem(sys.maxint, data_file_path, self.data_metadata)
 	    self.data_metadata[data_file_path] = ''

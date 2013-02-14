@@ -18,38 +18,39 @@ class DataLinkListDialog(wx.Dialog):
 
         ## get all data acquisition tags
         self.data_acquis_well = {}
-        #self.select_data_acquis_well = {}
         self.data_metadata = {}
-        
+
         for tag in meta.global_settings:
             if len(tag.split('|')) == 6:
-                for dm in meta.get_field(tag):
-                    pw = (tag.split('|')[5]).strip('[]')
-                    self.data_metadata[dm] = pw+'_'+str(get_tag_timepoint(tag))  # dictionary [data_metadata tuple] = plate_well 
-
-        self.ultimateList.InsertColumn(0, 'Where')
-        self.ultimateList.InsertColumn(1, 'When')
+                self.data_metadata[str(zip([tag.split('|')[4]], eval(tag.split('|')[5])))] = meta.get_field(tag)
+                
+        self.ultimateList.InsertColumn(0, 'When')
+        self.ultimateList.InsertColumn(1, 'Where')
         self.ultimateList.InsertColumn(2, 'Provenance')
         self.ultimateList.InsertColumn(3, 'Data')
         self.ultimateList.InsertColumn(4, 'Metadata')
-        self.ultimateList.SetColumnWidth(2, 250)
-        
-        for dm, pw_t in self.data_metadata.iteritems():
-            pw = pw_t.split('_')[0]
-            t = pw_t.split('_')[1]
-            d = dm[0]
-            m = dm[1]
-            index = self.ultimateList.InsertStringItem(sys.maxint, pw)
-            self.ultimateList.SetStringItem(index, 1, format_time_string(t), wx.LIST_FORMAT_CENTER)
-            self.ultimateList.SetStringItem(index, 3, d , wx.LIST_FORMAT_RIGHT)
-            self.ultimateList.SetStringItem(index, 4, m, wx.LIST_FORMAT_RIGHT)
-   
-            for well in well_ids:
-                if str(well)+'_'+str(time_point) == pw_t: 
-                    provenance_description = self.decode_tags(ancestor_tags)  # better to provide ancestor tags for all rows 
-                    self.ultimateList.SetStringItem(index, 2, provenance_description, wx.LIST_FORMAT_RIGHT)
-                    self.ultimateList.Select(index)
-                    
+        self.ultimateList.SetColumnWidth(2, 250)       
+ 
+        for k, urls in self.data_metadata.iteritems():
+            tp_pw = eval(k)
+            tp = tp_pw[0][0]
+            pw = tp_pw[0][1]
+            
+            for url in urls:
+                data = url[0]
+                metadata = url[1]
+                
+                index = self.ultimateList.InsertStringItem(sys.maxint, format_time_string(tp))
+                self.ultimateList.SetStringItem(index, 1, str(pw), wx.LIST_FORMAT_CENTER)
+                self.ultimateList.SetStringItem(index, 3, data , wx.LIST_FORMAT_RIGHT)
+                self.ultimateList.SetStringItem(index, 4, metadata, wx.LIST_FORMAT_RIGHT)
+                
+                for well_id in well_ids:
+                    if (str(time_point),well_id) in tp_pw:
+                        provenance_description = self.decode_tags(ancestor_tags)  # better to provide ancestor tags for all rows 
+                        self.ultimateList.SetStringItem(index, 2, provenance_description, wx.LIST_FORMAT_RIGHT)
+                        self.ultimateList.Select(index) 
+
         outputs = ('Export Selected', 'Export All', 'Show in ImageJ')
         self.output_options = wx.RadioBox(self, -1, "Output Choices", choices=outputs)
         
