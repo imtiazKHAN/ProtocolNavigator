@@ -9,9 +9,13 @@ meta = ExperimentSettings.getInstance()
 ########       Popup Dialog showing all instances of settings       ####
 ########################################################################            
 class FileListDialog(wx.Dialog):
-    def __init__(self, parent, tag, file_list):
-        wx.Dialog.__init__(self, parent, -1, "Linking data files", size=(550,300), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
-        
+    def __init__(self, parent, tag, file_list, origin_location):
+	wx.Dialog.__init__(self, parent, -1, size=(550,300), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+	if origin_location is None:
+	    self.SetTitle("Attach files")
+	else:
+	    self.SetTitle("Linking data files for %s"%origin_location)
+	    
         self.file_list = file_list
         self.tag = tag
 

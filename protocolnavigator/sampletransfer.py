@@ -10,8 +10,8 @@ meta = ExperimentSettings.getInstance()
 ########       Popup Dialog showing sample transfer activity        ####
 ########################################################################            
 class SampleTransferDialog(wx.Dialog):
-    def __init__(self, parent, cell_line, h_inst, s_inst,  token, vesselpanel, vesselScroller, platedesign):
-	wx.Dialog.__init__(self, parent, -1, size=(750,550), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
+    def __init__(self, parent, cell_line, h_inst, s_inst,  token, vesselpanel, vesselScroller, platedesign, harvest_location):
+	wx.Dialog.__init__(self, parent, -1, "Sample transfer", size=(750,550), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
 	
 	self.settings_controls = {}
 	
@@ -43,7 +43,7 @@ class SampleTransferDialog(wx.Dialog):
 	
 	pic=wx.StaticBitmap(self.top_panel)
 	pic.SetBitmap(icons.harvest.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())
-	text = wx.StaticText(self.top_panel, -1, 'Harvest')
+	text = wx.StaticText(self.top_panel, -1, 'Harvested from %s'%harvest_location)
 	font = wx.Font(9, wx.SWISS, wx.NORMAL, wx.BOLD)
 	text.SetFont(font)
 	h_titleSizer = wx.BoxSizer(wx.HORIZONTAL)

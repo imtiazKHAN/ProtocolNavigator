@@ -251,7 +251,7 @@ class Bench(wx.Panel):
 	if int(self.page_counter) > 1:
 	    lineage_panel.timeline_panel.on_note_icon_add()
 	attfileTAG = 'Attachments|Files|%s|%s' %(str(self.get_selected_timepoint()), str(self.page_counter))    
-	dia = FileListDialog(self, attfileTAG, meta.get_field(attfileTAG, []))
+	dia = FileListDialog(self, attfileTAG, meta.get_field(attfileTAG, []), None)
 	if dia.ShowModal()== wx.ID_OK:
 	    f_list = dia.file_list
 	    if f_list:
@@ -377,9 +377,11 @@ class Bench(wx.Panel):
 	meta.set_field(wells_tag, list(platewell_ids))                
 
         # SPECIAL CASE: for data/image association or dissociation
-        if selected and prefix.startswith('DataAcquis'):	    
+        if selected and prefix.startswith('DataAcquis'):
+	    stack_name = PlateDesign.get_plate_group(selected_pw_id[0][0])  
+	    origin_location = '"'+stack_name+'_'+selected_pw_id[0][0]+'_'+selected_pw_id[0][1]+'"'
             images_tag = '%s|Images|%s|%s|%s'%(prefix, instance, self.get_selected_timepoint(), selected_pw_id)
-	    dia = FileListDialog(self, images_tag, meta.get_field(images_tag, []))
+	    dia = FileListDialog(self, images_tag, meta.get_field(images_tag, []), origin_location)
 	    if dia.ShowModal()== wx.ID_OK:
 		f_list = dia.file_list
 		if f_list:

@@ -944,7 +944,7 @@ class CellLinePanel(wx.Panel):
     
     def OnAttachPropFile(self, event):
 	if meta.checkMandatoryTags(self.mandatory_tags):	
-	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []), None)		
 	    if dia.ShowModal()== wx.ID_OK:
 		f_list = dia.file_list
 		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
@@ -1864,7 +1864,7 @@ class MicroscopePanel(wx.Panel):
 		
     def OnAttachPropFile(self, event):
 	if meta.checkMandatoryTags(self.mandatory_tags):	
-	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []), None)		
 	    if dia.ShowModal()== wx.ID_OK:
 		f_list = dia.file_list
 		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
@@ -2288,7 +2288,7 @@ class FlowcytometerPanel(wx.Panel):
 	    
     def OnAttachPropFile(self, event):
 	if meta.checkMandatoryTags(self.mandatory_tags):	
-	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []), None)		
 	    if dia.ShowModal()== wx.ID_OK:
 		f_list = dia.file_list
 		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
@@ -4171,7 +4171,7 @@ class ChemicalAgentPanel(wx.Panel):
     
     def OnAttachPropFile(self, event):
 	if meta.checkMandatoryTags(self.mandatory_tags):	
-	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []), None)		
 	    if dia.ShowModal()== wx.ID_OK:
 		f_list = dia.file_list
 		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
@@ -4349,7 +4349,7 @@ class BiologicalAgentPanel(wx.Panel):
     
     def OnAttachPropFile(self, event):
 	if meta.checkMandatoryTags(self.mandatory_tags):	
-	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []), None)		
 	    if dia.ShowModal()== wx.ID_OK:
 		f_list = dia.file_list
 		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
@@ -4511,7 +4511,7 @@ class PhysicalAgentPanel(wx.Panel):
     
     def OnAttachPropFile(self, event):
 	if meta.checkMandatoryTags(self.mandatory_tags):	
-	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []), None)		
 	    if dia.ShowModal()== wx.ID_OK:
 		f_list = dia.file_list
 		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
@@ -4751,7 +4751,7 @@ class ImmunoPanel(wx.Panel):
 	
     def OnAttachPropFile(self, event):
 	if meta.checkMandatoryTags(self.mandatory_tags):	
-	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []), None)		
 	    if dia.ShowModal()== wx.ID_OK:
 		f_list = dia.file_list
 		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
@@ -4975,7 +4975,7 @@ class GeneticPanel(wx.Panel):
 	
     def OnAttachPropFile(self, event):
 	if meta.checkMandatoryTags(self.mandatory_tags):	
-	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []), None)		
 	    if dia.ShowModal()== wx.ID_OK:
 		f_list = dia.file_list
 		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
@@ -5271,7 +5271,7 @@ class DyePanel(wx.Panel):
 	
     def OnAttachPropFile(self, event):
 	if meta.checkMandatoryTags(self.mandatory_tags):	
-	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []), None)		
 	    if dia.ShowModal()== wx.ID_OK:
 		f_list = dia.file_list
 		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
@@ -5530,7 +5530,7 @@ class DryingPanel(wx.Panel):
 	
     def OnAttachPropFile(self, event):
 	if meta.checkMandatoryTags(self.mandatory_tags):	
-	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []), None)		
 	    if dia.ShowModal()== wx.ID_OK:
 		f_list = dia.file_list
 		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
@@ -5785,7 +5785,7 @@ class IncubationPanel(wx.Panel):
 	
     def OnAttachPropFile(self, event):
 	if meta.checkMandatoryTags(self.mandatory_tags):	
-	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []), None)		
 	    if dia.ShowModal()== wx.ID_OK:
 		f_list = dia.file_list
 		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
@@ -5981,7 +5981,7 @@ class AddMediumPanel(wx.Panel):
 	
     def OnAttachPropFile(self, event):
 	if meta.checkMandatoryTags(self.mandatory_tags):	
-	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []), None)		
 	    if dia.ShowModal()== wx.ID_OK:
 		f_list = dia.file_list
 		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
@@ -6305,7 +6305,7 @@ class IncubatorPanel(wx.Panel):
 	    
     def OnAttachPropFile(self, event):
 	if meta.checkMandatoryTags(self.mandatory_tags):	
-	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []), None)		
 	    if dia.ShowModal()== wx.ID_OK:
 		f_list = dia.file_list
 		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
@@ -6586,7 +6586,7 @@ class RheometerPanel(wx.Panel):
 	    
     def OnAttachPropFile(self, event):
 	if meta.checkMandatoryTags(self.mandatory_tags):	
-	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []), None)		
 	    if dia.ShowModal()== wx.ID_OK:
 		f_list = dia.file_list
 		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
@@ -6764,7 +6764,7 @@ class RheoManipulationPanel(wx.Panel):
 	
     def OnAttachPropFile(self, event):
 	if meta.checkMandatoryTags(self.mandatory_tags):	
-	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []), None)		
 	    if dia.ShowModal()== wx.ID_OK:
 		f_list = dia.file_list
 		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
@@ -7053,7 +7053,7 @@ class CentrifugePanel(wx.Panel):
 	    
     def OnAttachPropFile(self, event):
 	if meta.checkMandatoryTags(self.mandatory_tags):	
-	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []), None)		
 	    if dia.ShowModal()== wx.ID_OK:
 		f_list = dia.file_list
 		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
@@ -7271,7 +7271,7 @@ class CentrifugationPanel(wx.Panel):
 	
     def OnAttachPropFile(self, event):
 	if meta.checkMandatoryTags(self.mandatory_tags):	
-	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []), None)		
 	    if dia.ShowModal()== wx.ID_OK:
 		f_list = dia.file_list
 		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
@@ -7412,7 +7412,7 @@ class OvenPanel(wx.Panel):
 	    
     def OnAttachPropFile(self, event):
 	if meta.checkMandatoryTags(self.mandatory_tags):	
-	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []))		
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []), None)		
 	    if dia.ShowModal()== wx.ID_OK:
 		f_list = dia.file_list
 		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))

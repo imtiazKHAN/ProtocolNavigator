@@ -147,7 +147,9 @@ class VesselPanel(wx.Panel):
     # get the timepoint this harvest event being occuring
     # pop up the dialog to show the available wells to be transferred, including the own, and highlight/disable origin well  
     # All attributes of previous instance are copied to the new instance so that users need to rewrite the attribute values.
-        dlg = SampleTransferDialog(self, cell_line, new_h_inst, new_s_inst, self.token, VesselPanel, VesselScroller, PlateDesign)
+        stack_name = PlateDesign.get_plate_group(self.get_plate_id())  
+	origin_location = '"'+stack_name+'_'+harvest_from_well[0]+'_'+harvest_from_well[1]+'"'
+        dlg = SampleTransferDialog(self, cell_line, new_h_inst, new_s_inst, self.token, VesselPanel, VesselScroller, PlateDesign, origin_location)
 	#if Cancel button clicked then DEL all SET fields for the new instance related attributes from the buffer
 	if dlg.ShowModal() == wx.ID_OK: 	    
 	    destination_wells = dlg.get_selected_platewell_ids()
