@@ -600,7 +600,7 @@ class LineagePanel(wx.Panel):
             else:
                 for node in sorted(nodes_by_tp[t], key=self.order_nodes):
 		    ancestor_tags = self.get_ancestral_tags(node)
-		    children_tags = self.get_children_tags(node)
+		    children_tags = self.get_children_tags(node, 2)
 		    node_tags = node.get_tags()
 		    stateRGB = meta.getStateRGB([tags for tags in reversed(ancestor_tags)]+node_tags)# reverse the ancestal line so that it become progeny + curr node			    
 		    if node_tags:
@@ -743,17 +743,17 @@ class LineagePanel(wx.Panel):
     def _on_mouse_click(self, evt):
         if self.current_node is None:
             return
-    
-	#self.cursor_pos = (evt.X, evt.Y)
-	#print self.cursor_pos
-	
-        
+	# first check whehter the tag is Harvest if so call the method.
+	#self.remove_harvest_seed_track(self.current_node.tags[0])
+	    
+	    #meta.remove_field(ctags)
         # --- Update the Bench view ---
         try:
             bench = wx.GetApp().get_bench()
         except: 
             return
 	
+	bench.selected_harvest_inst = self.current_node.tags[0]
         bench.set_timepoint(self.current_node.get_timepoint())
         bench.taglistctrl.set_selected_protocols(
             [exp.get_tag_protocol(tag) for tag in self.current_node.get_tags()])
@@ -844,13 +844,41 @@ class LineagePanel(wx.Panel):
         return '\n'.join(['%s=%s'%(k, v) for k, v in meta.get_attribute_dict(exp.get_tag_protocol(protocol))])  
     
     #----------------------------------------------------------------------
-    def get_children_tags(self, node):
-	"""returns the children node tags"""
-	
-	    
-	return [exp.get_tag_stump(ctag, 2)
+    def get_children_tags(self, node, stump_no):
+	"""returns the children node tags"""    
+	return [exp.get_tag_stump(ctag, stump_no)
 	        for cnodes in timeline.get_progeny(node) if cnodes
 	        for ctag in cnodes.tags]	
+    
+    def remove_harvest_seed_track(self, h_tag):
+	'''Completely removes all events associated with a harvest_seed (sample transfer) track including the harvest seed coupled event'''
+	h_instance = exp.get_tag_instance(h_tag)
+	harvest_tp = exp.get_tag_timepoint(h_tag)
+	tag_list = [h_tag]
+	
+	for s_instance in meta.get_field_instances('Transfer|Seed|HarvestInstance'):
+	    if meta.get_field('Transfer|Seed|HarvestInstance|%s'%s_instance) == h_instance:
+		s_tag = 'Transfer|Seed|Wells|%s|%s'%(s_instance, str(harvest_tp+1)) # coupled seed is always 1 min after from harvest
+		for tpnode in self.nodes_by_timepoint[harvest_tp+1]:
+		    if tpnode:
+			if s_tag in tpnode.tags:
+			    for c_tag in self.get_children_tags(tpnode, 5):
+				if c_tag.startswith('Transfer|Harvest'): # in case further harvest-seed is there then make it recursive
+				    self.remove_harvest_seed_track(c_tag)
+				else:
+				    for s_well in meta.get_field(s_tag):
+					c_wells = meta.get_field(c_tag)
+					if s_well in c_wells:
+					    c_wells.remove(s_well)
+					    meta.remove_associated_dataacquis_tag([s_well]) 
+					    if c_wells:  # if at least one other affected well
+						meta.set_field(c_tag, c_wells)
+					    else:
+						meta.remove_field(c_tag) # tag with single well
+						meta.remove_timeline_attachments(exp.get_tag_timepoint(c_tag))
+			    meta.remove_field(h_tag)
+			    meta.remove_field(s_tag)		    
+			    meta.remove_harvest_seed_tags(h_instance, s_instance)	
 	
    
     def find_ancestral_tags(self, node):

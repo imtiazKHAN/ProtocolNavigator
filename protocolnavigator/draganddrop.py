@@ -62,10 +62,10 @@ class MyFileDropTarget(wx.FileDropTarget):
         self.window = window
         
     def OnDropFiles(self, x, y, filenames):
-        list = []
+        f_list = []
         for file in filenames:
-            list.append(file)
-        self.window.GetParent().file_list.extend(list)    
+            f_list.append(file)
+        self.window.GetParent().file_list.extend(f_list)    
         self.showFiles()
     
     def showFiles(self): 

@@ -30,6 +30,7 @@ class Bench(wx.Panel):
         self.bot_panel = wx.Panel(self.splitter)
         self.splitter.SplitHorizontally(self.top_panel, self.bot_panel)
 	self.splitter.SetSashGravity(0.6)
+	self.selected_harvest_inst = None
         
         # --- CREATE WIDGETS ---
         # TOP PANEL
@@ -259,21 +260,29 @@ class Bench(wx.Panel):
 		lineage_panel.timeline_panel.on_note_icon_add()		
 		
     def on_del_event(self, evt):
-        protocols = self.taglistctrl.get_selected_protocols()
-        if protocols == []:
-	    dial = wx.MessageDialog(None, 'No event was found for deletion\nor\nCan not undo cell transfer event', 'Error', wx.OK | wx.ICON_ERROR)
-	    dial.ShowModal()              
-            return
-        
-        protocol = protocols[0]
-        prefix, instance = protocol.rsplit('|',1)   
-	wells_tag = '%s|Wells|%s|%s'%(prefix, instance, self.get_selected_timepoint())
-	meta.remove_field(wells_tag) 
-	if prefix.startswith('DataAcquis'):
-	    for images_tag in  meta.get_matching_tags('%s|Images|%s|%s|*'%(prefix, instance, self.get_selected_timepoint())):
-		meta.remove_field(images_tag)
-        self.update_well_selections()
-	self.del_evt_button.Disable()
+	if self.selected_harvest_inst.startswith('Transfer|Harvest'):
+	    #Make users aware that whole track will be deleted
+	    try:
+		lineage_panel = wx.GetApp().get_lineage()
+	    except: 
+		return	
+	    lineage_panel.lineage_panel.remove_harvest_seed_track(self.selected_harvest_inst)
+	else:
+	    protocols = self.taglistctrl.get_selected_protocols() 
+	    if protocols == []:
+		dial = wx.MessageDialog(None, 'No event was found for deletion\nor\nCan not undo cell transfer event', 'Error', wx.OK | wx.ICON_ERROR)
+		dial.ShowModal()              
+		return
+	    
+	    protocol = protocols[0]
+	    prefix, instance = protocol.rsplit('|',1)   
+	    wells_tag = '%s|Wells|%s|%s'%(prefix, instance, self.get_selected_timepoint())
+	    meta.remove_field(wells_tag) 
+	    if prefix.startswith('DataAcquis'):
+		for images_tag in  meta.get_matching_tags('%s|Images|%s|%s|*'%(prefix, instance, self.get_selected_timepoint())):
+		    meta.remove_field(images_tag)
+	    self.update_well_selections()
+	    self.del_evt_button.Disable()
         
 
     def update_well_selections(self):

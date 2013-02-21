@@ -120,21 +120,21 @@ class PrintProtocol(wx.Frame):
 	microscopes = meta.get_field_instances('Instrument|Microscope')
 	flowcytometers = meta.get_field_instances('Instrument|Flowcytometer')
 	
-	if microscopes:
-	    for instance in microscopes:
-		protocol_info = self.decode_event_description('Instrument|Microscope|%s'%instance)
-		self.printfile.write('<br /><table border="1"><tr><th colspan="2" align="center"><i>'+protocol_info[0]+' channel settings (microscope instance %s)'%instance+'</i></th></tr>')	
-		for component in protocol_info[1]:
-		    comp_type = component[0][0]
-		    comp_name = component[0][1]
-		    comp_attributes = component[1]
-		    #self.printfile.write('<tr><td width=10% align="center">'+comp_type+'</td>')
-		    self.printfile.write('<tr><code><td width=20% align="center"><font size="2"><b>'+comp_name+'</b></font></code></td>')
-		    self.printfile.write('<td  width=80%  align="left">')		
-		    for attr in comp_attributes:
-			self.printfile.write('<code><font size="2"><b>'+attr[0]+': </b></font></code><code><font size="1">'+attr[1]+',  </font></code>')
-		    self.printfile.write('</td></tr>')
-		self.printfile.write('</table><p></p>')			
+	#if microscopes:
+	    #for instance in microscopes:
+		#protocol_info = self.decode_event_description('Instrument|Microscope|%s'%instance)
+		#self.printfile.write('<br /><table border="1"><tr><th colspan="2" align="center"><i>'+protocol_info[0]+' channel settings (microscope instance %s)'%instance+'</i></th></tr>')	
+		#for component in protocol_info[1]:
+		    #comp_type = component[0][0]
+		    #comp_name = component[0][1]
+		    #comp_attributes = component[1]
+		    ##self.printfile.write('<tr><td width=10% align="center">'+comp_type+'</td>')
+		    #self.printfile.write('<tr><code><td width=20% align="center"><font size="2"><b>'+comp_name+'</b></font></code></td>')
+		    #self.printfile.write('<td  width=80%  align="left">')		
+		    #for attr in comp_attributes:
+			#self.printfile.write('<code><font size="2"><b>'+attr[0]+': </b></font></code><code><font size="1">'+attr[1]+',  </font></code>')
+		    #self.printfile.write('</td></tr>')
+		#self.printfile.write('</table><p></p>')			
 			
 	#if flowcytometers:
 	    #for instance in flowcytometers:
@@ -417,7 +417,7 @@ class PrintProtocol(wx.Frame):
 		if exp.get_tag_event(protocol) == 'Wash': 
 		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
 		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Washing </th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
-		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')
+		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')			
 		    if 'Protocol Name' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Protocol Name</b></font></code></td></tr>')
 			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Protocol Name']+'</font></code></td></tr>')	
@@ -541,65 +541,71 @@ class PrintProtocol(wx.Frame):
 			for row in protocol_info['Procedure']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')		
 		    self.printfile.write('</table>')		
-		    self.printlocation(spatial_info)		
-		    
-                #if exp.get_tag_event(protocol) == 'Dry': 
-                    #self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
-		                         #'</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Drying</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
-		    #self.printfile.write('<code><font size="1">'+protocol_info[0]+'</font></code>') # header part
-		    #for element in protocol_info[1]:  # step description
-			#description = element[0]
-			#duration = element[1]
-			#temp = element[2]
-			#if len(duration) > 0: # duration is mentioned
-			    #duration = ' for %s minutes'%element[1]			    
-			#if len(temp) > 0: # duration is mentioned
-			    #temp = ' at %s C.'%element[2]
-			#self.printfile.write('<code><font size="1">'+description+duration+temp+'</font></code><br />')		    
-		    #self.printlocation(spatial_info) 
+		    self.printlocation(spatial_info)
+		
+		if exp.get_tag_event(protocol) == 'FCS': 
+		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
+		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Flow Data</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
+		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')	
+		    if 'Instrument Instance' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Instrument Used: </b>Flowcytometer instance '+protocol_info['Instrument Instance']+' was used for this purpose</font></code></td></tr>')				
+		    if 'File Format' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>File Format: </b>'+protocol_info['File Format']+'</font></code></td></tr>')
+		    if 'Software' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Software: </b>'+protocol_info['Software']+'</font></code></td></tr>')				
+		    self.printfile.write('</table>')
+		    self.printLoacationandURL(spatial_info, instance,timepoint, 'FCS')
+		           
+                if exp.get_tag_event(protocol) == 'HCS': 
+		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
+		                        '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Static Image Data</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
+		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')	
+		    if 'Instrument Instance' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Instrument Used: </b>Microscope instance '+protocol_info['Instrument Instance']+' was used for this purpose</font></code></td></tr>')				
+		    if 'File Format' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>File Format: </b>'+protocol_info['File Format']+'</font></code></td></tr>')
+		    if 'Pixel Size' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Pixel Size: </b>'+protocol_info['Pixel Size']+'</font></code></td></tr>')
+		    if 'Pixel Convertion' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Pixel Convertion: </b>'+protocol_info['Pixel Convertion']+'</font></code></td></tr>')
+		    if 'Software' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Software: </b>'+protocol_info['Software']+'</font></code></td></tr>')				
+		    self.printfile.write('</table>')
+		    self.printLoacationandURL(spatial_info, instance,timepoint, 'HCS')
 
-                #if exp.get_tag_event(protocol) == 'Incubator': 
-                    #self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
-		                         #'</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Incubation</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
-		    #self.printfile.write('<code><font size="1">'+protocol_info[0]+'</font></code>') # header part
-		    #for element in protocol_info[1]:  # step description
-			#description = element[0]
-			#duration = element[1]
-			#temp = element[2]
-			#if len(duration) > 0: # duration is mentioned
-			    #duration = ' for %s minutes'%element[1]			    
-			#if len(temp) > 0: # duration is mentioned
-			    #temp = ' at %s C.'%element[2]
-			#self.printfile.write('<code><font size="1">'+description+duration+temp+'</font></code><br />')	
-		    #self.printfile.write('</table><br />')
-		    #self.printlocation(spatial_info)
-                
-                #if exp.get_tag_event(protocol) == 'TLM': 
-                    #self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
-		                         #'</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Timelapse Imaging</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
-		    #self.printfile.write('<code><font size="2">'+protocol_info[0]+'</font></code><br />')
-		    #for element in protocol_info[1]:  # attributes
-			#self.printfile.write('<code><font size="2"><b>'+element[0]+'</b></font></code>')
-			#self.printfile.write('<code><font size="1">'+element[1]+'</font></code><br />')	
-		    #self.printLoacationandURL(spatial_info, instance,timepoint, 'TLM')		    
-		    
-                #if exp.get_tag_event(protocol) == 'HCS': 
-                    #self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
-		                         #'</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Static Imaging</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
-		    #self.printfile.write('<code><font size="2">'+protocol_info[0]+'</font></code><br />')
-		    #for element in protocol_info[1]:  # attributes
-			#self.printfile.write('<code><font size="2"><b>'+element[0]+'</b></font></code>')
-			#self.printfile.write('<code><font size="1">'+element[1]+'</font></code><br />')	
-		    #self.printLoacationandURL(spatial_info, instance,timepoint, 'HCS')		    
-               
-                #if exp.get_tag_event(protocol) == 'FCS': 
-                    #self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
-		                         #'</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>FCS File Acquisition</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
-		    #self.printfile.write('<code><font size="2">'+protocol_info[0]+'</font></code><br />')
-		    #for element in protocol_info[1]:  # attributes
-			#self.printfile.write('<code><font size="2"><b>'+element[0]+'</b></font></code>')
-			#self.printfile.write('<code><font size="1">'+element[1]+'</font></code><br />')	
-		    #self.printLoacationandURL(spatial_info, instance,timepoint, 'FCS')	
+		if exp.get_tag_event(protocol) == 'TLM': 
+		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
+		                        '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Timelapse Image Data</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
+		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')	
+		    if 'Instrument Instance' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Instrument Used: </b>Microscope instance '+protocol_info['Instrument Instance']+' was used for this purpose</font></code></td></tr>')				
+		    if 'File Format' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>File Format: </b>'+protocol_info['File Format']+'</font></code></td></tr>')
+		    if 'Time Interval' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Time Interval: </b>'+protocol_info['Time Interval']+'</font></code></td></tr>')
+		    if 'Frame Number' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Frame Number: </b>'+protocol_info['Frame Number']+'</font></code></td></tr>')
+		    if 'Stack Process' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Stack Process: </b>'+protocol_info['Stack Process']+'</font></code></td></tr>')
+		    if 'Pixel Size' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Pixel Size: </b>'+protocol_info['Pixel Size']+'</font></code></td></tr>')
+		    if 'Pixel Convertion' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Pixel Convertion: </b>'+protocol_info['Pixel Convertion']+'</font></code></td></tr>')
+		    if 'Software' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Software: </b>'+protocol_info['Software']+'</font></code></td></tr>')				
+		    self.printfile.write('</table>')
+		    self.printLoacationandURL(spatial_info, instance,timepoint, 'TLM')		    
+
+		if exp.get_tag_event(protocol) == 'RHE': 
+		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
+		                        '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Rheometer Data</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
+		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')	
+		    if 'Instrument Instance' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Instrument Used: </b>Rheometer instance '+protocol_info['Instrument Instance']+' was used for this purpose</font></code></td></tr>')				
+		    if 'Procedure' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure</b></font></code></td></tr>')
+			for row in protocol_info['Procedure']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')
 				
                 #if exp.get_tag_event(protocol) == 'Text': # to implement if there are events at the same timepoint write those event first then the critical point
                     #self.printfile.write('<code><font size="1" color="#FF0000">Critical point: '+meta.get_field('Notes|Text|Description|%s'%instance)+'</font></code><br />')                
@@ -1082,7 +1088,7 @@ class PrintProtocol(wx.Frame):
 	    if meta.get_field('DataAcquis|FCS|FlowcytometerInstance|%s'%instance) is not None:
 		metadata['Instrument Instance'] = meta.get_field('DataAcquis|FCS|FlowcytometerInstance|%s'%instance)
 	    if meta.get_field('DataAcquis|FCS|Format|%s'%instance) is not None:
-		metadata['Format'] = meta.get_field('DataAcquis|FCS|Format|%s'%instance)
+		metadata['File Format'] = meta.get_field('DataAcquis|FCS|Format|%s'%instance)
 	    if meta.get_field('DataAcquis|FCS|Software|%s'%instance) is not None:
 		metadata['Software'] = meta.get_field('DataAcquis|FCS|Software|%s'%instance)
 	    return metadata
@@ -1098,7 +1104,7 @@ class PrintProtocol(wx.Frame):
 	    if meta.get_field('DataAcquis|HCS|MicroscopeInstance|%s'%instance) is not None:
 		metadata['Instrument Instance'] = meta.get_field('DataAcquis|HCS|MicroscopeInstance|%s'%instance)
 	    if meta.get_field('DataAcquis|HCS|Format|%s'%instance) is not None: 
-		metadata['Format'] = meta.get_field('DataAcquis|HCS|Format|%s'%instance)
+		metadata['File Format'] = meta.get_field('DataAcquis|HCS|Format|%s'%instance)
 	    if meta.get_field('DataAcquis|HCS|PixelSize|%s'%instance) is not None: 
 		metadata['Pixel Size'] = meta.get_field('DataAcquis|HCS|PixelSize|%s'%instance)
 	    if meta.get_field('DataAcquis|HCS|PixelConvert|%s'%instance) is not None: 
@@ -1111,13 +1117,13 @@ class PrintProtocol(wx.Frame):
 	    if meta.get_field('DataAcquis|TLM|MicroscopeInstance|%s'%instance) is not None:
 		metadata['Instrument Instance'] = meta.get_field('DataAcquis|TLM|MicroscopeInstance|%s'%instance)
 	    if meta.get_field('DataAcquis|TLM|Format|%s'%instance) is not None: 
-		metadata['Format'] = meta.get_field('DataAcquis|TLM|Format|%s'%instance)
+		metadata['File Format'] = meta.get_field('DataAcquis|TLM|Format|%s'%instance)
 	    if meta.get_field('DataAcquis|TLM|TimeInterval|%s'%instance) is not None: 
 		metadata['Time Interval'] = meta.get_field('DataAcquis|TLM|TimeInterval|%s'%instance)	    
 	    if meta.get_field('DataAcquis|TLM|FrameNumber|%s'%instance) is not None: 
 		metadata['Frame Number'] = meta.get_field('DataAcquis|TLM|FrameNumber|%s'%instance)	    
 	    if meta.get_field('DataAcquis|TLM|StackProcess|%s'%instance) is not None: 
-		metadata['Format'] = meta.get_field('DataAcquis|TLM|StackProcess|%s'%instance)	    	    
+		metadata['Stack Process'] = meta.get_field('DataAcquis|TLM|StackProcess|%s'%instance)	    	    
 	    if meta.get_field('DataAcquis|TLM|PixelSize|%s'%instance) is not None: 
 		metadata['Pixel Size'] = meta.get_field('DataAcquis|TLM|PixelSize|%s'%instance)
 	    if meta.get_field('DataAcquis|TLM|PixelConvert|%s'%instance) is not None: 
@@ -1126,7 +1132,13 @@ class PrintProtocol(wx.Frame):
 		metadata['Software'] = meta.get_field('DataAcquis|TLM|Software|%s'%instance)	    
 	    return metadata
         
-        
+	if exp.get_tag_event(protocol) == 'RHE':
+	    if meta.get_field('DataAcquis|RHE|RheometerInstance|%s'%instance) is not None:
+		metadata['Instrument Instance'] = meta.get_field('DataAcquis|RHE|RheometerInstance|%s'%instance) 
+	    if meta.get_field('DataAcquis|RHE|Step1|%s'%instance) is not None: 
+		metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')
+	    return metadata
+
         # ***********************************   CHANGE ENDS    ******************************#
 	
 	
@@ -1266,11 +1278,13 @@ class PrintProtocol(wx.Frame):
 	    # write the image urls
 	    self.printfile.write('<br /><table border="0">')
 	    for well in wells:
-		pw = plate, well
-		self.printfile.write('<tr><code><td width=25% align="left"><font size="1"><b>'+plate+'_ '+well+'-> </b></font></code></td>')
+		pw = []
+		pw.append((plate, well))
+		self.printfile.write('<tr><code><td width=25% align="left"><font size="1"><b>'+plate+'_'+well+'-> </b></font></code></td>')
 		self.printfile.write('<td width=75% align="left">')
-		for url in meta.get_field('DataAcquis|%s|Images|%s|%s|%s'%(format, instance,timepoint, pw), []):
-		    self.printfile.write('<code><font size="1">'+url+'</font></code><br />')
+		urls = meta.get_field('DataAcquis|%s|Images|%s|%s|%s'%(format, instance,timepoint, str(pw)), [])
+		for url in urls:
+		    self.printfile.write('<code><font size="1">Data> '+url[0]+'<br />Metadata> '+url[1]+'</font></code><br />')
 		self.printfile.write('</td></tr>')
 	    self.printfile.write('</table>')	
 	    

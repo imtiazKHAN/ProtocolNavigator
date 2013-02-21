@@ -154,7 +154,7 @@ class VesselPanel(wx.Panel):
 	if dlg.ShowModal() == wx.ID_OK: 	    
 	    destination_wells = dlg.get_selected_platewell_ids()
 	    if not destination_wells:
-		self.remove_HS_TAGS(new_h_inst, new_s_inst)		
+		meta.remove_harvest_seed_tags(new_h_inst, new_s_inst)		
 		dlg = wx.MessageDialog(None, 'No destination vessel was selected', 'Seeding...', wx.OK| wx.ICON_ERROR)
 		dlg.ShowModal()
 		return		
@@ -162,7 +162,7 @@ class VesselPanel(wx.Panel):
 	    meta.set_field('Transfer|Seed|Wells|%s|%s'%(new_s_inst, bench.get_selected_timepoint() + 1), destination_wells) # For now all reseeding instances are set 1 minute after harvesting
 	    bench.update_well_selections()
 	else:
-	    self.remove_HS_TAGS(new_h_inst, new_s_inst)
+	    meta.remove_harvest_seed_tags(new_h_inst, new_s_inst)
 	    return
 	#else:
 	    #self.vesselscroller.get_vessel(platewell_id[0]).deselect_well_id(platewell_id)
@@ -170,16 +170,16 @@ class VesselPanel(wx.Panel):
 	    #return	    
 	
         
-    def remove_HS_TAGS(self, h_inst, s_inst):
-	#remove all tags from the metadata
-	h_attrs = meta.get_attribute_list_by_instance('Transfer|Harvest', h_inst)
-	if h_attrs:
-	    for h_attr in h_attrs:
-		meta.remove_field('Transfer|Harvest|%s|%s'%(h_attr, h_inst), notify_subscribers =False)
-	s_attrs = meta.get_attribute_list_by_instance('Transfer|Seed', s_inst)
-	if s_attrs:
-	    for s_attr in s_attrs:
-		meta.remove_field('Transfer|Seed|%s|%s'%(s_attr, s_inst), notify_subscribers =False)	
+    #def remove_HS_TAGS(self, h_inst, s_inst):
+	##remove all tags from the metadata
+	#h_attrs = meta.get_attribute_list_by_instance('Transfer|Harvest', h_inst)
+	#if h_attrs:
+	    #for h_attr in h_attrs:
+		#meta.remove_field('Transfer|Harvest|%s|%s'%(h_attr, h_inst), notify_subscribers =False)
+	#s_attrs = meta.get_attribute_list_by_instance('Transfer|Seed', s_inst)
+	#if s_attrs:
+	    #for s_attr in s_attrs:
+		#meta.remove_field('Transfer|Seed|%s|%s'%(s_attr, s_inst), notify_subscribers =False)	
 	
     #def remove_RowTAGs(self, rows, protocol, token):
 	#tag_stump = get_tag_stump(protocol, 2)

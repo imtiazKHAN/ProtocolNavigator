@@ -92,6 +92,36 @@ class ExperimentSettings(Singleton):
             self.notify_subscribers(tag)
         print 'DEL FIELD: %s'%(tag)
     
+    def remove_harvest_seed_tags(self, h_inst, s_inst):
+	'''removes all associated tags with coupled harvest seed tags e.g density, steps etc'''
+	h_attrs = self.get_attribute_list_by_instance('Transfer|Harvest', h_inst)
+	s_attrs = self.get_attribute_list_by_instance('Transfer|Seed', s_inst)
+	if h_attrs:
+	    for h_attr in h_attrs:
+		self.remove_field('Transfer|Harvest|%s|%s'%(h_attr, h_inst), notify_subscribers =False)
+	if s_attrs:
+	    for s_attr in s_attrs:
+		self.remove_field('Transfer|Seed|%s|%s'%(s_attr, s_inst), notify_subscribers =False)    
+		
+    def remove_associated_dataacquis_tag(self, wells):
+	'''removes all image tags associated with this timepoint and wells  e.g. DataAcquis|*|Images|*|timepoint|[(Plate_Well), ()]'''
+	image_tags = self.get_matching_tags('DataAcquis|*|Images|*|*|%s'%str(wells))
+	if image_tags:
+	    for i_tag in image_tags:
+		self.remove_field(i_tag)
+	    
+    def remove_timeline_attachments(self, timepoint):
+	'''removes all notes and attachment from the timeline at the given timepoint'''
+	note_tags = self.get_matching_tags('Notes|*|%s|*'%timepoint)
+	attach_tags = self.get_matching_tags('Attachments|*|%s|*'%timepoint)
+	if note_tags:
+	    for n_tag in note_tags:
+		self.remove_field(n_tag)
+	if attach_tags:
+	    for a_tag in attach_tags:
+		self.remove_field(a_tag)	
+
+    
     def get_action_tags(self):
         '''returns all existing TEMPORAL tags as list'''
         return [tag for tag in self.global_settings 
