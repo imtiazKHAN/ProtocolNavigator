@@ -24,7 +24,7 @@ class FileListDialog(wx.Dialog):
         self.drop_target = MyFileDropTarget(self.text_box)
         self.text_box.SetDropTarget(self.drop_target)        
 	
-        cut_bmp = icons.cut.Scale(20.0, 20.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
+        cut_bmp = icons.undo.Scale(20.0, 20.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
 	self.clear_btn = wx.BitmapButton(self, wx.ID_CLEAR, cut_bmp)
 	self.clear_btn.SetToolTipString("Clear file links.")
         self.ok_btn = wx.Button(self, wx.ID_OK)

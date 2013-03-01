@@ -736,6 +736,8 @@ class ExperimentSettings(Singleton):
 	    icon = icons.drying.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
 	elif act =='Medium':
 	    icon = icons.medium.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+	elif act =='Initiation':
+	    icon = icons.initiation.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
 	elif act =='Incubation':
 	    icon = icons.incubator.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 
 	elif act =='RheoManipulation':
@@ -834,6 +836,7 @@ EVENT_RGB ={
     'Incubation': (224,27,224,100),
     'RheoManipulation': (224, 27, 244, 100),
     'Wash': (175,27,224,100),
+    'Initiation': (175,27,224,100),
     'Drying': (168,27224,100),
     'Medium': (122,27,224,100),
     'TLM': (224,194,27,100),

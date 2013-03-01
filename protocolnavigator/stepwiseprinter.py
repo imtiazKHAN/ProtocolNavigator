@@ -85,31 +85,95 @@ class PrintProtocol(wx.Frame):
         
         #---- Overview ---#
         protocol_info =  self.decode_event_description('Overview|Project|1') #this 1 is psedo to make it coherent with other instance based tabs
-    
-        self.printfile.write('<html><head><title>Experiment Protocol</title></head>'
-                 '<br/><body><h1>'+protocol_info[0]+'</h1>'
-                 '<h3>1. Experiment Overview</h3>'                
-                )
-        for element in protocol_info[1]:
-            self.printfile.write('<code><font size="2"><b>'+element[0]+': </b></font></code><code><font size="1">'+element[1]+'</font></code><br />')
-        
+        self.printfile.write('<html><head><title>Experiment Protocol</title></head><br/><body><h1>'+protocol_info.get('Title', '')+'</h1><h3>1. Experiment Overview</h3>')
+	self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')
+	if 'Aims' in protocol_info:
+	    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Aims: </b>'+protocol_info['Aims']+'</font></code></td></tr>')
+	if 'Fund' in protocol_info:	
+	    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Funding Code: </b>'+protocol_info['Fund']+'</font></code></td></tr>')
+	if 'Keywords' in protocol_info:	
+	    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Keywords: </b>'+protocol_info['Keywords']+'</font></code></td></tr>')
+	if 'ExptNum' in protocol_info:
+	    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Experiment Number: </b>'+protocol_info['ExptNum']+'</font></code></td></tr>')
+	if 'ExptDate' in protocol_info:
+	    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Experiment start Date: </b>'+protocol_info['ExptDate']+'</font></code></td></tr>')
+	if 'Publications' in protocol_info:
+	    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Publications: </b>'+protocol_info['Publications']+'</font></code></td></tr>')
+	if 'Experimenter' in protocol_info:
+	    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Experimenter: </b>'+protocol_info['Experimenter']+'</font></code></td></tr>')
+	if 'Institution' in protocol_info:
+	    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Institution: </b>'+protocol_info['Institution']+'</font></code></td></tr>')
+	if 'Department' in protocol_info:
+	    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Department: </b>'+protocol_info['Department']+'</font></code></td></tr>')
+	if 'Address' in protocol_info:
+	    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Address: </b>'+protocol_info['Address']+'</font></code></td></tr>')
+	if 'Status' in protocol_info:
+	    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Status: </b>'+protocol_info['Status']+'</font></code></td></tr>')
+	self.printfile.write('</table>')
         #---- Sample ----#
 	cellline = meta.get_field_instances('Sample|CellLine')
-	self.printfile.write('<h3>2. Cell Line (stock culture)</h3>')	
+	self.printfile.write('<h3>2. Sample (Cell Line)</h3>')	
 	if cellline:
 	    for instance in cellline:
 		protocol_info = self.decode_event_description('Sample|CellLine|%s'%instance)
-		self.printfile.write('<br /><table border="0"><tr><th colspan="2" align="center"><i>'+protocol_info[0]+'</i></th></tr>')
-		for element in protocol_info[1]:
-		    self.printfile.write('<tr><td width=10% align="center"><code><font size="2"><b>'+element[0]+'</b></font></code></td>')
-		    self.printfile.write('<td  width=90%  align="left"><code><font size="1">'+element[1]+'</font></code></td></tr>')
-		if protocol_info[2]:
-		    self.printfile.write('<tr><td width=10% align="center"><code><font size="2"><b>Maintenance History</b></font></code></td>')
-		    self.printfile.write('<td  width=90%  align="left"><code><font size="1"></font></code></td></tr>')	
-		    for pass_info in protocol_info[2]:
-			self.printfile.write('<tr><td width=10% align="center"></td>')
-			self.printfile.write('<td  width=90%  align="left"><code><font size="1">'+pass_info+'</font></code></td></tr>')				
-		self.printfile.write('</table><p></p>')
+		self.printfile.write('<code><font size="1"><b>' +protocol_info['Name']+ ' cell line (Authority ' +protocol_info.get('Authority', '')+ ' , Catalogue No: '+protocol_info.get('CatalogueNo', '')+ ') was used. This will be referred as Cell Line Instance ' +str(instance)+ '</b></font></code>')		
+		self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')
+		if 'Depositors' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Depositors: </b>'+protocol_info['Depositors']+'</font></code></td></tr>')
+		if 'Biosafety' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Biosafety: </b>'+protocol_info['Biosafety']+'</font></code></td></tr>')
+		if 'Shipment' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Shipment: </b>'+protocol_info['Shipment']+'</font></code></td></tr>')
+		if 'Permit' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Permit: </b>'+protocol_info['Permit']+'</font></code></td></tr>')	
+		if 'GrowthProperty' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Growth Property: </b>'+protocol_info['GrowthProperty']+'</font></code></td></tr>')
+		if 'Organism' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Organism: </b>'+protocol_info['Organism']+'</font></code></td></tr>')		    
+		if 'Morphology' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Morphology: </b>'+protocol_info['Morphology']+'</font></code></td></tr>')		    
+		if 'Organ' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Organ: </b>'+protocol_info['Organ']+'</font></code></td></tr>')		    
+		if 'Disease' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Disease: </b>'+protocol_info['Disease']+'</font></code></td></tr>')		    
+		if 'Products' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Products: </b>'+protocol_info['Products']+'</font></code></td></tr>')		    
+		if 'Applications' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Applications: </b>'+protocol_info['Applications']+'</font></code></td></tr>')		    
+		if '' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Receptors: </b>'+protocol_info['Receptors']+'</font></code></td></tr>')		    
+		if 'Antigen' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Antigen: </b>'+protocol_info['Antigen']+'</font></code></td></tr>')		    
+		if 'DNA' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>DNA: </b>'+protocol_info['DNA']+'</font></code></td></tr>')		    
+		if '' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Cytogenetic: </b>'+protocol_info['Cytogenetic']+'</font></code></td></tr>')		    
+		if 'Isoenzymes' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Isoenzymes: </b>'+protocol_info['Isoenzymes']+'</font></code></td></tr>')		    
+		if 'Age' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Age: </b>'+protocol_info['Age']+'</font></code></td></tr>')		    
+		if 'Gender' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Gender: </b>'+protocol_info['Gender']+'</font></code></td></tr>')		    
+		if 'Ethnicity' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Ethnicity: </b>'+protocol_info['Ethnicity']+'</font></code></td></tr>')		    
+		if 'Comments' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Comments: </b>'+protocol_info['Comments']+'</font></code></td></tr>')		    
+		if 'Publications' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Publications: </b>'+protocol_info['Publications']+'</font></code></td></tr>')		    
+		if 'RelProduct' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related Products: </b>'+protocol_info['RelProduct']+'</font></code></td></tr>')		    
+		if 'OrgPassageNo' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Orginal Passage No: </b>'+protocol_info['OrgPassageNo']+'</font></code></td></tr>')		    
+		if 'Preservation' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Preservation: </b>'+protocol_info['Preservation']+'</font></code></td></tr>')		    
+		if 'GrowthMedium' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Growth Medium: </b>'+protocol_info['GrowthMedium']+'</font></code></td></tr>')		    
+		
+		if 'Passage' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="2"><b>Maintenance History</b></font></code></td></tr>')
+		    for pass_info in protocol_info['Passage']:
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+pass_info+'</font></code></td></tr>')
+		self.printfile.write('</table><br />')
 		    
 	else:
 	    self.printfile.write('<code>No cell line was used for this experiment</code>')
@@ -119,37 +183,60 @@ class PrintProtocol(wx.Frame):
 	
 	microscopes = meta.get_field_instances('Instrument|Microscope')
 	flowcytometers = meta.get_field_instances('Instrument|Flowcytometer')
+	centrifuges = meta.get_field_instances('Instrument|Centrifuge')
+	incubators = meta.get_field_instances('Instrument|Incubator')
+	ovens = meta.get_field_instances('Instrument|Oven')
+	rheometers = meta.get_field_instances('Instrument|Rheometer')
+		
+	if microscopes:
+	    for instance in microscopes:
+		protocol_info = self.decode_event_description('Instrument|Microscope|%s'%instance)
+		self.printfile.write('<code><font size="1"><b>'+protocol_info.get('Name', 'Not Specified')+' Channel settings</b></font></code>')
+		# TODO: For different components the attributes of the components needs to be written
+		self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1">Hardware</font></code></th></tr>')
+		if 'Stand' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Stand: </b>'+' '.join(map(str,protocol_info['Stand']))+'</font></code></td></tr>')
+		if 'Condenser' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Condenser: </b>'+' '.join(map(str,protocol_info['Condenser']))+'</font></code></td></tr>')		
+		if 'Stage' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Stage: </b>'+' '.join(map(str,protocol_info['Stage']))+'</font></code></td></tr>')		
+		if 'Incubator' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Incubator: </b>'+' '.join(map(str,protocol_info['Incubator']))+'</font></code></td></tr>')		
+		self.printfile.write('</table>')
 	
-	#if microscopes:
-	    #for instance in microscopes:
-		#protocol_info = self.decode_event_description('Instrument|Microscope|%s'%instance)
-		#self.printfile.write('<br /><table border="1"><tr><th colspan="2" align="center"><i>'+protocol_info[0]+' channel settings (microscope instance %s)'%instance+'</i></th></tr>')	
-		#for component in protocol_info[1]:
-		    #comp_type = component[0][0]
-		    #comp_name = component[0][1]
-		    #comp_attributes = component[1]
-		    ##self.printfile.write('<tr><td width=10% align="center">'+comp_type+'</td>')
-		    #self.printfile.write('<tr><code><td width=20% align="center"><font size="2"><b>'+comp_name+'</b></font></code></td>')
-		    #self.printfile.write('<td  width=80%  align="left">')		
-		    #for attr in comp_attributes:
-			#self.printfile.write('<code><font size="2"><b>'+attr[0]+': </b></font></code><code><font size="1">'+attr[1]+',  </font></code>')
-		    #self.printfile.write('</td></tr>')
-		#self.printfile.write('</table><p></p>')			
+		self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1">Optics</font></code></th></tr>')
+		if 'LightSource' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>LightSource: </b>'+' '.join(map(str,protocol_info['LightSource']))+'</font></code></td></tr>')
+		if 'ExtFilter' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Excitation Filter: </b>'+' '.join(map(str,protocol_info['ExtFilter']))+'</font></code></td></tr>')		
+		if 'Mirror' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Mirror: </b>'+' '.join(map(str,protocol_info['Mirror']))+'</font></code></td></tr>')		
+		if 'SplitMirror' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>SplitMirror: </b>'+' '.join(map(str,protocol_info['SplitMirror']))+'</font></code></td></tr>')		
+		if 'EmsFilter' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Emission Filter: </b>'+' '.join(map(str,protocol_info['EmsFilter']))+'</font></code></td></tr>')		
+		if 'Lens' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Lens: </b>'+' '.join(map(str,protocol_info['Lens']))+'</font></code></td></tr>')		
+		if 'Detector' in protocol_info:
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Detector: </b>'+' '.join(map(str,protocol_info['Detector']))+'</font></code></td></tr>')		
+		self.printfile.write('</table>')
+		
+					
 			
-	#if flowcytometers:
-	    #for instance in flowcytometers:
-		#protocol_info = self.decode_event_description('Instrument|Flowcytometer|%s'%instance)
-		#self.printfile.write('<br /><table border="1"><tr><th colspan="2" align="center"><i>'+protocol_info[0]+' (flowcytometer instance %s)'%instance+'</i></th></tr>')
-		#for element in protocol_info[1]:  # channels
-		    #self.printfile.write('<tr><code><td width=10% align="center"><font size="2"><b>'+element[0]+'</b></font></code></td>')
-		    #self.printfile.write('<code><td width=90% align="left"><font size="1">')
-		    #for i, component in enumerate(element[1]):  # config of each component of this channel
-			#if i == len(element[1])-1:
-			    #self.printfile.write(meta.decode_ch_component(component[0]))
-			#else:
-			    #self.printfile.write(meta.decode_ch_component(component[0])+' >> ')
-		    #self.printfile.write('</font></td></code></tr>')
-		#self.printfile.write('</table><p></p>')
+	if flowcytometers:
+	    for instance in flowcytometers:
+		protocol_info = self.decode_event_description('Instrument|Flowcytometer|%s'%instance)
+		self.printfile.write('<br /><table border="1"><tr><th colspan="2" align="center"><i>'+protocol_info['Name']+ ' Flowcytometer (%s %s) was used. This will be referred as instance %s' %(protocol_info.get('Manufacturer', ''), protocol_info.get('Model', ''), str(instance))+'</i></th></tr>')		
+		for ch, components in protocol_info.iteritems():
+		    if ch not in ['Name', 'Manufacturer', 'Model']:
+			self.printfile.write('<tr><code><td width=10% align="center"><font size="2"><b>'+ch+'</b></font></code></td>')
+			description = ''
+			for componet in components:   # enumerate and put >> sign except the last component
+			    print componet
+			    description += meta.decode_ch_component(componet[0])
+			self.printfile.write('<code><td width=90% align="left">'+description+'<font size="1"></font></td></code></tr>')			
+		self.printfile.write('</table><p></p>')
+		
 	 
 	
         #---- Material and Method Secion ---#
@@ -198,30 +285,20 @@ class PrintProtocol(wx.Frame):
 		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
 		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Chemical Perturbation</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
 		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')
-		    if 'Protocol Name' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Protocol Name</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Protocol Name']+'</font></code></td></tr>')
-		    if 'Chemical Name' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Chemical Name</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Chemical Name']+'</font></code></td></tr>')
-		    if 'Perturbing Concentration' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Perturbing Concentration</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Perturbing Concentration']+'</font></code></td></tr>')	
-		    if 'Stock Concentration' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Stock Concentration</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Stock Concentration']+'</font></code></td></tr>')	
+		    if 'Name' in protocol_info:	
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Chemical Name</b>'+protocol_info['Name']+'</font></code></td></tr>')
+		    if 'PerturbConc' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Perturbing Concentration</b>'+' '.join(protocol_info['PerturbConc'])+'</font></code></td></tr>')	
+		    if 'StockConc' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Stock Concentration</b>'+' '.join(protocol_info['StockConc'])+'</font></code></td></tr>')	
 		    if 'Manufacturer' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Manufacturer</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Manufacturer']+'</font></code></td></tr>')	
-		    if 'Catalogue Number' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Catalogue Number</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Catalogue Number']+'</font></code></td></tr>')	
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Manufacturer</b>'+protocol_info['Manufacturer']+'</font></code></td></tr>')	
+		    if 'CatNum' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Catalogue Number</b>'+protocol_info['CatNum']+'</font></code></td></tr>')	
 		    if 'Storage' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Storage</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Storage']+'</font></code></td></tr>')			
-		    if 'Other Information' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Other Information']+'</font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Storage</b>'+protocol_info['Storage']+'</font></code></td></tr>')			
+		    if 'Other' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information</b>'+protocol_info['Other']+'</font></code></td></tr>')
 		    if 'Additive' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Additive</b></font></code></td></tr>')
 			for row in protocol_info['Additive']:
@@ -233,9 +310,9 @@ class PrintProtocol(wx.Frame):
 		    if 'URL' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related website</b></font></code></td></tr>')
 			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['URL']+'</font></code></td></tr>')
-		    if 'Attached Files' in protocol_info:
+		    if 'AttachFiles' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files</b></font></code></td></tr>')
-			for row in protocol_info['Attached Files']:
+			for row in protocol_info['AttachFiles']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')						    
 		    self.printfile.write('</table>')		
 		    self.printlocation(spatial_info)		
@@ -643,173 +720,42 @@ class PrintProtocol(wx.Frame):
     def decode_event_description(self, protocol):
 	meta = ExperimentSettings.getInstance()
 	instance = exp.get_tag_attribute(protocol)
+	tag_stump = exp.get_tag_stump(protocol, 2)
 	metadata = {}
 	
         if exp.get_tag_type(protocol) == 'Overview':
-	    header = ''
-	    info = []
-	    
-            header += meta.get_field('Overview|Project|Title', default='Not specified')
-            info.append(('Aims', meta.get_field('Overview|Project|Aims', default='Not specified')))
-	    info.append(('Funding Code', meta.get_field('Overview|Project|Fund', default='Not specified')))
-            info.append(('Keywords', meta.get_field('Overview|Project|Keywords', default='Not specified')))
-	    info.append(('Experiment Number', meta.get_field('Overview|Project|ExptNum', default='Not specified')))
-            info.append(('Experiment date', meta.get_field('Overview|Project|ExptDate', default='Not specified')))
-            info.append(('Relevant publications', meta.get_field('Overview|Project|Publications', default='Not specified')))
-	    info.append(('Experimenter', meta.get_field('Overview|Project|Experimenter', default='Not specified')))
-            info.append(('Institution', meta.get_field('Overview|Project|Institution', default='Not specified')))
-	    info.append(('Department', meta.get_field('Overview|Project|Department', default='Not specified')))
-            info.append(('Address', meta.get_field('Overview|Project|Address', default='Not specified')))
-	    info.append(('Experiment Status', meta.get_field('Overview|Project|Status', default='Not specified')))
-	    
-            return (header, info)
+	    for attr in meta.get_attribute_list(tag_stump):
+		metadata[attr] = meta.get_field(tag_stump+'|'+attr)
+	    return metadata
 	
 	if exp.get_tag_event(protocol) == 'CellLine':
-	    header = ''
-	    info = []
-	    footer = []	   
-	    
-	    header += '%s cell line (Authority %s, Ref: %s) was used. This will be referred as Cell Line Instance %s' %(meta.get_field('Sample|CellLine|Name|%s'%instance, default='Not specified'),
-	                                                meta.get_field('Sample|CellLine|Authority|%s'%instance, default='Not specified'),	                                                
-	                                                 meta.get_field('Sample|CellLine|CatalogueNo|%s'%instance, default='Not specified'),
-	                                                 str(instance))
-	    info.append(('Depositors', meta.get_field('Sample|CellLine|Depositors|%s'%instance, default='Not specified')))
-	    info.append(('Biosafety Level', meta.get_field('Sample|CellLine|Biosafety|%s'%instance, default='Not specified')))
-	    info.append(('Shipment', meta.get_field('Sample|CellLine|Shipment|%s'%instance, default='Not specified')))
-	    info.append(('Permit', meta.get_field('Sample|CellLine|Permit|%s'%instance, default='Not specified')))
-	    info.append(('Growth Property', meta.get_field('Sample|CellLine|GrowthProperty|%s'%instance, default='Not specified')))
-	    info.append(('Organism', meta.get_field('Sample|CellLine|Organism|%s'%instance, default='Not specified')))
-	    info.append(('Morphology', meta.get_field('Sample|CellLine|Morphology|%s'%instance, default='Not specified')))
-	    info.append(('Organ', meta.get_field('Sample|CellLine|Organ|%s'%instance, default='Not specified')))    
-	    info.append(('Disease', meta.get_field('Sample|CellLine|Disease|%s'%instance, default='Not specified')))
-	    info.append(('Products', meta.get_field('Sample|CellLine|Products|%s'%instance, default='Not specified')))
-	    info.append(('Applications', meta.get_field('Sample|CellLine|Applications|%s'%instance, default='Not specified')))
-	    info.append(('Receptors', meta.get_field('Sample|CellLine|Receptors|%s'%instance, default='Not specified')))
-	    info.append(('Antigen', meta.get_field('Sample|CellLine|Antigen|%s'%instance, default='Not specified')))
-	    info.append(('DNA', meta.get_field('Sample|CellLine|DNA|%s'%instance, default='Not specified')))
-	    info.append(('Cytogenetic', meta.get_field('Sample|CellLine|Cytogenetic|%s'%instance, default='Not specified')))
-	    info.append(('Isoenzymes', meta.get_field('Sample|CellLine|Isoenzymes|%s'%instance, default='Not specified')))
-	    info.append(('Age of Organism (days)', meta.get_field('Sample|CellLine|Age|%s'%instance, default='Not specified')))
-	    info.append(('Gender', meta.get_field('Sample|CellLine|Gender|%s'%instance, default='Not specified')))
-	    info.append(('Ethnicity', meta.get_field('Sample|CellLine|Ethnicity|%s'%instance, default='Not specified')))
-	    info.append(('Comments', meta.get_field('Sample|CellLine|Comments|%s'%instance, default='Not specified')))
-	    info.append(('Publications', meta.get_field('Sample|CellLine|Publications|%s'%instance, default='Not specified')))
-	    info.append(('Related Products', meta.get_field('Sample|CellLine|RelProduct|%s'%instance, default='Not specified')))
-	    info.append(('Original Passage Number', meta.get_field('Sample|CellLine|OrgPassageNo|%s'%instance, default='Not specified')))
-	    info.append(('Preservation', meta.get_field('Sample|CellLine|Preservation|%s'%instance, default='Not specified')))
-	    info.append(('GrowthMedium', meta.get_field('Sample|CellLine|GrowthMedium|%s'%instance, default='Not specified')))
-	    
-	    passages = [attr for attr in meta.get_attribute_list_by_instance('Sample|CellLine', instance)
-			                        if attr.startswith('Passage')]
+	    passages = []
+	    for attr in meta.get_attribute_list_by_instance(tag_stump, instance):
+		if attr.startswith('Passage'):
+		    passages.append(attr)
+		else:
+		    metadata[attr] = meta.get_field(tag_stump+'|'+attr+'|'+instance)
 	    if passages:
-		for passage in passages:
-		    footer.append('%s was done by %s'%(passage, self.get_passage_admin_info(meta.get_field('Sample|CellLine|%s|%s'%(passage,instance)))))
-		    
-	    return (header, info, footer)	    	    
+		passage_info = []
+		for passage in sorted(passages, key=meta.stringSplitByNumbers):
+		    passage_info.append('%s was done by %s'%(passage, self.get_passage_admin_info(meta.get_field('Sample|CellLine|%s|%s'%(passage,instance)))))
+		metadata['Passage'] = passage_info
+	    return metadata         
 	
-	#if exp.get_tag_event(protocol) == 'Microscope':	    
-	    #header += '%s' %meta.get_field('Instrument|Microscope|ChannelName|%s'%instance, default = 'Not specified')
-	    
-	    #if meta.get_field('Instrument|Microscope|Stand|%s'%instance) is not None:
-		#component=('Hardware', 'Stand')
-		#attributes = []
-		#attributes.append(('Type', meta.get_field('Instrument|Microscope|Stand|%s'%instance)[0]))
-		#attributes.append(('Make', meta.get_field('Instrument|Microscope|Stand|%s'%instance)[1]))
-		#attributes.append(('Model', meta.get_field('Instrument|Microscope|Stand|%s'%instance)[2]))
-		#attributes.append(('Orientation', meta.get_field('Instrument|Microscope|Stand|%s'%instance)[3]))
-		#attributes.append(('Number of Lamps', str(meta.get_field('Instrument|Microscope|Stand|%s'%instance)[4])))
-		#attributes.append(('Number of Detectors', str(meta.get_field('Instrument|Microscope|Stand|%s'%instance)[5])))
-		#info.append((component,attributes))
-	    #if meta.get_field('Instrument|Microscope|Condenser|%s'%instance) is not None:
-		#component=('Hardware', 'Condenser')
-		#attributes = []	    
-		#attributes.append(('Type', meta.get_field('Instrument|Microscope|Condenser|%s'%instance)[0]))
-		#attributes.append(('Make', meta.get_field('Instrument|Microscope|Condenser|%s'%instance)[1]))
-		#attributes.append(('Model', meta.get_field('Instrument|Microscope|Condenser|%s'%instance)[2]))
-		#info.append((component,attributes))
-	    #if meta.get_field('Instrument|Microscope|Stage|%s'%instance) is not None:
-		#component=('Hardware', 'Stage')
-		#attributes = []	   		
-		#attributes.append(('Type', meta.get_field('Instrument|Microscope|Stage|%s'%instance)[0]))
-		#attributes.append(('Make', meta.get_field('Instrument|Microscope|Stage|%s'%instance)[1]))
-		#attributes.append(('Model', meta.get_field('Instrument|Microscope|Stage|%s'%instance)[2]))
-		#attributes.append(('Stage Holder', meta.get_field('Instrument|Microscope|Stage|%s'%instance)[3]))
-		#attributes.append(('Holder Code', meta.get_field('Instrument|Microscope|Stage|%s'%instance)[4]))
-		#info.append((component,attributes))
-	    #if meta.get_field('Instrument|Microscope|Incubator|%s'%instance) is not None:
-		#component=('Hardware', 'Incubator')
-		#attributes = []
-		#attributes.append(('Make', meta.get_field('Instrument|Microscope|Incubator|%s'%instance)[0]))
-		#attributes.append(('Model', meta.get_field('Instrument|Microscope|Incubator|%s'%instance)[1]))
-		#attributes.append(('Temperature(C)', meta.get_field('Instrument|Microscope|Incubator|%s'%instance)[2]))
-		#attributes.append(('CO2%', meta.get_field('Instrument|Microscope|Incubator|%s'%instance)[3]))
-		#attributes.append(('Humidity', meta.get_field('Instrument|Microscope|Incubator|%s'%instance)[4]))
-		#attributes.append(('Pressure', meta.get_field('Instrument|Microscope|Incubator|%s'%instance)[5]))
-		#info.append((component,attributes))
-	    #if meta.get_field('Instrument|Microscope|LightSource|%s'%instance) is not None:
-		#component=('Optics', 'Light Source')
-		#attributes = []
-		#attributes.append(('Type', meta.get_field('Instrument|Microscope|LightSource|%s'%instance)[0]))
-		#attributes.append(('Source', meta.get_field('Instrument|Microscope|LightSource|%s'%instance)[1]))
-		#attributes.append(('Make', meta.get_field('Instrument|Microscope|LightSource|%s'%instance)[2]))
-		#attributes.append(('Model', meta.get_field('Instrument|Microscope|LightSource|%s'%instance)[3]))
-		#attributes.append(('Measured Power (User)', meta.get_field('Instrument|Microscope|LightSource|%s'%instance)[4]))
-		#attributes.append(('Measured Power (Instrument)', meta.get_field('Instrument|Microscope|LightSource|%s'%instance)[5]))
-		#attributes.append(('Shutter Used', meta.get_field('Instrument|Microscope|LightSource|%s'%instance)[6]))
-		#attributes.append(('Shutter Type', meta.get_field('Instrument|Microscope|LightSource|%s'%instance)[7]))
-		#attributes.append(('Shutter Make', meta.get_field('Instrument|Microscope|LightSource|%s'%instance)[8]))
-		#attributes.append(('Shutter Model', meta.get_field('Instrument|Microscope|LightSource|%s'%instance)[9]))
-		#info.append((component,attributes))
-	    #if meta.get_field('Instrument|Microscope|ExtFilter|%s'%instance) is not None:
-		#component=('Optics', 'Excitation Filter')
-		#attributes = []
-		#attributes.append(('Wavelength Range (nm)', str(meta.get_field('Instrument|Microscope|ExtFilter|%s'%instance)[0])+' - '+str(meta.get_field('Instrument|Microscope|ExtFilter|%s'%instance)[1])))
-		#attributes.append(('Make', meta.get_field('Instrument|Microscope|ExtFilter|%s'%instance)[2]))
-		#attributes.append(('Model', meta.get_field('Instrument|Microscope|ExtFilter|%s'%instance)[3]))
-		#info.append((component,attributes))
-	    #if meta.get_field('Instrument|Microscope|Mirror|%s'%instance) is not None:	    
-		#component=('Optics', 'Dichroic Mirror')
-		#attributes = []
-		#attributes.append(('Wavelength Range (nm)', str(meta.get_field('Instrument|Microscope|Mirror|%s'%instance)[0])+' - '+str(meta.get_field('Instrument|Microscope|Mirror|%s'%instance)[1])))
-		#attributes.append(('Mode', meta.get_field('Instrument|Microscope|Mirror|%s'%instance)[2]))
-		#attributes.append(('Make', meta.get_field('Instrument|Microscope|Mirror|%s'%instance)[3]))
-		#attributes.append(('Model', meta.get_field('Instrument|Microscope|Mirror|%s'%instance)[4]))
-		#attributes.append(('Modification', meta.get_field('Instrument|Microscope|Mirror|%s'%instance)[5]))
-		#info.append((component,attributes))
-	    #if meta.get_field('Instrument|Microscope|EmsFilter|%s'%instance) is not None:
-		#component=('Optics', 'Emission Filter')
-		#attributes = []		
-		#attributes.append(('Wavelength Range (nm)', str(meta.get_field('Instrument|Microscope|EmsFilter|%s'%instance)[0])+' - '+str(meta.get_field('Instrument|Microscope|EmsFilter|%s'%instance)[1])))
-		#attributes.append(('Make', meta.get_field('Instrument|Microscope|EmsFilter|%s'%instance)[2]))
-		#attributes.append(('Model', meta.get_field('Instrument|Microscope|EmsFilter|%s'%instance)[3]))
-		#info.append((component,attributes))
-	    #if meta.get_field('Instrument|Microscope|Lens|%s'%instance) is not None:
-		#component=('Optics', 'Lens')
-		#attributes = []			
-		#attributes.append(('Make', meta.get_field('Instrument|Microscope|Lens|%s'%instance)[0]))
-		#attributes.append(('Model', meta.get_field('Instrument|Microscope|Lens|%s'%instance)[1]))
-		#attributes.append(('Objective Magnification', meta.get_field('Instrument|Microscope|Lens|%s'%instance)[2]))
-		#attributes.append(('Objective NA', meta.get_field('Instrument|Microscope|Lens|%s'%instance)[3]))
-		#attributes.append(('Calibrated Magnification', meta.get_field('Instrument|Microscope|Lens|%s'%instance)[4]))
-		#attributes.append(('Immersion', meta.get_field('Instrument|Microscope|Lens|%s'%instance)[5]))
-		#attributes.append(('Correction Collar', meta.get_field('Instrument|Microscope|Lens|%s'%instance)[6]))
-		#attributes.append(('Correction Value', meta.get_field('Instrument|Microscope|Lens|%s'%instance)[7]))
-		#attributes.append(('Correction Type', meta.get_field('Instrument|Microscope|Lens|%s'%instance)[8]))
-		#info.append((component,attributes))
-	    #if meta.get_field('Instrument|Microscope|Lens|%s'%instance) is not None:
-		#component=('Optics', 'Detector')
-		#attributes = []	
-		#attributes.append(('Type', meta.get_field('Instrument|Microscope|Detector|%s'%instance)[0]))
-		#attributes.append(('Make', meta.get_field('Instrument|Microscope|Detector|%s'%instance)[1]))
-		#attributes.append(('Model', meta.get_field('Instrument|Microscope|Detector|%s'%instance)[2]))
-		#attributes.append(('Binning', str(meta.get_field('Instrument|Microscope|Detector|%s'%instance)[3])))
-		#attributes.append(('Exposure Time', meta.get_field('Instrument|Microscope|Detector|%s'%instance)[4]+' '+meta.get_field('Instrument|Microscope|Detector|%s'%instance)[5]))
-		#attributes.append(('Gain', meta.get_field('Instrument|Microscope|Detector|%s'%instance)[6]+' '+meta.get_field('Instrument|Microscope|Detector|%s'%instance)[7]))
-		#attributes.append(('Offset', meta.get_field('Instrument|Microscope|Detector|%s'%instance)[8]+' '+meta.get_field('Instrument|Microscope|Detector|%s'%instance)[9]))
-		#info.append((component,attributes))
+	if exp.get_tag_event(protocol) == 'Microscope':	   
+	    for attr in meta.get_attribute_list(tag_stump):
+		if attr.startswith('Name'):
+		    metadata[attr] = meta.get_field(tag_stump+'|'+attr+'|'+instance)
+		else:
+		    metadata[attr] = [f for f in meta.get_field(tag_stump+'|'+attr+'|'+instance)] 
+	    return metadata
+	
+	if exp.get_tag_event(protocol) == 'Flowcytometer':	   
+	    for attr in meta.get_attribute_list(tag_stump):
+		metadata[attr] = meta.get_field(tag_stump+'|'+attr+'|'+instance)
+	    return metadata
 		
-	    #return (header, info)
-	
+
 	##if exp.get_tag_event(protocol) == 'Flowcytometer':
 	    ##header += meta.get_field('Instrument|Flowcytometer|Manufacturer|%s'%instance, default='')
 	    ##if meta.get_field('Instrument|Flowcytometer|Model|%s'%instance) is not None:
@@ -885,25 +831,18 @@ class PrintProtocol(wx.Frame):
 	    return metadata
 	
 	if exp.get_tag_event(protocol) == 'Chemical':
-	    if meta.get_field('Perturbation|Chemical|Name|%s'%instance) is not None:                    
-		metadata['Chemical Name']= meta.get_field('Perturbation|Chemical|Name|%s'%instance)	
-	    if meta.get_field('Perturbation|Chemical|PerturbConc|%s'%instance) is not None: 
-		metadata['Perturbing Concentration']= '%s %s' %(meta.get_field('Perturbation|Chemical|PerturbConc|%s'%instance)[0], meta.get_field('Perturbation|Chemical|PerturbConc|%s'%instance)[1]) 
-	    if meta.get_field('Perturbation|Chemical|StockConc|%s'%instance) is not None:    
-		metadata['Stock Concentration'] = '%s %s' %(meta.get_field('Perturbation|Chemical|StockConc|%s'%instance)[0], meta.get_field('Perturbation|Chemical|StockConc|%s'%instance)[1])
-	    if meta.get_field('Perturbation|Chemical|CatNum|%s'%instance) is not None:                    
-		metadata['Catalogue Number']= meta.get_field('Perturbation|Chemical|CatNum|%s'%instance)	    
-	    if meta.get_field('Perturbation|Chemical|Storage|%s'%instance) is not None: 
-		metadata['Storage Information'] = meta.get_field('Perturbation|Chemical|Storage|%s'%instance) 
-	    if meta.get_field('Perturbation|Chemical|Manufacturer|%s'%instance) is not None: 
-		metadata['Manufacturer'] = meta.get_field('Perturbation|Chemical|Manufacturer|%s'%instance) 
-	    if meta.get_field('Perturbation|Chemical|Other|%s'%instance) is not None: 
-		metadata['Other Information'] = meta.get_field('Perturbation|Chemical|Other|%s'%instance) 	  
-	    if meta.get_field('Perturbation|Chemical|Additive1|%s'%instance) is not None: # At least one step/additive is present
-		metadata['Additive'] = self.decode_subprocess(protocol, 'Additive')
-	    if meta.get_field('Perturbation|Chemical|Step1|%s'%instance) is not None: # At least one step/additive is present
-		metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	
-	    return metadata 		    
+	    for attr in meta.get_attribute_list_by_instance(tag_stump, instance):
+		if attr.startswith('Step1'):
+		    metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')
+		elif attr.startswith('Additive1'):
+		    metadata['Additive'] = self.decode_subprocess(protocol, 'Additive')
+		elif attr.startswith('AttachFiles'):
+		    metadata['AttachFiles'] = [f for f in meta.get_field(tag_stump+'|AttachFiles|%s'%instance)] 
+		elif attr.startswith('URL'):
+		    metadata['URL'] = ' %s'%meta.get_field(tag_stump+'|URL|%s'%instance)		
+		else:
+		    metadata[attr] = meta.get_field(tag_stump+'|'+attr+'|'+instance)	
+	    return metadata
 
         if exp.get_tag_event(protocol) == 'Biological':	      
 	    if meta.get_field('Perturbation|Biological|RNAi1|%s'%instance) is not None:
@@ -1047,6 +986,7 @@ class PrintProtocol(wx.Frame):
 	    return metadata   
 	
 	if exp.get_tag_event(protocol) == 'Incubation':
+	    
 	    if meta.get_field('InstProcess|Incubation|Name|%s'%instance) is not None:
 		metadata['Protocol Name'] = meta.get_field('InstProcess|Incubation|Name|%s'%instance)
 	    if meta.get_field('InstProcess|Incubation|IncubatorInstance|%s'%instance) is not None: 

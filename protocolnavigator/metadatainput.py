@@ -72,8 +72,10 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
         self.tree.AppendItem(lbl, 'Immunofluorescence')
         self.tree.AppendItem(lbl, 'Genetic')
 	adp = self.tree.AppendItem(stc, 'Additional Processes')        
-	self.tree.AppendItem(adp, 'Add Medium')
-	self.tree.AppendItem(adp, 'Wash')	
+	self.tree.AppendItem(adp, 'Add Medium')	
+	self.tree.AppendItem(adp, 'Initiation')
+	self.tree.AppendItem(adp, 'Storage')
+	self.tree.AppendItem(adp, 'Wash')
 	inp = self.tree.AppendItem(stc, 'Instrumental Processes')
 	self.tree.AppendItem(inp, 'Centrifugation')
 	self.tree.AppendItem(inp, 'Drying')
@@ -153,7 +155,12 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
 	if get_tag_type(tag) == 'AddProcess' and get_tag_event(tag) == 'Medium':
 	    self.settings_panel = AddMediumSettingPanel(self.settings_container)
 	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)
-		
+	if get_tag_type(tag) == 'AddProcess' and get_tag_event(tag) == 'Initiation':
+	    self.settings_panel = InitiationSettingPanel(self.settings_container)
+	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)	
+	if get_tag_type(tag) == 'AddProcess' and get_tag_event(tag) == 'Storage':
+	    self.settings_panel = StorageSettingPanel(self.settings_container)
+	    self.settings_panel.notebook.SetSelection(int(get_tag_instance(tag))-1)    
 		
 	if get_tag_type(tag) == 'DataAcquis' and get_tag_event(tag) == 'TLM':  
 	    self.settings_panel = MicroscopeSettingPanel(self.settings_container)
@@ -234,6 +241,10 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
             self.settings_panel =  DryingSettingPanel(self.settings_container) 
         elif self.tree.GetItemText(item) == 'Add Medium':
             self.settings_panel =  AddMediumSettingPanel(self.settings_container)
+	elif self.tree.GetItemText(item) == 'Initiation':
+	    self.settings_panel =  InitiationSettingPanel(self.settings_container)
+	elif self.tree.GetItemText(item) == 'Storage':
+	    self.settings_panel =  StorageSettingPanel(self.settings_container)	
         elif self.tree.GetItemText(item) == 'Incubation':
             self.settings_panel = IncubationSettingPanel(self.settings_container)   
 	elif self.tree.GetItemText(item) == 'Rheological Manipulation':
@@ -567,8 +578,9 @@ class CellLinePanel(wx.Panel):
 	self.settings_controls[self.nameTAG].Bind(wx.EVT_TEXT, self.OnSavingData)	
 	self.settings_controls[self.nameTAG].SetToolTipString('Cell Line selection')
 	self.labels[self.nameTAG] = wx.StaticText(self.top_panel, -1, 'Cell Line/Designation')
-	
-	self.save_btn = wx.Button(self.top_panel, -1, "Save Settings")
+	save_bmp = icons.save.Scale(20.0, 20.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+	self.save_btn = wx.BitmapButton(self.top_panel, -1, save_bmp)
+	self.save_btn.SetToolTipString("Save instance for future reuse")	
 	self.save_btn.Bind(wx.EVT_BUTTON, self.OnSavingSettings)
 	
 	attributesizer.Add(self.labels[self.nameTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
@@ -1493,15 +1505,15 @@ class MicroscopePanel(wx.Panel):
 	extfltTAG = self.tag_stump+'|ExtFilter|'+str(self.tab_number)
 	extfilter = meta.get_field(extfltTAG, [])
 	
-	self.startNM, self.endNM = 300, 800
+	self.startNM, self.endNM = 300, 1000
 	if len(extfilter)> 1:
 	    self.startNM = int(extfilter[0])
 	    self.endNM = int(extfilter[1])
 
 	multctrlSizer.Add(wx.StaticText(self.pane, -1, 'Wavelength\n(nm)'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 
-	self.exTsld = self.settings_controls[extfltTAG +'|0'] = wx.Slider(self.pane, -1, self.startNM, 300, 800, wx.DefaultPosition, (100, -1), wx.SL_LABELS)
-	self.exBsld = self.settings_controls[extfltTAG +'|1'] = wx.Slider(self.pane, -1, self.endNM, 300, 800, wx.DefaultPosition, (100, -1), style = wx.SL_LABELS|wx.SL_TOP)
+	self.exTsld = self.settings_controls[extfltTAG +'|0'] = wx.Slider(self.pane, -1, self.startNM, 300, 1000, wx.DefaultPosition, (100, -1), wx.SL_LABELS)
+	self.exBsld = self.settings_controls[extfltTAG +'|1'] = wx.Slider(self.pane, -1, self.endNM, 300, 1000, wx.DefaultPosition, (100, -1), style = wx.SL_LABELS|wx.SL_TOP)
 	
 	self.fltrspectrum = FilterSpectrum(self.pane)
 
@@ -1541,15 +1553,15 @@ class MicroscopePanel(wx.Panel):
 
 	mirrorTAG = self.tag_stump+'|Mirror|'+str(self.tab_number)
 	mirror = meta.get_field(mirrorTAG, [])
-	self.startNM, self.endNM = 300, 800
+	self.startNM, self.endNM = 300, 1000
 	if len(mirror)> 1:
 	    self.startNM = int(mirror[0])
 	    self.endNM = int(mirror[1])
 
 	multctrlSizer.Add(wx.StaticText(self.pane, -1, 'Wavelength\n(nm)'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 
-	self.settings_controls[mirrorTAG +'|0'] = wx.Slider(self.pane, -1, self.startNM, 300, 800, wx.DefaultPosition, (100, -1), wx.SL_LABELS)
-	self.settings_controls[mirrorTAG +'|1'] = wx.Slider(self.pane, -1, self.endNM, 300, 800, wx.DefaultPosition, (100, -1), style = wx.SL_LABELS|wx.SL_TOP)
+	self.settings_controls[mirrorTAG +'|0'] = wx.Slider(self.pane, -1, self.startNM, 300, 1000, wx.DefaultPosition, (100, -1), wx.SL_LABELS)
+	self.settings_controls[mirrorTAG +'|1'] = wx.Slider(self.pane, -1, self.endNM, 300, 1000, wx.DefaultPosition, (100, -1), style = wx.SL_LABELS|wx.SL_TOP)
 	
 	self.pane.fltTsld = self.settings_controls[mirrorTAG +'|0']
 	self.pane.fltBsld = self.settings_controls[mirrorTAG +'|1']
@@ -1603,6 +1615,68 @@ class MicroscopePanel(wx.Panel):
 	
 	mirrorSizer.Add(multctrlSizer, 1, wx.EXPAND|wx.ALL, 5)	
 	
+	#-- Split Mirror --#
+	staticbox = wx.StaticBox(self.pane, -1, "Split Mirror")
+	splitterSizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
+	multctrlSizer = wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
+
+	mirrorTAG = self.tag_stump+'|SplitMirror|'+str(self.tab_number)
+	mirror = meta.get_field(mirrorTAG, [])
+	startNM = 300
+	if len(mirror)> 0:
+	    startNM = int(mirror[0])
+
+	multctrlSizer.Add(wx.StaticText(self.pane, -1, 'Wavelength\n(nm)'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.settings_controls[mirrorTAG +'|0'] = wx.Slider(self.pane, -1, startNM, 300, 1000, wx.DefaultPosition, (100, -1), wx.SL_LABELS)	
+	self.pane.fltTsld = self.settings_controls[mirrorTAG +'|0']
+	self.fltrspectrum = FilterSpectrum(self.pane)
+
+	self.pane.Bind(wx.EVT_SLIDER, self.OnSavingData)
+	
+	spctrmSizer = wx.BoxSizer(wx.VERTICAL)
+	spctrmSizer.Add(self.pane.fltTsld,0)
+	spctrmSizer.Add(self.fltrspectrum, 0)  
+	
+	multctrlSizer.Add(spctrmSizer, 0)
+	
+	self.settings_controls[mirrorTAG +'|1'] = wx.TextCtrl(self.pane, value='') 	
+	if len(mirror)> 1:
+	    self.settings_controls[mirrorTAG +'|1'].SetValue(mirror[1])
+	self.settings_controls[mirrorTAG +'|1'].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[mirrorTAG+'|1'] = wx.StaticText(self.pane, -1, 'Make')
+	self.labels[mirrorTAG+'|1'].SetToolTipString('Make of mirror')
+	multctrlSizer.Add(self.labels[mirrorTAG+'|1'], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	multctrlSizer.Add(self.settings_controls[mirrorTAG +'|1'], 0, wx.EXPAND)	
+	
+	self.settings_controls[mirrorTAG +'|2'] = wx.TextCtrl(self.pane, value='') 	
+	if len(mirror)> 2:
+	    self.settings_controls[mirrorTAG +'|2'].SetValue(mirror[2])
+	self.settings_controls[mirrorTAG +'|2'].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[mirrorTAG+'|2'] = wx.StaticText(self.pane, -1, 'Model')
+	self.labels[mirrorTAG+'|2'].SetToolTipString('Model of mirror')
+	multctrlSizer.Add(self.labels[mirrorTAG+'|2'], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	multctrlSizer.Add(self.settings_controls[mirrorTAG +'|2'], 0, wx.EXPAND)
+	
+	self.settings_controls[mirrorTAG +'|3'] = wx.TextCtrl(self.pane, value='') 	
+	if len(mirror)> 3:
+	    self.settings_controls[mirrorTAG +'|3'].SetValue(mirror[3])
+	self.settings_controls[mirrorTAG +'|3'].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[mirrorTAG+'|3'] = wx.StaticText(self.pane, -1, 'Left Component')
+	self.labels[mirrorTAG+'|3'].SetToolTipString('e.g. Pump')
+	multctrlSizer.Add(self.labels[mirrorTAG+'|3'], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	multctrlSizer.Add(self.settings_controls[mirrorTAG +'|3'], 0, wx.EXPAND)	
+
+	self.settings_controls[mirrorTAG +'|4'] = wx.TextCtrl(self.pane, value='') 	
+	if len(mirror)> 4:
+	    self.settings_controls[mirrorTAG +'|4'].SetValue(mirror[4])
+	self.settings_controls[mirrorTAG +'|4'].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[mirrorTAG+'|4'] = wx.StaticText(self.pane, -1, 'Right Component')
+	self.labels[mirrorTAG+'|4'].SetToolTipString('e.g. Stoking')
+	multctrlSizer.Add(self.labels[mirrorTAG+'|4'], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	multctrlSizer.Add(self.settings_controls[mirrorTAG +'|4'], 0, wx.EXPAND)
+	
+	splitterSizer.Add(multctrlSizer, 1, wx.EXPAND|wx.ALL, 5)
+	
 	
 	#-- Emission Filter --#
 	staticbox = wx.StaticBox(self.pane, -1, " Emission Filter")
@@ -1611,15 +1685,15 @@ class MicroscopePanel(wx.Panel):
 
 	emsfltTAG = self.tag_stump+'|EmsFilter|'+str(self.tab_number)
 	emsfilter = meta.get_field(emsfltTAG, [])
-	self.startNM, self.endNM = 300, 800
+	self.startNM, self.endNM = 300, 1000
 	if len(emsfilter)> 1:
 	    self.startNM = int(emsfilter[0])
 	    self.endNM = int(emsfilter[1])
 
 	multctrlSizer.Add(wx.StaticText(self.pane, -1, 'Wavelength\n(nm)'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 
-	self.settings_controls[emsfltTAG +'|0'] = wx.Slider(self.pane, -1, self.startNM, 300, 800, wx.DefaultPosition, (100, -1), wx.SL_LABELS)
-	self.settings_controls[emsfltTAG +'|1'] = wx.Slider(self.pane, -1, self.endNM, 300, 800, wx.DefaultPosition, (100, -1), style = wx.SL_LABELS|wx.SL_TOP)
+	self.settings_controls[emsfltTAG +'|0'] = wx.Slider(self.pane, -1, self.startNM, 300, 1000, wx.DefaultPosition, (100, -1), wx.SL_LABELS)
+	self.settings_controls[emsfltTAG +'|1'] = wx.Slider(self.pane, -1, self.endNM, 300, 1000, wx.DefaultPosition, (100, -1), style = wx.SL_LABELS|wx.SL_TOP)
 	
 	self.pane.fltTsld = self.settings_controls[emsfltTAG +'|0']
 	self.pane.fltBsld = self.settings_controls[emsfltTAG +'|1']
@@ -1852,6 +1926,7 @@ class MicroscopePanel(wx.Panel):
 	opticSizer.Add(lightSizer, 0, wx.EXPAND|wx.ALL, 5)
 	opticSizer.Add(extfilterSizer, 0, wx.EXPAND|wx.ALL, 5)
 	opticSizer.Add(mirrorSizer, 0, wx.EXPAND|wx.ALL, 5)
+	opticSizer.Add(splitterSizer, 0, wx.EXPAND|wx.ALL, 5)
 	opticSizer.Add(emsfilterSizer, 0, wx.EXPAND|wx.ALL, 5)
 	opticSizer.Add(lensSizer, 0, wx.EXPAND|wx.ALL, 5)
 	opticSizer.Add(detectorSizer, 0, wx.EXPAND|wx.ALL, 5)
@@ -5801,7 +5876,205 @@ class IncubationPanel(wx.Panel):
 	elif meta.checkMandatoryTags(self.mandatory_tags):
 	    meta.saveData(ctrl, tag, self.settings_controls)
 
+########################################################################        
+################## CULTURE INITIATION SETTING PANEL        #############
+########################################################################
+class InitiationSettingPanel(wx.Panel):
+    """
+    Panel that holds parameter input panel and the buttons for more additional panel
+    """
+    def __init__(self, parent, id=-1):
+        wx.Panel.__init__(self, parent, id)
 
+        self.settings_controls = {}
+        meta = ExperimentSettings.getInstance()
+		
+	self.tag_stump = 'AddProcess|Initiation'	
+
+        self.notebook = fnb.FlatNotebook(self, -1, style=fnb.FNB_NO_X_BUTTON | fnb.FNB_VC8)
+	self.notebook.Bind(fnb.EVT_FLATNOTEBOOK_PAGE_CLOSING, meta.onTabClosing)
+
+	for instance_id in sorted(meta.get_field_instances(self.tag_stump)):
+	    panel = InitiationPanel(self.notebook, self.tag_stump, int(instance_id))
+	    self.notebook.AddPage(panel, 'Instance No: %s'%(instance_id), True)
+		
+	# Buttons
+	createTabBtn = wx.Button(self, label="Create Instance")
+	createTabBtn.Bind(wx.EVT_BUTTON, self.onCreateTab)    
+	loadTabBtn = wx.Button(self, label="Load Instance")
+	loadTabBtn.Bind(wx.EVT_BUTTON, self.onLoadTab)  	
+
+	# Sizers
+	mainsizer = wx.BoxSizer(wx.VERTICAL)
+	btnSizer = wx.BoxSizer(wx.HORIZONTAL)
+	mainsizer.Add(self.notebook, 1, wx.ALL|wx.EXPAND, 5)
+	btnSizer.Add(createTabBtn  , 0, wx.ALL, 5)
+	btnSizer.Add(loadTabBtn, 0, wx.ALL, 5)
+	mainsizer.Add(btnSizer)
+	self.SetSizer(mainsizer)
+	self.Layout()
+	
+    def onCreateTab(self, event):
+	next_tab_num = meta.get_new_protocol_id(self.tag_stump)
+	if self.notebook.GetPageCount()+1 != int(next_tab_num):
+	    dlg = wx.MessageDialog(None, 'Can not create the next instance\nPlease fill information in Instance No: %s'%next_tab_num, 'Creating Instance..', wx.OK| wx.ICON_STOP)
+	    dlg.ShowModal()
+	    return 	
+	panel = InitiationPanel(self.notebook, self.tag_stump, next_tab_num)
+	self.notebook.AddPage(panel, 'Instance No: %s'%next_tab_num, True)    
+ 
+    def onLoadTab(self, event):
+	next_tab_num = meta.get_new_protocol_id(self.tag_stump)	
+	if self.notebook.GetPageCount()+1 != int(next_tab_num):
+	    dlg = wx.MessageDialog(None, 'Can not load the next instance\nPlease fill information in Instance No: %s'%next_tab_num, 'Creating Instance..', wx.OK| wx.ICON_STOP)
+	    dlg.ShowModal()
+	    return 
+	
+	dlg = wx.FileDialog(None, "Select the file containing settings...",
+                                    defaultDir=os.getcwd(), style=wx.OPEN|wx.FD_CHANGE_DIR)
+	# read the supp protocol file and setup a new tab
+	if dlg.ShowModal() == wx.ID_OK:
+	    filename = dlg.GetFilename()
+	    dirname = dlg.GetDirectory()
+	    file_path = os.path.join(dirname, filename)
+	    #Check for empty file
+	    if os.stat(file_path)[6] == 0:
+		dial = wx.MessageDialog(None, 'Settings file is empty!!', 'Error', wx.OK | wx.ICON_ERROR)
+		dial.ShowModal()  
+		return	
+	    #Check for Settings Type:	
+	    if open(file_path).readline().rstrip() != exp.get_tag_event(self.tag_stump):
+		dial = wx.MessageDialog(None, 'The file is not %s settings!!'%exp.get_tag_event(self.tag_stump), 'Error', wx.OK | wx.ICON_ERROR)
+		dial.ShowModal()  
+		return		    
+	    
+	    meta.load_settings(file_path, self.tag_stump+'|%s'%str(next_tab_num))  
+	    panel = InitiationPanel(self.notebook, self.tag_stump, next_tab_num)
+	    self.notebook.AddPage(panel, 'Instance No: %s'%str(next_tab_num), True) 
+
+class InitiationPanel(wx.Panel):
+    def __init__(self, parent, tag_stump, tab_number):
+	
+        self.settings_controls = {}
+	self.labels = {}
+        meta = ExperimentSettings.getInstance()
+
+        wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
+
+        self.tab_number = tab_number
+	self.tag_stump = tag_stump
+	self.protocol = self.tag_stump+'|'+str(self.tab_number)
+	self.mandatory_tags = []
+		
+	# Panel
+	self.sw = wx.ScrolledWindow(self)
+	self.swsizer = wx.BoxSizer(wx.VERTICAL)
+	
+	# Title & Save button
+	text = wx.StaticText(self.sw, -1, 'Culture %s'%exp.get_tag_event(tag_stump))
+	font = wx.Font(12, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
+	text.SetFont(font)
+	pic=wx.StaticBitmap(self.sw)
+	pic.SetBitmap(icons.initiation.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())	
+	titlesizer = wx.BoxSizer(wx.HORIZONTAL)	
+	titlesizer.Add(pic)
+	titlesizer.AddSpacer((5,-1))	
+	titlesizer.Add(text, 0)
+	
+	# Additives
+	staticbox = wx.StaticBox(self.sw, -1, "Additives")
+	additivesizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
+	COLUMN_DETAILS = OrderedDict([('Name', ['TextCtrl', 100, -1, '']),
+                                      ('Conc.', ['TextCtrl', 50, -1, '']),
+                                      ('Description', ['TextCtrl', 200, -1, ''])
+                                    ])		
+	self.additive = RowBuilder(self.sw, self.protocol, 'Additive', COLUMN_DETAILS, self.mandatory_tags)
+	additivesizer.Add(self.additive, 0, wx.ALL, 5)
+		
+	# Procedure
+	staticbox = wx.StaticBox(self.sw, -1, "Procedure")
+	proceduresizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
+	COLUMN_DETAILS = OrderedDict([('Name', ['TextCtrl', 100, -1, '']),
+	                              ('Description', ['TextCtrl', 200, -1, '']),
+	                              ('Duration\n(Min)', ['TextCtrl', 30, -1, '']),
+	                              ('Temp\n(C)', ['TextCtrl', 30, -1, ''])
+                                    ])		
+	self.procedure = RowBuilder(self.sw, self.protocol, 'Step', COLUMN_DETAILS, self.mandatory_tags)
+	self.procedure.SetBackgroundColour('#99CC99')
+	proceduresizer.Add(self.procedure, 0, wx.ALL, 5)	
+	
+	# Attributes
+	attributesizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)	
+	
+	self.nameTAG = self.tag_stump+'|Name|'+str(self.tab_number)
+	self.settings_controls[self.nameTAG] = wx.TextCtrl(self.sw, value=meta.get_field(self.nameTAG, default=''))
+	self.settings_controls[self.nameTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.settings_controls[self.nameTAG].SetInitialSize((250,20))
+	self.labels[self.nameTAG] = wx.StaticText(self.sw, -1, 'Protocol Name')
+	self.labels[self.nameTAG].SetToolTipString('Type a unique name for identifying the protocol')
+	save_bmp = icons.save.Scale(20.0, 20.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+	self.save_btn = wx.BitmapButton(self.sw, -1, save_bmp)
+	self.save_btn.SetToolTipString("Save instance for future reuse")
+	self.save_btn.Bind(wx.EVT_BUTTON, self.OnSavingSettings)
+	attributesizer.Add(self.labels[self.nameTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	attributesizer.Add(self.settings_controls[self.nameTAG], 0, wx.EXPAND)
+	attributesizer.Add(self.save_btn, 0)	
+	
+	otherTAG = self.tag_stump+'|Other|'+str(self.tab_number)
+        self.settings_controls[otherTAG] = wx.TextCtrl(self.sw, value=meta.get_field(otherTAG, default=''), style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER)
+        self.settings_controls[otherTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[otherTAG] = wx.StaticText(self.sw, -1, 'Other informaiton')
+	self.labels[otherTAG].SetToolTipString('Other relevant information')
+        attributesizer.Add(self.labels[otherTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+        attributesizer.Add(self.settings_controls[otherTAG], 0, wx.EXPAND)
+        attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)
+	
+	# Set Mandatory Label colour
+	meta.setLabelColour(self.mandatory_tags, self.labels)	
+	
+        #--- Layout ----
+	self.swsizer.Add(titlesizer,0,wx.ALL, 5)
+	self.swsizer.Add((-1,10))
+	self.swsizer.Add(attributesizer, 0, wx.EXPAND|wx.ALL, 5)
+	self.swsizer.Add(additivesizer, 0, wx.EXPAND|wx.ALL, 5)
+	self.swsizer.Add(proceduresizer, 0, wx.EXPAND|wx.ALL, 5)
+	self.sw.SetSizer(self.swsizer)
+	self.sw.SetScrollbars(20, 20, self.Size[0]+10, self.Size[1]+10, 0, 0)
+
+	self.Sizer = wx.BoxSizer(wx.VERTICAL)
+	self.Sizer.Add(self.sw, 1, wx.EXPAND)
+	self.SetSizer(self.Sizer)
+
+    def goURL(self, event):
+	try:
+	    webbrowser.open(self.settings_controls[self.urlTAG].GetValue())
+	except:
+	    dial = wx.MessageDialog(None, 'Unable to launch internet browser', 'Error', wx.OK | wx.ICON_ERROR)
+	    dial.ShowModal()  
+	    return  
+	
+    def OnAttachPropFile(self, event):
+	if meta.checkMandatoryTags(self.mandatory_tags):	
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []), None)		
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.file_list
+		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+		if f_list:
+		    meta.set_field(self.attfileTAG, f_list) 
+			
+    def OnSavingSettings(self, event):
+	meta.saving_settings(self.protocol, self.nameTAG, self.mandatory_tags)      
+	    
+    def OnSavingData(self, event):
+	ctrl = event.GetEventObject()
+	tag = [t for t, c in self.settings_controls.items() if c==ctrl][0]
+	
+	if exp.get_tag_stump(tag, 4) in self.mandatory_tags:
+	    meta.saveData(ctrl, tag, self.settings_controls)
+	    meta.setLabelColour(self.mandatory_tags, self.labels)
+	elif meta.checkMandatoryTags(self.mandatory_tags):
+	    meta.saveData(ctrl, tag, self.settings_controls)
+	    
 ########################################################################        
 ################## ADD MEDIUM SETTING PANEL                #############
 ########################################################################
@@ -6003,7 +6276,275 @@ class AddMediumPanel(wx.Panel):
 
 
 ########################################################################        
-################## ADD MEDIUM SETTING PANEL                #############
+################## STORAGE SETTING PANEL                #############
+########################################################################
+class StorageSettingPanel(wx.Panel):
+    """
+    Panel that holds parameter input panel and the buttons for more additional panel
+    """
+    def __init__(self, parent, id=-1):
+        wx.Panel.__init__(self, parent, id)
+
+        self.settings_controls = {}
+        meta = ExperimentSettings.getInstance()
+		
+	self.tag_stump = 'AddProcess|Storage'	
+
+        self.notebook = fnb.FlatNotebook(self, -1, style=fnb.FNB_NO_X_BUTTON | fnb.FNB_VC8)
+	self.notebook.Bind(fnb.EVT_FLATNOTEBOOK_PAGE_CLOSING, meta.onTabClosing)
+
+	for instance_id in sorted(meta.get_field_instances(self.tag_stump)):
+	    panel = StoragePanel(self.notebook, self.tag_stump, int(instance_id))
+	    self.notebook.AddPage(panel, 'Instance No: %s'%(instance_id), True)
+		
+	# Buttons
+	createTabBtn = wx.Button(self, label="Create Instance")
+	createTabBtn.Bind(wx.EVT_BUTTON, self.onCreateTab)    
+	loadTabBtn = wx.Button(self, label="Load Instance")
+	loadTabBtn.Bind(wx.EVT_BUTTON, self.onLoadTab)  	
+
+	# Sizers
+	mainsizer = wx.BoxSizer(wx.VERTICAL)
+	btnSizer = wx.BoxSizer(wx.HORIZONTAL)
+	mainsizer.Add(self.notebook, 1, wx.ALL|wx.EXPAND, 5)
+	btnSizer.Add(createTabBtn  , 0, wx.ALL, 5)
+	btnSizer.Add(loadTabBtn, 0, wx.ALL, 5)
+	mainsizer.Add(btnSizer)
+	self.SetSizer(mainsizer)
+	self.Layout()
+	
+    def onCreateTab(self, event):
+	next_tab_num = meta.get_new_protocol_id(self.tag_stump)
+	if self.notebook.GetPageCount()+1 != int(next_tab_num):
+	    dlg = wx.MessageDialog(None, 'Can not create the next instance\nPlease fill information in Instance No: %s'%next_tab_num, 'Creating Instance..', wx.OK| wx.ICON_STOP)
+	    dlg.ShowModal()
+	    return 	
+	panel = StoragePanel(self.notebook, self.tag_stump, next_tab_num)
+	self.notebook.AddPage(panel, 'Instance No: %s'%next_tab_num, True)    
+ 
+    def onLoadTab(self, event):
+	next_tab_num = meta.get_new_protocol_id(self.tag_stump)	
+	if self.notebook.GetPageCount()+1 != int(next_tab_num):
+	    dlg = wx.MessageDialog(None, 'Can not load the next instance\nPlease fill information in Instance No: %s'%next_tab_num, 'Creating Instance..', wx.OK| wx.ICON_STOP)
+	    dlg.ShowModal()
+	    return 
+	
+	dlg = wx.FileDialog(None, "Select the file containing settings...",
+                                    defaultDir=os.getcwd(), style=wx.OPEN|wx.FD_CHANGE_DIR)
+	# read the supp protocol file and setup a new tab
+	if dlg.ShowModal() == wx.ID_OK:
+	    filename = dlg.GetFilename()
+	    dirname = dlg.GetDirectory()
+	    file_path = os.path.join(dirname, filename)
+	    #Check for empty file
+	    if os.stat(file_path)[6] == 0:
+		dial = wx.MessageDialog(None, 'Settings file is empty!!', 'Error', wx.OK | wx.ICON_ERROR)
+		dial.ShowModal()  
+		return	
+	    #Check for Settings Type:	
+	    if open(file_path).readline().rstrip() != exp.get_tag_event(self.tag_stump):
+		dial = wx.MessageDialog(None, 'The file is not %s settings!!'%exp.get_tag_event(self.tag_stump), 'Error', wx.OK | wx.ICON_ERROR)
+		dial.ShowModal()  
+		return		    
+	    
+	    meta.load_settings(file_path, self.tag_stump+'|%s'%str(next_tab_num))  
+	    panel = StoragePanel(self.notebook, self.tag_stump, next_tab_num)
+	    self.notebook.AddPage(panel, 'Instance No: %s'%str(next_tab_num), True) 
+
+class StoragePanel(wx.Panel):
+    def __init__(self, parent, tag_stump, tab_number):
+	
+        self.settings_controls = {}
+	self.labels = {}
+        meta = ExperimentSettings.getInstance()
+
+        wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
+
+        self.tab_number = tab_number
+	self.tag_stump = tag_stump
+	self.protocol = self.tag_stump+'|'+str(self.tab_number)
+	self.mandatory_tags = []
+		
+	# Panel
+	self.sw = wx.ScrolledWindow(self)
+	self.swsizer = wx.BoxSizer(wx.VERTICAL)
+	
+	# Title & Save button
+	text = wx.StaticText(self.sw, -1, exp.get_tag_event(tag_stump))
+	font = wx.Font(12, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
+	text.SetFont(font)
+	pic=wx.StaticBitmap(self.sw)
+	pic.SetBitmap(icons.medium.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())	
+	titlesizer = wx.BoxSizer(wx.HORIZONTAL)	
+	titlesizer.Add(pic)
+	titlesizer.AddSpacer((5,-1))	
+	titlesizer.Add(text, 0)
+	
+	#Storage	
+	self.staticbox = wx.StaticBox(self.sw, -1, "Storage")
+	self.staticbox_sizer = wx.StaticBoxSizer(self.staticbox, wx.VERTICAL)
+	
+	self.ctypeSizer = wx.FlexGridSizer(cols=3, hgap=15, vgap=5)
+	self.cool_box = wx.RadioButton(self.sw, -1, "CoolBox", style = wx.RB_GROUP )
+	self.freezer = wx.RadioButton(self.sw, -1, "Freezer" )
+	self.cool_box.SetValue(0)
+	self.freezer.SetValue(0)
+	self.ctypeSizer.Add(self.cool_box, 0)
+	self.ctypeSizer.Add(self.freezer, 0)
+	self.ctypeSizer.Add(wx.StaticText(self.sw, -1, ''), 0)
+	self.staticbox_sizer.Add(self.ctypeSizer, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+	self.staticbox_sizer.Add((-1,10))
+    
+	if meta.get_field(self.tag_stump+'|Type|'+str(self.tab_number)) is not None: 	
+	    if meta.get_field(self.tag_stump+'|Type|'+str(self.tab_number)) == 'CoolBox':
+		self.onShowCoolBox(event=meta.get_field(self.tag_stump+'|Type|'+str(self.tab_number)))
+	    if meta.get_field(self.tag_stump+'|Type|'+str(self.tab_number)) == 'Freeze':
+		self.onShowFreeze(event=meta.get_field(self.tag_stump+'|Type|'+str(self.tab_number)))
+	else:	    
+	    #self.cool_box.Bind(wx.EVT_RADIOBUTTON,self.onShowCoolBox)
+	    self.freezer.Bind(wx.EVT_RADIOBUTTON, self.onShowFreeze)	
+
+	# Procedure
+	staticbox = wx.StaticBox(self.sw, -1, "Procedure")
+	proceduresizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
+	COLUMN_DETAILS = OrderedDict([('Name', ['TextCtrl', 100, -1, '']),
+	                              ('Description', ['TextCtrl', 200, -1, '']),
+	                              ('Duration\n(Min)', ['TextCtrl', 30, -1, '']),
+	                              ('Temp\n(C)', ['TextCtrl', 30, -1, ''])
+                                    ])		
+	self.procedure = RowBuilder(self.sw, self.protocol, 'Step', COLUMN_DETAILS, self.mandatory_tags)
+	self.procedure.SetBackgroundColour('#99CC99')
+	proceduresizer.Add(self.procedure, 0, wx.ALL, 5)	
+	
+	# Attributes
+	attributesizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)	
+	
+	self.nameTAG = self.tag_stump+'|Name|'+str(self.tab_number)
+	self.settings_controls[self.nameTAG] = wx.TextCtrl(self.sw, value=meta.get_field(self.nameTAG, default=''))
+	self.settings_controls[self.nameTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.settings_controls[self.nameTAG].SetInitialSize((250,20))
+	self.labels[self.nameTAG] = wx.StaticText(self.sw, -1, 'Protocol Name')
+	self.labels[self.nameTAG].SetToolTipString('Type a unique name for identifying the protocol')
+	save_bmp = icons.save.Scale(20.0, 20.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
+	self.save_btn = wx.BitmapButton(self.sw, -1, save_bmp)
+	self.save_btn.SetToolTipString("Save instance for future reuse")
+	self.save_btn.Bind(wx.EVT_BUTTON, self.OnSavingSettings)
+	attributesizer.Add(self.labels[self.nameTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	attributesizer.Add(self.settings_controls[self.nameTAG], 0, wx.EXPAND)
+	attributesizer.Add(self.save_btn, 0)	
+	
+	
+	# Set Mandatory Label colour
+	meta.setLabelColour(self.mandatory_tags, self.labels)	
+	
+        #--- Layout ----
+	self.swsizer.Add(titlesizer,0,wx.ALL, 5)
+	self.swsizer.Add((-1,10))
+	self.swsizer.Add(attributesizer, 0, wx.EXPAND|wx.ALL, 5)
+	self.swsizer.Add(self.staticbox_sizer,0,wx.EXPAND|wx.ALL, 5)
+	self.swsizer.Add(proceduresizer, 0, wx.EXPAND|wx.ALL, 5)
+	self.sw.SetSizer(self.swsizer)
+	self.sw.SetScrollbars(20, 20, self.Size[0]+10, self.Size[1]+10, 0, 0)
+
+	self.Sizer = wx.BoxSizer(wx.VERTICAL)
+	self.Sizer.Add(self.sw, 1, wx.EXPAND)
+	self.SetSizer(self.Sizer)
+    
+    def onShowFreeze(self, event):
+	self.freezer.SetValue(1)
+	self.freezer.Enable(0)	
+	self.cool_box.Enable(0)	
+	
+	meta.set_field(self.tag_stump+'|Type|'+str(self.tab_number), 'Freeze')	    
+	fgs = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
+	
+	# make
+	# model
+	# dimension
+	# capacity
+	# Refrigerant
+	# Sample Location rack # block # 
+	freeze_sizer = wx.BoxSizer(wx.VERTICAL)
+
+	makeTAG = self.tag_stump+'|Manufacturer|'+str(self.tab_number)
+	self.settings_controls[makeTAG] = wx.TextCtrl(self.sw, value=meta.get_field(makeTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[makeTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.settings_controls[makeTAG].SetToolTipString('Manufacturer of freeze')
+	fgs.Add(wx.StaticText(self.sw, -1, 'Manufacturer'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	fgs.Add(self.settings_controls[makeTAG], 0, wx.EXPAND)
+	fgs.Add(wx.StaticText(self.sw, -1, ''), 0)	
+	
+	modelTAG = self.tag_stump+'|Model|'+str(self.tab_number)
+	self.settings_controls[modelTAG] = wx.TextCtrl(self.sw, value=meta.get_field(modelTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[modelTAG].Bind(wx.EVT_TEXT,self.OnSavingData)
+	self.settings_controls[makeTAG].SetToolTipString('Model number')
+	fgs.Add(wx.StaticText(self.sw, -1, 'Model'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	fgs.Add(self.settings_controls[modelTAG], 0, wx.EXPAND)
+	fgs.Add(wx.StaticText(self.sw, -1, ''), 0)	
+
+	dimensionTAG = self.tag_stump+'|Dimension|'+str(self.tab_number)
+	dimn = meta.get_field(dimensionTAG, [])
+	self.settings_controls[dimensionTAG+'|0'] = wx.TextCtrl(self.sw, size=(20,-1), style=wx.TE_PROCESS_ENTER)
+	if len(dimn) > 0:
+	    self.settings_controls[dimensionTAG+'|0'].SetValue(dimn[0])
+	self.settings_controls[dimensionTAG+'|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
+	fgs.Add(wx.StaticText(self.sw, -1, 'Width'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	fgs.Add(self.settings_controls[dimensionTAG+'|0'], 0, wx.EXPAND)
+	fgs.Add(wx.StaticText(self.sw, -1, ''), 0)
+	fgs.Add(wx.StaticText(self.sw, -1, ''), 0)
+	
+	# Procedure
+	staticbox = wx.StaticBox(self.sw, -1, "Sample Placement")
+	proceduresizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)
+	COLUMN_DETAILS = OrderedDict([('Sample', ['TextCtrl', 100, -1, '']),
+                                      ('Rack No.', ['TextCtrl', 30, -1, '']),
+                                      ('Location', ['TextCtrl', 30, -1, '']),
+                                      ('Temp\n(C)', ['TextCtrl', 30, -1, ''])
+                                    ])		
+	self.procedure = RowBuilder(self.sw, self.protocol, 'Placement', COLUMN_DETAILS, self.mandatory_tags)
+	proceduresizer.Add(self.procedure, 0, wx.ALL, 5)
+		
+	    
+	#--- Sizers -------
+	freeze_sizer.Add(fgs, 0)
+	freeze_sizer.Add(proceduresizer, 0)
+	self.staticbox_sizer.Add(freeze_sizer, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+	self.sw.SetSizer(self.swsizer)
+	self.sw.SetScrollbars(20, 20, self.Size[0]+10, self.Size[1]+10, 0, 0) 
+	self.sw.FitInside()
+
+    def goURL(self, event):
+	try:
+	    webbrowser.open(self.settings_controls[self.urlTAG].GetValue())
+	except:
+	    dial = wx.MessageDialog(None, 'Unable to launch internet browser', 'Error', wx.OK | wx.ICON_ERROR)
+	    dial.ShowModal()  
+	    return  
+	
+    def OnAttachPropFile(self, event):
+	if meta.checkMandatoryTags(self.mandatory_tags):	
+	    dia = FileListDialog(self, self.attfileTAG, meta.get_field(self.attfileTAG, []), None)		
+	    if dia.ShowModal()== wx.ID_OK:
+		f_list = dia.file_list
+		self.attach_file_num.SetLabel('(%s)'%str(len(f_list)))
+		if f_list:
+		    meta.set_field(self.attfileTAG, f_list) 
+			
+    def OnSavingSettings(self, event):
+	meta.saving_settings(self.protocol, self.nameTAG, self.mandatory_tags)      
+	    
+    def OnSavingData(self, event):
+	ctrl = event.GetEventObject()
+	tag = [t for t, c in self.settings_controls.items() if c==ctrl][0]
+	
+	if exp.get_tag_stump(tag, 4) in self.mandatory_tags:
+	    meta.saveData(ctrl, tag, self.settings_controls)
+	    meta.setLabelColour(self.mandatory_tags, self.labels)
+	elif meta.checkMandatoryTags(self.mandatory_tags):
+	    meta.saveData(ctrl, tag, self.settings_controls)     
+
+########################################################################        
+################## WASH SETTING PANEL                      #############
 ########################################################################
 class WashSettingPanel(wx.Panel):
     """
@@ -6101,7 +6642,7 @@ class WashPanel(wx.Panel):
 	font = wx.Font(12, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
 	text.SetFont(font)
 	pic=wx.StaticBitmap(self.sw)
-	pic.SetBitmap(icons.medium.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())	
+	pic.SetBitmap(icons.wash.Scale(ICON_SIZE, ICON_SIZE, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap())	
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)	
 	titlesizer.Add(pic)
 	titlesizer.AddSpacer((5,-1))	
