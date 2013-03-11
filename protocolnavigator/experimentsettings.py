@@ -636,6 +636,9 @@ class ExperimentSettings(Singleton):
 		description = re.sub('\D', '', component)+' nm Short Pass Filter'
 	    if component.endswith('BP'):
 		description = (component.split('FLT')[1]).split('BP')[0]+' nm Band pass Filter' # this needs to be adjusted
+	if component.startswith('SLT'):
+	    ratio = component.split('SLT')[1]
+	    description = re.sub('/', ':', ratio)+' Beam Splitter'
         if component.startswith('DYE'):
             dye = component.split('_')[1]
             description = 'Dye used: %s' %dye

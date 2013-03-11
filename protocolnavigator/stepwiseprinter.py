@@ -230,11 +230,10 @@ class PrintProtocol(wx.Frame):
 		for ch, components in protocol_info.iteritems():
 		    if ch not in ['Name', 'Manufacturer', 'Model']:
 			self.printfile.write('<tr><code><td width=10% align="center"><font size="2"><b>'+ch+'</b></font></code></td>')
-			description = ''
-			for componet in components:   # enumerate and put >> sign except the last component
-			    print componet
-			    description += meta.decode_ch_component(componet[0])
-			self.printfile.write('<code><td width=90% align="left">'+description+'<font size="1"></font></td></code></tr>')			
+			self.printfile.write('<code><td width=90% align="left"><font size="1">')
+			for component in components[:-1]: 
+			    self.printfile.write(meta.decode_ch_component(component[0])+' >>')
+			self.printfile.write(meta.decode_ch_component(components[-1][0])+'</font></td></code></tr>')			
 		self.printfile.write('</table><p></p>')
 		
 	 
