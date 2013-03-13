@@ -1,15 +1,22 @@
 import wx
 import re
 import datetime
+import time
 import experimentsettings as exp
+import wx.lib.masked as masked
+import locale
 from experimentsettings import ExperimentSettings
 from wx.lib.masked import NumCtrl
+from addrow import RowBuilder
+from collections import OrderedDict
 # TO DO: make the onSavingData coherent with experimentsettings file method. Also Step builder should use addrow.py ; Finally check current passage date is later than last passage date.
 
 meta = exp.ExperimentSettings.getInstance()
+locale.setlocale(locale.LC_ALL, "")
 
 Default_Protocol ={
     'ADMIN' : ['Your name', '', '', '','', ''],
+    'STAT' : ['', '', ''],
     'Step1' : ['Remove medium with a stripette','','', ''],
     'Step2' : ['Add trypsin in the following volumes - 1ml for the 60mm dish or T25 flask OR 2ml for 100mm dish or T75 flask','','', ''],
     'Step3' : ['Gently tip to ensure trypsin reaches all surfaces','','', ''],
@@ -33,18 +40,32 @@ class PassageStepBuilder(wx.Dialog):
 	
 	self.settings_controls = {}
 	self.curr_protocol = {}
-	self.admin_info = {}        
+	self.admin_info = {}      
+	self.prev_datetime = None
+	
+	self.today_datetime = datetime.datetime.now()
 	
 	self.tag_stump = exp.get_tag_stump(self.protocol, 2)
 	self.instance = exp.get_tag_attribute(self.protocol)
-
+		
 	if meta.get_field(self.tag_stump+'|Passage%s|%s' %(str(self.currpassageNo-1), self.instance)) is None:
 	    self.curr_protocol = Default_Protocol
 	else:
 	    d =  meta.get_field(self.tag_stump+'|Passage%s|%s' %(str(self.currpassageNo-1), self.instance))
 	    for k, v in d:
-		self.curr_protocol[k] = v	    
-		    
+		self.curr_protocol[k] = v	
+	
+	#datetime.datetime.fromtimestamp(wx.DateTime.Now().GetTicks()) 
+	#wx.DateTimeFromTimeT(time.mktime(datetime.datetime.now().timetuple())) 
+	if self.curr_protocol['ADMIN'][1]:
+	    date = self.curr_protocol['ADMIN'][1].split('/')
+	    time = self.curr_protocol['ADMIN'][2].split(':')
+	    self.prev_datetime = datetime.datetime(*map(int, [date[2],date[1],date[0],time[0],time[1], time[2]]))
+
+	
+	#Admin
+	staticbox = wx.StaticBox(self.top_panel, -1, "Admin")
+	adminsizer = wx.StaticBoxSizer(staticbox, wx.HORIZONTAL)	
 	self.settings_controls['Admin|0'] = wx.TextCtrl(self.top_panel, size=(70,-1), value=self.curr_protocol['ADMIN'][0])
 	self.settings_controls['Admin|1'] = wx.DatePickerCtrl(self.top_panel, style = wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
 	if meta.get_field(self.tag_stump+'|Passage%s|%s' %(str(self.currpassageNo-1), self.instance)) is not None:
@@ -53,54 +74,80 @@ class PassageStepBuilder(wx.Dialog):
 		self.curr_protocol[k] = v
 		if k == 'ADMIN':
 		    day, month, year = v[1].split('/')
-		    this_date = wx.DateTimeFromDMY(int(day), int(month)-1, int(year))	    		
+		    this_date = wx.DateTimeFromDMY(int(day), int(month)-1, int(year))	 
+		    
 	else:
-	    today = datetime.date.today()
-	    self.curr_protocol['ADMIN'][1] = str(today.day)+'/'+str(today.month)+'/'+str(today.year)
-	    this_date = wx.DateTimeFromDMY(int(today.day), int(today.month)-1, int(today.year))
-	self.settings_controls['Admin|1'].SetValue(this_date)
-	self.settings_controls['Admin|2'] = wx.TextCtrl(self.top_panel, size=(20,-1), value=self.curr_protocol['ADMIN'][2])
-	self.settings_controls['Admin|3'] = wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)
-	if isinstance(self.curr_protocol['ADMIN'][3], int): #it had value
-	    self.settings_controls['Admin|3'].SetValue(self.curr_protocol['ADMIN'][3])
-	unit_choices =['nM2', 'uM2', 'mM2','Other']
-	self.settings_controls['Admin|4'] = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
-	if self.curr_protocol['ADMIN'][4] is not None:
-	    self.settings_controls['Admin|4'].Append(self.curr_protocol['ADMIN'][4])
-	    self.settings_controls['Admin|4'].SetStringSelection(self.curr_protocol['ADMIN'][4])
-	vessel_types =['T75', 'T25', '6WellPlate','12WellPlate', 'Other']
-	self.settings_controls['Admin|5'] = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (100,20), vessel_types, wx.LB_SINGLE)
-	if self.curr_protocol['ADMIN'][5] is not None:
-	    self.settings_controls['Admin|5'].Append(self.curr_protocol['ADMIN'][5])
-	    self.settings_controls['Admin|5'].SetStringSelection(self.curr_protocol['ADMIN'][5])	
+	    self.curr_protocol['ADMIN'][1] = str(self.today_datetime.day)+'/'+str(self.today_datetime.month)+'/'+str(self.today_datetime.year)
+	    this_date = wx.DateTimeFromDMY(int(self.today_datetime.day), int(self.today_datetime.month)-1, int(self.today_datetime.year))
+	  
+	    
+	self.settings_controls['Admin|1'].SetValue(this_date)	
+	self.settings_controls['Admin|2'] = masked.TimeCtrl( self.top_panel, -1, name="24 hour control", fmt24hr=True )
+	h = self.settings_controls['Admin|2'].GetSize().height
+	spin1 = wx.SpinButton( self.top_panel, -1, wx.DefaultPosition, (-1,h), wx.SP_VERTICAL )
+	self.settings_controls['Admin|2'].BindSpinButton( spin1 )
 	
+	#now = wx.DateTimeFromTimeT(time.mktime(self.today_datetime.timetuple())) 
+	
+	self.settings_controls['Admin|2'].SetValue(wx.DateTime_Now())	
+	
+	vessel_types =['T75', 'T25', '6WellPlate','12WellPlate', 'Other']
+	self.settings_controls['Admin|3'] = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (100,20), vessel_types, wx.LB_SINGLE)
+	if self.curr_protocol['ADMIN'][3] is not None:
+	    self.settings_controls['Admin|3'].Append(self.curr_protocol['ADMIN'][3])
+	    self.settings_controls['Admin|3'].SetStringSelection(self.curr_protocol['ADMIN'][3]) 
+	    
 	self.settings_controls['Admin|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
 	self.settings_controls['Admin|1'].Bind(wx.EVT_DATE_CHANGED, self.OnSavingData)
 	self.settings_controls['Admin|2'].Bind(wx.EVT_TEXT, self.OnSavingData)
-	self.settings_controls['Admin|3'].Bind(wx.EVT_TEXT, self.OnSavingData)
-	self.settings_controls['Admin|4'].Bind(wx.EVT_LISTBOX, self.OnSavingData)  
-	self.settings_controls['Admin|5'].Bind(wx.EVT_LISTBOX, self.OnSavingData) 
+	self.settings_controls['Admin|3'].Bind(wx.EVT_TEXT, self.OnSavingData)	
+	    
+	#Statistics
+	staticbox = wx.StaticBox(self.top_panel, -1, "Staistics")
+	statsizer = wx.StaticBoxSizer(staticbox, wx.HORIZONTAL)
+    
+	self.settings_controls['Stat|0'] = wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)
+	if isinstance(self.curr_protocol['STAT'][0], int): #it had value
+	    self.settings_controls['Stat|0'].SetValue(self.curr_protocol['STAT'][0])
+	unit_choices =['nM2', 'uM2', 'mM2','Other']
+	self.settings_controls['Stat|1'] = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
+	if self.curr_protocol['STAT'][1] is not None:
+	    self.settings_controls['Stat|1'].Append(self.curr_protocol['STAT'][1])
+	    self.settings_controls['Stat|1'].SetStringSelection(self.curr_protocol['STAT'][1])
+	self.settings_controls['Stat|2'] = wx.TextCtrl(self.top_panel, size=(70,-1), value=self.curr_protocol['STAT'][2])
+	  
+	self.settings_controls['Stat|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.settings_controls['Stat|1'].Bind(wx.EVT_LISTBOX, self.OnSavingData)
+	self.settings_controls['Stat|2'].Bind(wx.EVT_TEXT, self.OnSavingData)	
 	
         self.selection_btn = wx.Button(self, wx.ID_OK, 'Record Passage')
         self.close_btn = wx.Button(self, wx.ID_CANCEL)
-        
+
 	# Sizers and layout
-	admin_fgs = wx.FlexGridSizer(cols=12, vgap=5)
+	adminsizer.Add(wx.StaticText(self.top_panel, -1, 'Operator Name'),0, wx.RIGHT, 5)
+	adminsizer.Add(self.settings_controls['Admin|0'] , 0, wx.EXPAND)
+	adminsizer.Add(wx.StaticText(self.top_panel, -1, 'Date'),0, wx.RIGHT|wx.LEFT, 5)
+	adminsizer.Add(self.settings_controls['Admin|1'], 0, wx.EXPAND)
+	adminsizer.Add(wx.StaticText(self.top_panel, -1, 'Time'),0, wx.LEFT, 5)
+	adminsizer.Add(self.settings_controls['Admin|2'], 0, wx.EXPAND)
+	adminsizer.Add( spin1, 0, wx.ALIGN_CENTRE )
+	adminsizer.Add(wx.StaticText(self.top_panel, -1, ' Vessel Type'),0, wx.RIGHT|wx.LEFT, 5)
+	adminsizer.Add(self.settings_controls['Admin|3'], 0, wx.EXPAND)
 	
-	admin_fgs.Add(wx.StaticText(self.top_panel, -1, 'Operator Name'),0, wx.RIGHT, 5)
-	admin_fgs.Add(self.settings_controls['Admin|0'] , 0, wx.EXPAND)
-	admin_fgs.Add(wx.StaticText(self.top_panel, -1, 'Date'),0, wx.RIGHT|wx.LEFT, 5)
-	admin_fgs.Add(self.settings_controls['Admin|1'], 0, wx.EXPAND)
-	admin_fgs.Add(wx.StaticText(self.top_panel, -1, 'Split 1:'),0, wx.LEFT, 5)
-	admin_fgs.Add(self.settings_controls['Admin|2'], 0, wx.EXPAND)
-	admin_fgs.Add(wx.StaticText(self.top_panel, -1, 'Cell Count'),0, wx.RIGHT|wx.LEFT, 5)
-	admin_fgs.Add(self.settings_controls['Admin|3'], 0, wx.EXPAND)
-	admin_fgs.Add(wx.StaticText(self.top_panel, -1, ' cells/'),0)
-	admin_fgs.Add(self.settings_controls['Admin|4'], 0, wx.EXPAND)
-	admin_fgs.Add(wx.StaticText(self.top_panel, -1, ' Vessel type'),0)
-	admin_fgs.Add(self.settings_controls['Admin|5'], 0, wx.EXPAND)	
-	
-	self.top_panel.SetSizer(admin_fgs)
+	if isinstance(self.curr_protocol['STAT'][0], int): #it had value
+	    statsizer.Add(wx.StaticText(self.top_panel, -1, locale.format('%d', self.curr_protocol['STAT'][0], True)), 0, wx.RIGHT|wx.LEFT, 5)
+	else:
+	    statsizer.Add(wx.StaticText(self.top_panel, -1, '0'), 0, wx.RIGHT|wx.LEFT, 5)
+	statsizer.Add(wx.StaticText(self.top_panel, -1, 'Cell Count'),0, wx.RIGHT|wx.LEFT, 5)
+	statsizer.Add(self.settings_controls['Stat|0'], 0, wx.EXPAND)
+	statsizer.Add(wx.StaticText(self.top_panel, -1, ' cells/'),0)
+	statsizer.Add(self.settings_controls['Stat|1'], 0, wx.EXPAND)
+	statsizer.Add(wx.StaticText(self.top_panel, -1, 'Split 1:'),0, wx.LEFT, 5)
+	statsizer.Add(self.settings_controls['Stat|2'], 0, wx.EXPAND)	
+
+ 	self.top_panel_sizer = wx.BoxSizer(wx.VERTICAL)
+	self.top_panel_sizer.Add(adminsizer, 0, wx.EXPAND|wx.ALL, 5)
+	self.top_panel_sizer.Add(statsizer, 0, wx.EXPAND|wx.ALL, 5)
 	
 	self.fgs = wx.FlexGridSizer(cols=7, hgap=5, vgap=5)	
 	
@@ -110,21 +157,25 @@ class PassageStepBuilder(wx.Dialog):
 	btnSizer.Add(self.selection_btn  , 0, wx.ALL, 5)
 	btnSizer.Add(self.close_btn , 0, wx.ALL, 5)	
 
-        
+        self.top_panel.SetSizer(self.top_panel_sizer)
 	self.bot_panel.SetSizer(self.fgs)
         self.bot_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
+	
+	btnSizer = wx.BoxSizer(wx.HORIZONTAL)
+	btnSizer.Add(self.selection_btn  , 0, wx.ALL, 5)
+	btnSizer.Add(self.close_btn , 0, wx.ALL, 5)	
 
         self.Sizer = wx.BoxSizer(wx.VERTICAL)
 	self.Sizer.Add(self.top_panel, 0, wx.EXPAND|wx.ALL, 5)
 	self.Sizer.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.ALL, 5)
-        self.Sizer.Add(self.bot_panel, 1, wx.EXPAND|wx.ALL, 10)
+	self.Sizer.Add(self.bot_panel, 1, wx.EXPAND|wx.ALL, 5)
 	self.Sizer.Add(btnSizer)
         self.Show()         
           
     def showSteps(self):
 	# get the sorted steps in passaging
 	steps = sorted([step for step in self.curr_protocol.keys()
-		 if not step.startswith('ADMIN')] , key = meta.stringSplitByNumbers)
+		 if step.startswith('Step')] , key = meta.stringSplitByNumbers)
 		
 	#-- Header --#		
 	desp_header = wx.StaticText(self.bot_panel, -1, 'Description')
@@ -262,6 +313,17 @@ class PassageStepBuilder(wx.Dialog):
 	ctrl = event.GetEventObject()
 	tag = [t for t, c in self.settings_controls.items() if c==ctrl][0]
 	
+	date = self.settings_controls['Admin|1'].GetValue()
+	tm = self.settings_controls['Admin|2'].GetValue().split(':')
+	
+	
+	selected_datetime = datetime.datetime(*map(int, [date.Year,date.Month+1,date.Day,tm[0],tm[1], tm[2]]))	
+	
+	
+	if self.prev_datetime and selected_datetime>self.prev_datetime:
+	    time_elapsed =  (selected_datetime-self.prev_datetime)
+	    print (time_elapsed.days * 1440) + (time_elapsed.seconds / 60)
+	
 	if tag.startswith('Admin'): # if this is an Admin 
 	    if isinstance(ctrl, wx.ListBox) and ctrl.GetStringSelection() == 'Other':
 		other = wx.GetTextFromUser('Insert Other', 'Other')
@@ -270,13 +332,24 @@ class PassageStepBuilder(wx.Dialog):
 	    
 	    date = self.settings_controls['Admin|1'].GetValue()
 	    passage_date = '%02d/%02d/%4d'%(date.Day, date.Month+1, date.Year)
+	    
+	    #if self.settings_controls['Admin|2'].GetValue() is None:
+		#self.settings_controls['Admin|2'].
 			
 	    self.curr_protocol['ADMIN'] = [self.settings_controls['Admin|0'].GetValue(), 
 	                                   passage_date, 
 	                                   self.settings_controls['Admin|2'].GetValue(),
-	                                   self.settings_controls['Admin|3'].GetValue(),
-	                                   self.settings_controls['Admin|4'].GetStringSelection(),
-	                                   self.settings_controls['Admin|5'].GetStringSelection()]
+	                                   self.settings_controls['Admin|3'].GetStringSelection()
+	                                   ]
+	elif tag.startswith('Stat'):
+	    if isinstance(ctrl, wx.ListBox) and ctrl.GetStringSelection() == 'Other':
+		other = wx.GetTextFromUser('Insert Other', 'Other')
+		ctrl.Append(other)
+		ctrl.SetStringSelection(other)	
+	    self.curr_protocol['STAT'] = [self.settings_controls['Stat|0'].GetValue(), 
+	                                  self.settings_controls['Stat|1'].GetStringSelection(),
+	                                  self.settings_controls['Stat|2'].GetValue()
+	                                    ]	    
 	    
 	else:   # if this is a step 
 	    step = tag.split('|')[0]

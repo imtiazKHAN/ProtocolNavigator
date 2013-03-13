@@ -219,9 +219,7 @@ class PrintProtocol(wx.Frame):
 		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Lens: </b>'+' '.join(map(str,protocol_info['Lens']))+'</font></code></td></tr>')		
 		if 'Detector' in protocol_info:
 		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Detector: </b>'+' '.join(map(str,protocol_info['Detector']))+'</font></code></td></tr>')		
-		self.printfile.write('</table>')
-		
-					
+		self.printfile.write('</table>')			
 			
 	if flowcytometers:
 	    for instance in flowcytometers:
@@ -236,8 +234,22 @@ class PrintProtocol(wx.Frame):
 			self.printfile.write(meta.decode_ch_component(components[-1][0])+'</font></td></code></tr>')			
 		self.printfile.write('</table><p></p>')
 		
-	 
-	
+	if centrifuges:
+	    for instance in centrifuges:
+		protocol_info = self.decode_event_description('Instrument|Centrifuge|%s'%instance)	
+		
+	if incubators:
+	    for instance in incubators:
+		protocol_info = self.decode_event_description('Instrument|Incubator|%s'%instance)
+
+	if ovens:
+	    for instance in ovens:
+		protocol_info = self.decode_event_description('Instrument|Oven|%s'%instance)
+
+	if rheometers:
+	    for instance in rheometers:
+		protocol_info = self.decode_event_description('Instrument|Rheometer|%s'%instance)
+		
         #---- Material and Method Secion ---#
         self.printfile.write('<h3>4. Materials and Methods</h3>')  
         for i, timepoint in enumerate(timepoints):
@@ -285,32 +297,32 @@ class PrintProtocol(wx.Frame):
 		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Chemical Perturbation</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
 		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')
 		    if 'Name' in protocol_info:	
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Chemical Name</b>'+protocol_info['Name']+'</font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Chemical Name </b>'+protocol_info['Name']+'</font></code></td></tr>')
 		    if 'PerturbConc' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Perturbing Concentration</b>'+' '.join(protocol_info['PerturbConc'])+'</font></code></td></tr>')	
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Perturbing Concentration </b>'+' '.join(protocol_info['PerturbConc'])+'</font></code></td></tr>')	
 		    if 'StockConc' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Stock Concentration</b>'+' '.join(protocol_info['StockConc'])+'</font></code></td></tr>')	
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Stock Concentration </b>'+' '.join(protocol_info['StockConc'])+'</font></code></td></tr>')	
 		    if 'Manufacturer' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Manufacturer</b>'+protocol_info['Manufacturer']+'</font></code></td></tr>')	
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Manufacturer </b>'+protocol_info['Manufacturer']+'</font></code></td></tr>')	
 		    if 'CatNum' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Catalogue Number</b>'+protocol_info['CatNum']+'</font></code></td></tr>')	
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Catalogue Number </b>'+protocol_info['CatNum']+'</font></code></td></tr>')	
 		    if 'Storage' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Storage</b>'+protocol_info['Storage']+'</font></code></td></tr>')			
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Storage </b>'+protocol_info['Storage']+'</font></code></td></tr>')			
 		    if 'Other' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information</b>'+protocol_info['Other']+'</font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information </b>'+protocol_info['Other']+'</font></code></td></tr>')
 		    if 'Additive' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Additive</b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Additive </b></font></code></td></tr>')
 			for row in protocol_info['Additive']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	    
-		    if 'Procedure' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure</b></font></code></td></tr>')
-			for row in protocol_info['Procedure']:
+		    if 'Step' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure </b></font></code></td></tr>')
+			for row in protocol_info['Step']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
 		    if 'URL' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related website</b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related website </b></font></code></td></tr>')
 			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['URL']+'</font></code></td></tr>')
 		    if 'AttachFiles' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files</b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files </b></font></code></td></tr>')
 			for row in protocol_info['AttachFiles']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')						    
 		    self.printfile.write('</table>')		
@@ -749,76 +761,10 @@ class PrintProtocol(wx.Frame):
 		    metadata[attr] = [f for f in meta.get_field(tag_stump+'|'+attr+'|'+instance)] 
 	    return metadata
 	
-	if exp.get_tag_event(protocol) == 'Flowcytometer':	   
+	if exp.get_tag_event(protocol) in ('Flowcytometer', 'Centrifuge', 'Incubator', 'Oven', 'Rheometer'):
 	    for attr in meta.get_attribute_list(tag_stump):
 		metadata[attr] = meta.get_field(tag_stump+'|'+attr+'|'+instance)
 	    return metadata
-		
-
-	##if exp.get_tag_event(protocol) == 'Flowcytometer':
-	    ##header += meta.get_field('Instrument|Flowcytometer|Manufacturer|%s'%instance, default='')
-	    ##if meta.get_field('Instrument|Flowcytometer|Model|%s'%instance) is not None:
-		##header += '(model: %s)' %meta.get_field('Instrument|Flowcytometer|Model|%s'%instance)
-	    ##header += ' was used. '		
-	    ##for attribute, description in sorted(meta.get_attribute_dict('Instrument|Flowcytometer|%s'%instance).iteritems()):
-		##if attribute.startswith('Manufacturer')  or attribute.startswith('Model'):
-		    ##continue
-		##else:
-		    ##info.append((attribute, description))  # attribute is Ch# and description is the component list	
-	    ##return(header, info)
-	
-	#if exp.get_tag_event(protocol) == 'Centrifuge':
-		#header += meta.get_field('Instrument|Centrifuge|Manufacturer|%s'%instance, default='')
-		#if meta.get_field('Instrument|Centrifuge|Model|%s'%instance) is not None:
-		    #header += '(model: %s)' %meta.get_field('Instrument|Centrifuge|Model|%s'%instance)
-		#header += ' was used. '		
-		#for attribute, description in sorted(meta.get_attribute_dict('Instrument|Centrifuge|%s'%instance).iteritems()):
-		    #if attribute.startswith('Manufacturer')  or attribute.startswith('Model'):
-			#continue
-		    #else:
-			#info.append((attribute, description))  
-		#return(header, info)
-	    
-	#if exp.get_tag_event(protocol) == 'Incubator':
-		#header += meta.get_field('Instrument|Incubator|Manufacturer|%s'%instance, default='')
-		#if meta.get_field('Instrument|Incubator|Model|%s'%instance) is not None:
-		    #header += '(model: %s)' %meta.get_field('Instrument|Incubator|Model|%s'%instance)
-		#header += ' was used. '		
-		#for attribute, description in sorted(meta.get_attribute_dict('Instrument|Incubator|%s'%instance).iteritems()):
-		    #if attribute.startswith('Manufacturer')  or attribute.startswith('Model'):
-			#continue
-		    #else:
-			#info.append((attribute, description))  
-		#return(header, info)	
-	
-	#if exp.get_tag_event(protocol) == 'Oven':
-		#header += meta.get_field('Instrument|Oven|Manufacturer|%s'%instance, default='')
-		#if meta.get_field('Instrument|Oven|Model|%s'%instance) is not None:
-		    #header += '(model: %s)' %meta.get_field('Instrument|Oven|Model|%s'%instance)
-		#header += ' was used. '		
-		#for attribute, description in sorted(meta.get_attribute_dict('Instrument|Oven|%s'%instance).iteritems()):
-		    #if attribute.startswith('Manufacturer')  or attribute.startswith('Model'):
-			#continue
-		    #else:
-			#info.append((attribute, description))  	
-		#return(header, info)
-	    
-	#if exp.get_tag_event(protocol) == 'Rheometer':
-		#header += meta.get_field('Instrument|Rheometer|Manufacturer|%s'%instance, default='')
-		#if meta.get_field('Instrument|Rheometer|Model|%s'%instance) is not None:
-		    #header += '(model: %s)' %meta.get_field('Instrument|Rheometer|Model|%s'%instance)
-		#if meta.get_field('Instrument|Rheometer|Capacity|%s'%instance) is not None:
-		    #header += ' with capacity of %s' %meta.get_field('Instrument|Rheometer|Capacity|%s'%instance)
-		#header += ' was used. '	
-		
-		
-		
-		#for attribute, description in sorted(meta.get_attribute_dict('Instrument|Oven|%s'%instance).iteritems()):
-		    #if attribute.startswith('Manufacturer')  or attribute.startswith('Model'):
-			#continue
-		    #else:
-			#info.append((attribute, description))  	
-		#return(header, info)
 		
 	if exp.get_tag_event(protocol) == 'Seed':
 	    if meta.get_field('Transfer|Seed|CellLineInstance|%s'%instance) is not None:                    
@@ -829,12 +775,12 @@ class PrintProtocol(wx.Frame):
 		metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	
 	    return metadata
 	
-	if exp.get_tag_event(protocol) == 'Chemical':
+	if exp.get_tag_event(protocol) in ('Seed', 'Chemical', 'Biological', 'Physical', 'Dye', 'Immuno', 'Genetic', 'Medium', 'Wash', 'Storage', 'Initiation',
+	                                   'Centrifugation', 'Incubation', 'RheoManipulation', 'Drying',	                                   
+	                                   'TLM', 'HCS','FCS', 'RHE', 'Text', 'Hint', 'Rest', 'URL', 'MultiMedia'):
 	    for attr in meta.get_attribute_list_by_instance(tag_stump, instance):
-		if attr.startswith('Step1'):
-		    metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')
-		elif attr.startswith('Additive1'):
-		    metadata['Additive'] = self.decode_subprocess(protocol, 'Additive')
+		if attr.endswith('1'):
+		    metadata[attr[:-1]] = self.decode_subprocess(protocol, attr[:-1])
 		elif attr.startswith('AttachFiles'):
 		    metadata['AttachFiles'] = [f for f in meta.get_field(tag_stump+'|AttachFiles|%s'%instance)] 
 		elif attr.startswith('URL'):
@@ -843,305 +789,259 @@ class PrintProtocol(wx.Frame):
 		    metadata[attr] = meta.get_field(tag_stump+'|'+attr+'|'+instance)	
 	    return metadata
 
-        if exp.get_tag_event(protocol) == 'Biological':	      
-	    if meta.get_field('Perturbation|Biological|RNAi1|%s'%instance) is not None:
-		metadata['RNAi']  = self.decode_subprocess(protocol, 'RNAi')	    
-	    if meta.get_field('Perturbation|Biological|Target1|%s'%instance) is not None:
-		metadata['Target'] = self.decode_subprocess(protocol, 'Target')		    
-	    if meta.get_field('Perturbation|Biological|Additive1|%s'%instance) is not None:
-		metadata['Additive'] = self.decode_subprocess(protocol, 'Additive')	
-	    if meta.get_field('Perturbation|Biological|Step1|%s'%instance) is not None:
-		metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')		    
-            return metadata
+        #if exp.get_tag_event(protocol) == 'Biological':	
+	    #for attr in meta.get_attribute_list_by_instance(tag_stump, instance):
+		#if attr.startswith('RNAi1'):
+		    #metadata['RNAi'] = self.decode_subprocess(protocol, 'RNAi')
+		#elif attr.startswith('Target1'):
+		    #metadata['Target'] = self.decode_subprocess(protocol, 'Target')
+		#elif attr.startswith('Target1'):
+		    #metadata['Target'] = self.decode_subprocess(protocol, 'Target')		
+		#elif attr.startswith('AttachFiles'):
+		    #metadata['AttachFiles'] = [f for f in meta.get_field(tag_stump+'|AttachFiles|%s'%instance)] 
+		#elif attr.startswith('URL'):
+		    #metadata['URL'] = ' %s'%meta.get_field(tag_stump+'|URL|%s'%instance)		
+		#else:
+		    #metadata[attr] = meta.get_field(tag_stump+'|'+attr+'|'+instance)	
+	    #return metadata	  
 	
-	if exp.get_tag_event(protocol) == 'Physical':	    
-	    if meta.get_field('Perturbation|Physical|Material1|%s'%instance) is not None:
-		metadata['Material'] = self.decode_subprocess(protocol, 'Material')	    
-	    if meta.get_field('Perturbation|Physical|Step1|%s'%instance) is not None:
-		metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')		    
-	    return metadata	
+	    #if meta.get_field('Perturbation|Biological|RNAi1|%s'%instance) is not None:
+		#metadata['RNAi']  = self.decode_subprocess(protocol, 'RNAi')	    
+	    #if meta.get_field('Perturbation|Biological|Target1|%s'%instance) is not None:
+		#metadata['Target'] = self.decode_subprocess(protocol, 'Target')		    
+	    #if meta.get_field('Perturbation|Biological|Additive1|%s'%instance) is not None:
+		#metadata['Additive'] = self.decode_subprocess(protocol, 'Additive')	
+	    #if meta.get_field('Perturbation|Biological|Step1|%s'%instance) is not None:
+		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')		    
+            #return metadata
 	
-	if exp.get_tag_event(protocol) == 'Dye':
-	    if meta.get_field('Labeling|Dye|Name|%s'%instance) is not None:
-		metadata['Protocol Name'] = meta.get_field('Labeling|Dye|Name|%s'%instance)
-	    if meta.get_field('Labeling|Dye|DyeName|%s'%instance) is not None:                    
-		metadata['Dye Name'] = meta.get_field('Labeling|Dye|DyeName|%s'%instance)
-	    if meta.get_field('Labeling|Dye|Manufacturer|%s'%instance) is not None:
-		metadata['Dye Concentration'] = '%s,%s' %(meta.get_field('Labeling|Dye|Manufacturer|%s'%instance, default=''), meta.get_field('Labeling|Dye|CatNum|%s'%instance, default=''))
-	    if meta.get_field('Labeling|Dye|LabelingConc|%s'%instance) is not None: 
-		metadata['Labeling Concentration']= ' at a concentration of %s %s' %(meta.get_field('Labeling|Dye|LabelingConc|%s'%instance)[0], meta.get_field('Labeling|Dye|LabelingConc|%s'%instance)[1]) 
-	    if meta.get_field('Labeling|Dye|StockConc|%s'%instance) is not None:    
-		metadata['Stock Concentration']= '%s %s' %(meta.get_field('Labeling|Dye|StockConc|%s'%instance)[0], meta.get_field('Labeling|Dye|StockConc|%s'%instance)[1])
-	    if meta.get_field('Labeling|Dye|Manufacturer|%s'%instance) is not None: 
-		metadata['Manufacturer'] = meta.get_field('Labeling|Dye|Manufacturer|%s'%instance)
-	    if meta.get_field('Labeling|Dye|CatNum|%s'%instance) is not None: 
-		metadata['Catalogue Number'] = meta.get_field('Labeling|Dye|CatNum|%s'%instance)
-	    if meta.get_field('Labeling|Dye|Storage|%s'%instance) is not None: 
-		metadata['Storage'] = meta.get_field('Labeling|Dye|Storage|%s'%instance) 
-	    if meta.get_field('Labeling|Dye|Other|%s'%instance) is not None: 
-		metadata['Other Information'] = meta.get_field('Labeling|Dye|Other|%s'%instance) 	
-	    if meta.get_field('Labeling|Dye|AttachFiles|%s'%instance) is not None:
-		metadata['Attached Files'] = [f for f in meta.get_field('Labeling|Dye|AttachFiles|%s'%instance)]   	    
-	    if meta.get_field('Labeling|Dye|URL|%s'%instance) is not None: 
-		metadata['URL'] = ' %s'%meta.get_field('Labeling|Dye|URL|%s'%instance)	    
-	    if meta.get_field('Labeling|Dye|Additive1|%s'%instance) is not None: 
-		metadata['Additive'] = self.decode_subprocess(protocol, 'Additive')
-	    if meta.get_field('Labeling|Dye|Step1|%s'%instance) is not None: 
-		metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	
-	    return metadata	
+	#if exp.get_tag_event(protocol) == 'Physical':	    
+	    #if meta.get_field('Perturbation|Physical|Material1|%s'%instance) is not None:
+		#metadata['Material'] = self.decode_subprocess(protocol, 'Material')	    
+	    #if meta.get_field('Perturbation|Physical|Step1|%s'%instance) is not None:
+		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')		    
+	    #return metadata	
 	
-	if exp.get_tag_event(protocol) == 'Immuno':
-	    if meta.get_field('Labeling|Immuno|Name|%s'%instance) is not None:
-		metadata['Protocol Name'] = meta.get_field('Labeling|Immuno|Name|%s'%instance)
-	    if meta.get_field('Labeling|Immuno|Other|%s'%instance) is not None: 
-		metadata['Other Information'] = meta.get_field('Labeling|Immuno|Other|%s'%instance) 	
-	    if meta.get_field('Labeling|Immuno|AttachFiles|%s'%instance) is not None: 
-		metadata['Attached Files'] = [f for f in meta.get_field('Labeling|Immuno|AttachFiles|%s'%instance)]    	    
-	    if meta.get_field('Labeling|Immuno|URL|%s'%instance) is not None: 
-		metadata['URL'] = meta.get_field('Labeling|Immuno|URL|%s'%instance)	    
-	    if meta.get_field('Labeling|Immuno|Antibody1|%s'%instance) is not None: 
-		metadata['Antibody'] = self.decode_subprocess(protocol, 'Antibody')
-	    if meta.get_field('Labeling|Immuno|Step1|%s'%instance) is not None: 
-		metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	
-	    return metadata	
+	#if exp.get_tag_event(protocol) == 'Dye':
+	    #if meta.get_field('Labeling|Dye|Name|%s'%instance) is not None:
+		#metadata['Protocol Name'] = meta.get_field('Labeling|Dye|Name|%s'%instance)
+	    #if meta.get_field('Labeling|Dye|DyeName|%s'%instance) is not None:                    
+		#metadata['Dye Name'] = meta.get_field('Labeling|Dye|DyeName|%s'%instance)
+	    #if meta.get_field('Labeling|Dye|Manufacturer|%s'%instance) is not None:
+		#metadata['Dye Concentration'] = '%s,%s' %(meta.get_field('Labeling|Dye|Manufacturer|%s'%instance, default=''), meta.get_field('Labeling|Dye|CatNum|%s'%instance, default=''))
+	    #if meta.get_field('Labeling|Dye|LabelingConc|%s'%instance) is not None: 
+		#metadata['Labeling Concentration']= ' at a concentration of %s %s' %(meta.get_field('Labeling|Dye|LabelingConc|%s'%instance)[0], meta.get_field('Labeling|Dye|LabelingConc|%s'%instance)[1]) 
+	    #if meta.get_field('Labeling|Dye|StockConc|%s'%instance) is not None:    
+		#metadata['Stock Concentration']= '%s %s' %(meta.get_field('Labeling|Dye|StockConc|%s'%instance)[0], meta.get_field('Labeling|Dye|StockConc|%s'%instance)[1])
+	    #if meta.get_field('Labeling|Dye|Manufacturer|%s'%instance) is not None: 
+		#metadata['Manufacturer'] = meta.get_field('Labeling|Dye|Manufacturer|%s'%instance)
+	    #if meta.get_field('Labeling|Dye|CatNum|%s'%instance) is not None: 
+		#metadata['Catalogue Number'] = meta.get_field('Labeling|Dye|CatNum|%s'%instance)
+	    #if meta.get_field('Labeling|Dye|Storage|%s'%instance) is not None: 
+		#metadata['Storage'] = meta.get_field('Labeling|Dye|Storage|%s'%instance) 
+	    #if meta.get_field('Labeling|Dye|Other|%s'%instance) is not None: 
+		#metadata['Other Information'] = meta.get_field('Labeling|Dye|Other|%s'%instance) 	
+	    #if meta.get_field('Labeling|Dye|AttachFiles|%s'%instance) is not None:
+		#metadata['Attached Files'] = [f for f in meta.get_field('Labeling|Dye|AttachFiles|%s'%instance)]   	    
+	    #if meta.get_field('Labeling|Dye|URL|%s'%instance) is not None: 
+		#metadata['URL'] = ' %s'%meta.get_field('Labeling|Dye|URL|%s'%instance)	    
+	    #if meta.get_field('Labeling|Dye|Additive1|%s'%instance) is not None: 
+		#metadata['Additive'] = self.decode_subprocess(protocol, 'Additive')
+	    #if meta.get_field('Labeling|Dye|Step1|%s'%instance) is not None: 
+		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	
+	    #return metadata	
 	
-	if exp.get_tag_event(protocol) == 'Genetic':
-	    if meta.get_field('Labeling|Genetic|Name|%s'%instance) is not None:
-		metadata['Protocol Name'] = meta.get_field('Labeling|Genetic|Name|%s'%instance)
-	    if meta.get_field('Labeling|Genetic|Other|%s'%instance) is not None: 
-		metadata['Other Information'] = meta.get_field('Labeling|Genetic|Other|%s'%instance) 	
-	    if meta.get_field('Labeling|Genetic|AttachFiles|%s'%instance) is not None: 
-		metadata['Attached Files'] = [f for f in meta.get_field('Labeling|Genetic|AttachFiles|%s'%instance)]    	    
-	    if meta.get_field('Labeling|Genetic|URL|%s'%instance) is not None: 
-		metadata['URL'] = meta.get_field('Labeling|Genetic|URL|%s'%instance)	    
-	    if meta.get_field('Labeling|Genetic|Sequence1|%s'%instance) is not None: 
-		metadata['RPM']  = self.decode_subprocess(protocol, 'Sequence')
-	    if meta.get_field('Labeling|Genetic|Step1|%s'%instance) is not None: 
-		metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	    
-	    return metadata  	    
+	#if exp.get_tag_event(protocol) == 'Immuno':
+	    #if meta.get_field('Labeling|Immuno|Name|%s'%instance) is not None:
+		#metadata['Protocol Name'] = meta.get_field('Labeling|Immuno|Name|%s'%instance)
+	    #if meta.get_field('Labeling|Immuno|Other|%s'%instance) is not None: 
+		#metadata['Other Information'] = meta.get_field('Labeling|Immuno|Other|%s'%instance) 	
+	    #if meta.get_field('Labeling|Immuno|AttachFiles|%s'%instance) is not None: 
+		#metadata['Attached Files'] = [f for f in meta.get_field('Labeling|Immuno|AttachFiles|%s'%instance)]    	    
+	    #if meta.get_field('Labeling|Immuno|URL|%s'%instance) is not None: 
+		#metadata['URL'] = meta.get_field('Labeling|Immuno|URL|%s'%instance)	    
+	    #if meta.get_field('Labeling|Immuno|Antibody1|%s'%instance) is not None: 
+		#metadata['Antibody'] = self.decode_subprocess(protocol, 'Antibody')
+	    #if meta.get_field('Labeling|Immuno|Step1|%s'%instance) is not None: 
+		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	
+	    #return metadata	
+	
+	#if exp.get_tag_event(protocol) == 'Genetic':
+	    #if meta.get_field('Labeling|Genetic|Name|%s'%instance) is not None:
+		#metadata['Protocol Name'] = meta.get_field('Labeling|Genetic|Name|%s'%instance)
+	    #if meta.get_field('Labeling|Genetic|Other|%s'%instance) is not None: 
+		#metadata['Other Information'] = meta.get_field('Labeling|Genetic|Other|%s'%instance) 	
+	    #if meta.get_field('Labeling|Genetic|AttachFiles|%s'%instance) is not None: 
+		#metadata['Attached Files'] = [f for f in meta.get_field('Labeling|Genetic|AttachFiles|%s'%instance)]    	    
+	    #if meta.get_field('Labeling|Genetic|URL|%s'%instance) is not None: 
+		#metadata['URL'] = meta.get_field('Labeling|Genetic|URL|%s'%instance)	    
+	    #if meta.get_field('Labeling|Genetic|Sequence1|%s'%instance) is not None: 
+		#metadata['RPM']  = self.decode_subprocess(protocol, 'Sequence')
+	    #if meta.get_field('Labeling|Genetic|Step1|%s'%instance) is not None: 
+		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	    
+	    #return metadata  	    
 
-	if exp.get_tag_event(protocol) == 'Medium':
-	    if meta.get_field('AddProcess|Medium|Name|%s'%instance) is not None:
-		metadata['Protocol Name'] = meta.get_field('AddProcess|Medium|Name|%s'%instance)
-	    if meta.get_field('AddProcess|Medium|Other|%s'%instance) is not None: 
-		metadata['Other Information'] = meta.get_field('AddProcess|Medium|Other|%s'%instance) 	
-	    if meta.get_field('AddProcess|Medium|AttachFiles|%s'%instance) is not None:
-		metadata['Attached Files'] = [f for f in meta.get_field('AddProcess|Medium|AttachFiles|%s'%instance)]    	    
-	    if meta.get_field('AddProcess|Medium|URL|%s'%instance) is not None: 
-		metadata['URL'] = meta.get_field('AddProcess|Medium|URL|%s'%instance)	    
-	    if meta.get_field('AddProcess|Medium|Additive1|%s'%instance) is not None: 
-		metadata['Additive'] = self.decode_subprocess(protocol, 'Additive')
-	    if meta.get_field('AddProcess|Medium|Step1|%s'%instance) is not None: 
-		metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	
-	    return metadata	
+	#if exp.get_tag_event(protocol) == 'Medium':
+	    #if meta.get_field('AddProcess|Medium|Name|%s'%instance) is not None:
+		#metadata['Protocol Name'] = meta.get_field('AddProcess|Medium|Name|%s'%instance)
+	    #if meta.get_field('AddProcess|Medium|Other|%s'%instance) is not None: 
+		#metadata['Other Information'] = meta.get_field('AddProcess|Medium|Other|%s'%instance) 	
+	    #if meta.get_field('AddProcess|Medium|AttachFiles|%s'%instance) is not None:
+		#metadata['Attached Files'] = [f for f in meta.get_field('AddProcess|Medium|AttachFiles|%s'%instance)]    	    
+	    #if meta.get_field('AddProcess|Medium|URL|%s'%instance) is not None: 
+		#metadata['URL'] = meta.get_field('AddProcess|Medium|URL|%s'%instance)	    
+	    #if meta.get_field('AddProcess|Medium|Additive1|%s'%instance) is not None: 
+		#metadata['Additive'] = self.decode_subprocess(protocol, 'Additive')
+	    #if meta.get_field('AddProcess|Medium|Step1|%s'%instance) is not None: 
+		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	
+	    #return metadata	
 			
-	if exp.get_tag_event(protocol) == 'Wash':
-	    if meta.get_field('AddProcess|Wash|Name|%s'%instance) is not None:
-		metadata['Protocol Name'] = meta.get_field('AddProcess|Wash|Name|%s'%instance)
-	    if meta.get_field('AddProcess|Wash|Other|%s'%instance) is not None: 
-		metadata['Other Information'] = meta.get_field('AddProcess|Wash|Other|%s'%instance) 	
-	    if meta.get_field('AddProcess|Wash|AttachFiles|%s'%instance) is not None: 
-		metadata['Attached Files'] = [f for f in meta.get_field('AddProcess|Wash|AttachFiles|%s'%instance)] 	    
-	    if meta.get_field('AddProcess|Wash|URL|%s'%instance) is not None: 
-		metadata['URL'] = meta.get_field('AddProcess|Wash|URL|%s'%instance)	    
-	    if meta.get_field('AddProcess|Wash|Step1|%s'%instance) is not None: 
-		metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	
-	    return metadata 
+	#if exp.get_tag_event(protocol) == 'Wash':
+	    #if meta.get_field('AddProcess|Wash|Name|%s'%instance) is not None:
+		#metadata['Protocol Name'] = meta.get_field('AddProcess|Wash|Name|%s'%instance)
+	    #if meta.get_field('AddProcess|Wash|Other|%s'%instance) is not None: 
+		#metadata['Other Information'] = meta.get_field('AddProcess|Wash|Other|%s'%instance) 	
+	    #if meta.get_field('AddProcess|Wash|AttachFiles|%s'%instance) is not None: 
+		#metadata['Attached Files'] = [f for f in meta.get_field('AddProcess|Wash|AttachFiles|%s'%instance)] 	    
+	    #if meta.get_field('AddProcess|Wash|URL|%s'%instance) is not None: 
+		#metadata['URL'] = meta.get_field('AddProcess|Wash|URL|%s'%instance)	    
+	    #if meta.get_field('AddProcess|Wash|Step1|%s'%instance) is not None: 
+		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	
+	    #return metadata 
 	
-	if exp.get_tag_event(protocol) == 'Centrifugation':
-	    if meta.get_field('InstProcess|Centrifugation|Name|%s'%instance) is not None:
-		metadata['Protocol Name'] = meta.get_field('InstProcess|Centrifugation|Name|%s'%instance)
-	    if meta.get_field('InstProcess|Centrifugation|CentrifugeInstance|%s'%instance) is not None: 
-		metadata['Instrument Instance'] = meta.get_field('InstProcess|Centrifugation|CentrifugeInstance|%s'%instance) 	
-	    if meta.get_field('InstProcess|Centrifugation|AttachFiles|%s'%instance) is not None: 
-		metadata['Attached Files'] = [f for f in meta.get_field('InstProcess|Centrifugation|AttachFiles|%s'%instance)]    	    
-	    if meta.get_field('InstProcess|Centrifugation|URL|%s'%instance) is not None: 
-		metadata['URL'] = meta.get_field('InstProcess|Centrifugation|URL|%s'%instance)	    
-	    if meta.get_field('InstProcess|Centrifugation|RPM1|%s'%instance) is not None: 
-		metadata['RPM']  = self.decode_subprocess(protocol, 'RPM')
-	    if meta.get_field('InstProcess|Centrifugation|Step1|%s'%instance) is not None: 
-		metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	    
-	    return metadata             
+	#if exp.get_tag_event(protocol) == 'Centrifugation':
+	    #if meta.get_field('InstProcess|Centrifugation|Name|%s'%instance) is not None:
+		#metadata['Protocol Name'] = meta.get_field('InstProcess|Centrifugation|Name|%s'%instance)
+	    #if meta.get_field('InstProcess|Centrifugation|CentrifugeInstance|%s'%instance) is not None: 
+		#metadata['Instrument Instance'] = meta.get_field('InstProcess|Centrifugation|CentrifugeInstance|%s'%instance) 	
+	    #if meta.get_field('InstProcess|Centrifugation|AttachFiles|%s'%instance) is not None: 
+		#metadata['Attached Files'] = [f for f in meta.get_field('InstProcess|Centrifugation|AttachFiles|%s'%instance)]    	    
+	    #if meta.get_field('InstProcess|Centrifugation|URL|%s'%instance) is not None: 
+		#metadata['URL'] = meta.get_field('InstProcess|Centrifugation|URL|%s'%instance)	    
+	    #if meta.get_field('InstProcess|Centrifugation|RPM1|%s'%instance) is not None: 
+		#metadata['RPM']  = self.decode_subprocess(protocol, 'RPM')
+	    #if meta.get_field('InstProcess|Centrifugation|Step1|%s'%instance) is not None: 
+		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	    
+	    #return metadata             
 
-	if exp.get_tag_event(protocol) == 'Drying':
-	    if meta.get_field('InstProcess|Drying|Name|%s'%instance) is not None:
-		metadata['Protocol Name'] = meta.get_field('InstProcess|Drying|Name|%s'%instance)
-	    if meta.get_field('InstProcess|Drying|OvenInstance|%s'%instance) is not None: 
-		metadata['Instrument Instance'] = meta.get_field('InstProcess|Drying|OvenInstance|%s'%instance) 	
-	    if meta.get_field('InstProcess|Drying|AttachFiles|%s'%instance) is not None: 
-		metadata['Attached Files'] = [f for f in meta.get_field('InstProcess|Drying|AttachFiles|%s'%instance)]
-	    if meta.get_field('InstProcess|Drying|URL|%s'%instance) is not None: 
-		metadata['URL'] = meta.get_field('InstProcess|Drying|URL|%s'%instance)	    
-	    if meta.get_field('InstProcess|Drying|Gas1|%s'%instance) is not None: 
-		metadata['Gas Gradient'] = self.decode_subprocess(protocol, 'Gas')
-	    if meta.get_field('InstProcess|Drying|Temperature1|%s'%instance) is not None: 
-		metadata['Temperature Gradient'] = self.decode_subprocess(protocol, 'Temperature')	 
-	    if meta.get_field('InstProcess|Drying|Humidity1|%s'%instance) is not None: 
-		metadata['Humidity Gradient'] = self.decode_subprocess(protocol, 'Humidity')
-	    if meta.get_field('InstProcess|Drying|Pressure1|%s'%instance) is not None: 
-		metadata['Pressure Gradient'] = self.decode_subprocess(protocol, 'Pressure')	    
-	    if meta.get_field('InstProcess|Drying|Step1|%s'%instance) is not None: 
-		metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	    
-	    return metadata   
+	#if exp.get_tag_event(protocol) == 'Drying':
+	    #if meta.get_field('InstProcess|Drying|Name|%s'%instance) is not None:
+		#metadata['Protocol Name'] = meta.get_field('InstProcess|Drying|Name|%s'%instance)
+	    #if meta.get_field('InstProcess|Drying|OvenInstance|%s'%instance) is not None: 
+		#metadata['Instrument Instance'] = meta.get_field('InstProcess|Drying|OvenInstance|%s'%instance) 	
+	    #if meta.get_field('InstProcess|Drying|AttachFiles|%s'%instance) is not None: 
+		#metadata['Attached Files'] = [f for f in meta.get_field('InstProcess|Drying|AttachFiles|%s'%instance)]
+	    #if meta.get_field('InstProcess|Drying|URL|%s'%instance) is not None: 
+		#metadata['URL'] = meta.get_field('InstProcess|Drying|URL|%s'%instance)	    
+	    #if meta.get_field('InstProcess|Drying|Gas1|%s'%instance) is not None: 
+		#metadata['Gas Gradient'] = self.decode_subprocess(protocol, 'Gas')
+	    #if meta.get_field('InstProcess|Drying|Temperature1|%s'%instance) is not None: 
+		#metadata['Temperature Gradient'] = self.decode_subprocess(protocol, 'Temperature')	 
+	    #if meta.get_field('InstProcess|Drying|Humidity1|%s'%instance) is not None: 
+		#metadata['Humidity Gradient'] = self.decode_subprocess(protocol, 'Humidity')
+	    #if meta.get_field('InstProcess|Drying|Pressure1|%s'%instance) is not None: 
+		#metadata['Pressure Gradient'] = self.decode_subprocess(protocol, 'Pressure')	    
+	    #if meta.get_field('InstProcess|Drying|Step1|%s'%instance) is not None: 
+		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	    
+	    #return metadata   
 	
-	if exp.get_tag_event(protocol) == 'Incubation':
+	#if exp.get_tag_event(protocol) == 'Incubation':
 	    
-	    if meta.get_field('InstProcess|Incubation|Name|%s'%instance) is not None:
-		metadata['Protocol Name'] = meta.get_field('InstProcess|Incubation|Name|%s'%instance)
-	    if meta.get_field('InstProcess|Incubation|IncubatorInstance|%s'%instance) is not None: 
-		metadata['Instrument Instance'] = meta.get_field('InstProcess|Incubation|IncubatorInstance|%s'%instance) 	
-	    if meta.get_field('InstProcess|Incubation|AttachFiles|%s'%instance) is not None: 
-		metadata['Attached Files'] = [f for f in meta.get_field('InstProcess|Incubation|AttachFiles|%s'%instance)]
-	    if meta.get_field('InstProcess|Incubation|URL|%s'%instance) is not None: 
-		metadata['URL'] = meta.get_field('InstProcess|Incubation|URL|%s'%instance)	    
-	    if meta.get_field('InstProcess|Incubation|Gas1|%s'%instance) is not None: 
-		metadata['Gas Gradient'] = self.decode_subprocess(protocol, 'Gas')
-	    if meta.get_field('InstProcess|Incubation|Temperature1|%s'%instance) is not None: 
-		metadata['Temperature Gradient'] = self.decode_subprocess(protocol, 'Temperature')	 
-	    if meta.get_field('InstProcess|Incubation|Humidity1|%s'%instance) is not None: 
-		metadata['Humidity Gradient'] = self.decode_subprocess(protocol, 'Humidity')
-	    if meta.get_field('InstProcess|Incubation|Pressure1|%s'%instance) is not None: 
-		metadata['Pressure Gradient'] = self.decode_subprocess(protocol, 'Pressure')	    
-	    if meta.get_field('InstProcess|Incubation|Step1|%s'%instance) is not None: 
-		metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	    
-	    return metadata 
+	    #if meta.get_field('InstProcess|Incubation|Name|%s'%instance) is not None:
+		#metadata['Protocol Name'] = meta.get_field('InstProcess|Incubation|Name|%s'%instance)
+	    #if meta.get_field('InstProcess|Incubation|IncubatorInstance|%s'%instance) is not None: 
+		#metadata['Instrument Instance'] = meta.get_field('InstProcess|Incubation|IncubatorInstance|%s'%instance) 	
+	    #if meta.get_field('InstProcess|Incubation|AttachFiles|%s'%instance) is not None: 
+		#metadata['Attached Files'] = [f for f in meta.get_field('InstProcess|Incubation|AttachFiles|%s'%instance)]
+	    #if meta.get_field('InstProcess|Incubation|URL|%s'%instance) is not None: 
+		#metadata['URL'] = meta.get_field('InstProcess|Incubation|URL|%s'%instance)	    
+	    #if meta.get_field('InstProcess|Incubation|Gas1|%s'%instance) is not None: 
+		#metadata['Gas Gradient'] = self.decode_subprocess(protocol, 'Gas')
+	    #if meta.get_field('InstProcess|Incubation|Temperature1|%s'%instance) is not None: 
+		#metadata['Temperature Gradient'] = self.decode_subprocess(protocol, 'Temperature')	 
+	    #if meta.get_field('InstProcess|Incubation|Humidity1|%s'%instance) is not None: 
+		#metadata['Humidity Gradient'] = self.decode_subprocess(protocol, 'Humidity')
+	    #if meta.get_field('InstProcess|Incubation|Pressure1|%s'%instance) is not None: 
+		#metadata['Pressure Gradient'] = self.decode_subprocess(protocol, 'Pressure')	    
+	    #if meta.get_field('InstProcess|Incubation|Step1|%s'%instance) is not None: 
+		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	    
+	    #return metadata 
 	
-	if exp.get_tag_event(protocol) == 'RheoManipulation':
-	    if meta.get_field('InstProcess|RheoManipulation|Name|%s'%instance) is not None:
-		metadata['Protocol Name'] = meta.get_field('InstProcess|RheoManipulation|Name|%s'%instance)
-	    if meta.get_field('InstProcess|RheoManipulation|RheometerInstance|%s'%instance) is not None: 
-		metadata['Instrument Instance'] = meta.get_field('InstProcess|RheoManipulation|RheometerInstance|%s'%instance) 	
-	    if meta.get_field('InstProcess|RheoManipulation|AttachFiles|%s'%instance) is not None: 
-		metadata['Attached Files'] = [f for f in meta.get_field('InstProcess|RheoManipulation|AttachFiles|%s'%instance)]
-	    if meta.get_field('InstProcess|RheoManipulation|URL|%s'%instance) is not None: 
-		metadata['URL'] = meta.get_field('InstProcess|RheoManipulation|URL|%s'%instance)	    
-	    if meta.get_field('InstProcess|RheoManipulation|GelComposition1|%s'%instance) is not None: 
-		metadata['Gel Composition'] = self.decode_subprocess(protocol, 'GelComposition')
-	    if meta.get_field('InstProcess|RheoManipulation|GelProfile1|%s'%instance) is not None: 
-		metadata['Gel Profile'] = self.decode_subprocess(protocol, 'GelProfile')		    
-	    if meta.get_field('InstProcess|RheoManipulation|Step1|%s'%instance) is not None: 
-		metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	    
-	    return metadata    
+	#if exp.get_tag_event(protocol) == 'RheoManipulation':
+	    #if meta.get_field('InstProcess|RheoManipulation|Name|%s'%instance) is not None:
+		#metadata['Protocol Name'] = meta.get_field('InstProcess|RheoManipulation|Name|%s'%instance)
+	    #if meta.get_field('InstProcess|RheoManipulation|RheometerInstance|%s'%instance) is not None: 
+		#metadata['Instrument Instance'] = meta.get_field('InstProcess|RheoManipulation|RheometerInstance|%s'%instance) 	
+	    #if meta.get_field('InstProcess|RheoManipulation|AttachFiles|%s'%instance) is not None: 
+		#metadata['Attached Files'] = [f for f in meta.get_field('InstProcess|RheoManipulation|AttachFiles|%s'%instance)]
+	    #if meta.get_field('InstProcess|RheoManipulation|URL|%s'%instance) is not None: 
+		#metadata['URL'] = meta.get_field('InstProcess|RheoManipulation|URL|%s'%instance)	    
+	    #if meta.get_field('InstProcess|RheoManipulation|GelComposition1|%s'%instance) is not None: 
+		#metadata['Gel Composition'] = self.decode_subprocess(protocol, 'GelComposition')
+	    #if meta.get_field('InstProcess|RheoManipulation|GelProfile1|%s'%instance) is not None: 
+		#metadata['Gel Profile'] = self.decode_subprocess(protocol, 'GelProfile')		    
+	    #if meta.get_field('InstProcess|RheoManipulation|Step1|%s'%instance) is not None: 
+		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	    
+	    #return metadata    
 
-	if exp.get_tag_event(protocol) == 'FCS':
-	    if meta.get_field('DataAcquis|FCS|FlowcytometerInstance|%s'%instance) is not None:
-		metadata['Instrument Instance'] = meta.get_field('DataAcquis|FCS|FlowcytometerInstance|%s'%instance)
-	    if meta.get_field('DataAcquis|FCS|Format|%s'%instance) is not None:
-		metadata['File Format'] = meta.get_field('DataAcquis|FCS|Format|%s'%instance)
-	    if meta.get_field('DataAcquis|FCS|Software|%s'%instance) is not None:
-		metadata['Software'] = meta.get_field('DataAcquis|FCS|Software|%s'%instance)
-	    return metadata
+	#if exp.get_tag_event(protocol) == 'FCS':
+	    #if meta.get_field('DataAcquis|FCS|FlowcytometerInstance|%s'%instance) is not None:
+		#metadata['Instrument Instance'] = meta.get_field('DataAcquis|FCS|FlowcytometerInstance|%s'%instance)
+	    #if meta.get_field('DataAcquis|FCS|Format|%s'%instance) is not None:
+		#metadata['File Format'] = meta.get_field('DataAcquis|FCS|Format|%s'%instance)
+	    #if meta.get_field('DataAcquis|FCS|Software|%s'%instance) is not None:
+		#metadata['Software'] = meta.get_field('DataAcquis|FCS|Software|%s'%instance)
+	    #return metadata
 	
-	if exp.get_tag_event(protocol) == 'RHE':
-	    if meta.get_field('DataAcquis|RHE|RheometerInstance|%s'%instance) is not None:
-		metadata['Instrument Instance'] = meta.get_field('DataAcquis|RHE|RheometerInstance|%s'%instance)
-	    if meta.get_field('DataAcquis|RHE|Step1|%s'%instance) is not None: 
-		metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')
-	    return metadata
+	#if exp.get_tag_event(protocol) == 'RHE':
+	    #if meta.get_field('DataAcquis|RHE|RheometerInstance|%s'%instance) is not None:
+		#metadata['Instrument Instance'] = meta.get_field('DataAcquis|RHE|RheometerInstance|%s'%instance)
+	    #if meta.get_field('DataAcquis|RHE|Step1|%s'%instance) is not None: 
+		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')
+	    #return metadata
 
-	if exp.get_tag_event(protocol) == 'HCS':
-	    if meta.get_field('DataAcquis|HCS|MicroscopeInstance|%s'%instance) is not None:
-		metadata['Instrument Instance'] = meta.get_field('DataAcquis|HCS|MicroscopeInstance|%s'%instance)
-	    if meta.get_field('DataAcquis|HCS|Format|%s'%instance) is not None: 
-		metadata['File Format'] = meta.get_field('DataAcquis|HCS|Format|%s'%instance)
-	    if meta.get_field('DataAcquis|HCS|PixelSize|%s'%instance) is not None: 
-		metadata['Pixel Size'] = meta.get_field('DataAcquis|HCS|PixelSize|%s'%instance)
-	    if meta.get_field('DataAcquis|HCS|PixelConvert|%s'%instance) is not None: 
-		metadata['Pixel Convertion'] = meta.get_field('DataAcquis|HCS|PixelConvert|%s'%instance)
-	    if meta.get_field('DataAcquis|HCS|Software|%s'%instance) is not None:
-		metadata['Software'] = meta.get_field('DataAcquis|HCS|Software|%s'%instance)	    
-	    return metadata
+	#if exp.get_tag_event(protocol) == 'HCS':
+	    #if meta.get_field('DataAcquis|HCS|MicroscopeInstance|%s'%instance) is not None:
+		#metadata['Instrument Instance'] = meta.get_field('DataAcquis|HCS|MicroscopeInstance|%s'%instance)
+	    #if meta.get_field('DataAcquis|HCS|Format|%s'%instance) is not None: 
+		#metadata['File Format'] = meta.get_field('DataAcquis|HCS|Format|%s'%instance)
+	    #if meta.get_field('DataAcquis|HCS|PixelSize|%s'%instance) is not None: 
+		#metadata['Pixel Size'] = meta.get_field('DataAcquis|HCS|PixelSize|%s'%instance)
+	    #if meta.get_field('DataAcquis|HCS|PixelConvert|%s'%instance) is not None: 
+		#metadata['Pixel Convertion'] = meta.get_field('DataAcquis|HCS|PixelConvert|%s'%instance)
+	    #if meta.get_field('DataAcquis|HCS|Software|%s'%instance) is not None:
+		#metadata['Software'] = meta.get_field('DataAcquis|HCS|Software|%s'%instance)	    
+	    #return metadata
 
-	if exp.get_tag_event(protocol) == 'TLM':
-	    if meta.get_field('DataAcquis|TLM|MicroscopeInstance|%s'%instance) is not None:
-		metadata['Instrument Instance'] = meta.get_field('DataAcquis|TLM|MicroscopeInstance|%s'%instance)
-	    if meta.get_field('DataAcquis|TLM|Format|%s'%instance) is not None: 
-		metadata['File Format'] = meta.get_field('DataAcquis|TLM|Format|%s'%instance)
-	    if meta.get_field('DataAcquis|TLM|TimeInterval|%s'%instance) is not None: 
-		metadata['Time Interval'] = meta.get_field('DataAcquis|TLM|TimeInterval|%s'%instance)	    
-	    if meta.get_field('DataAcquis|TLM|FrameNumber|%s'%instance) is not None: 
-		metadata['Frame Number'] = meta.get_field('DataAcquis|TLM|FrameNumber|%s'%instance)	    
-	    if meta.get_field('DataAcquis|TLM|StackProcess|%s'%instance) is not None: 
-		metadata['Stack Process'] = meta.get_field('DataAcquis|TLM|StackProcess|%s'%instance)	    	    
-	    if meta.get_field('DataAcquis|TLM|PixelSize|%s'%instance) is not None: 
-		metadata['Pixel Size'] = meta.get_field('DataAcquis|TLM|PixelSize|%s'%instance)
-	    if meta.get_field('DataAcquis|TLM|PixelConvert|%s'%instance) is not None: 
-		metadata['Pixel Convertion'] = meta.get_field('DataAcquis|TLM|PixelConvert|%s'%instance)
-	    if meta.get_field('DataAcquis|TLM|Software|%s'%instance) is not None:
-		metadata['Software'] = meta.get_field('DataAcquis|TLM|Software|%s'%instance)	    
-	    return metadata
+	#if exp.get_tag_event(protocol) == 'TLM':
+	    #if meta.get_field('DataAcquis|TLM|MicroscopeInstance|%s'%instance) is not None:
+		#metadata['Instrument Instance'] = meta.get_field('DataAcquis|TLM|MicroscopeInstance|%s'%instance)
+	    #if meta.get_field('DataAcquis|TLM|Format|%s'%instance) is not None: 
+		#metadata['File Format'] = meta.get_field('DataAcquis|TLM|Format|%s'%instance)
+	    #if meta.get_field('DataAcquis|TLM|TimeInterval|%s'%instance) is not None: 
+		#metadata['Time Interval'] = meta.get_field('DataAcquis|TLM|TimeInterval|%s'%instance)	    
+	    #if meta.get_field('DataAcquis|TLM|FrameNumber|%s'%instance) is not None: 
+		#metadata['Frame Number'] = meta.get_field('DataAcquis|TLM|FrameNumber|%s'%instance)	    
+	    #if meta.get_field('DataAcquis|TLM|StackProcess|%s'%instance) is not None: 
+		#metadata['Stack Process'] = meta.get_field('DataAcquis|TLM|StackProcess|%s'%instance)	    	    
+	    #if meta.get_field('DataAcquis|TLM|PixelSize|%s'%instance) is not None: 
+		#metadata['Pixel Size'] = meta.get_field('DataAcquis|TLM|PixelSize|%s'%instance)
+	    #if meta.get_field('DataAcquis|TLM|PixelConvert|%s'%instance) is not None: 
+		#metadata['Pixel Convertion'] = meta.get_field('DataAcquis|TLM|PixelConvert|%s'%instance)
+	    #if meta.get_field('DataAcquis|TLM|Software|%s'%instance) is not None:
+		#metadata['Software'] = meta.get_field('DataAcquis|TLM|Software|%s'%instance)	    
+	    #return metadata
         
-	if exp.get_tag_event(protocol) == 'RHE':
-	    if meta.get_field('DataAcquis|RHE|RheometerInstance|%s'%instance) is not None:
-		metadata['Instrument Instance'] = meta.get_field('DataAcquis|RHE|RheometerInstance|%s'%instance) 
-	    if meta.get_field('DataAcquis|RHE|Step1|%s'%instance) is not None: 
-		metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')
-	    return metadata
+	#if exp.get_tag_event(protocol) == 'RHE':
+	    #if meta.get_field('DataAcquis|RHE|RheometerInstance|%s'%instance) is not None:
+		#metadata['Instrument Instance'] = meta.get_field('DataAcquis|RHE|RheometerInstance|%s'%instance) 
+	    #if meta.get_field('DataAcquis|RHE|Step1|%s'%instance) is not None: 
+		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')
+	    #return metadata
 
         # ***********************************   CHANGE ENDS    ******************************#
 	
-	
-	#if exp.get_tag_event(protocol) == 'TLM':
-	    #if meta.get_field('DataAcquis|TLM|MicroscopeInstance|%s'%instance) is not None:
-		#ch_name = meta.get_field('DataAcquis|TLM|MicroscopeInstance|%s'%instance)
-		#cytometer_instance=meta.get_instance_by_field_value('Instrument|Microscope|ChannelName|', ch_name) 
-		#header += ch_name+' channel was used (see microscope instance %s for details) for data acquisition.  '%cytometer_instance
-	    #if meta.get_field('DataAcquis|TLM|Format|%s'%instance) is not None:
-		#info.append(('Image Format: ', meta.get_field('DataAcquis|TLM|Format|%s'%instance)))
-	    #if meta.get_field('DataAcquis|TLM|TimeInterval|%s'%instance) is not None:
-		#info.append(('Time Interval: ', meta.get_field('DataAcquis|TLM|TimeInterval|%s'%instance)))
-	    #if meta.get_field('DataAcquis|TLM|FrameNumber|%s'%instance) is not None:
-		#info.append(('Number of Frames: ', meta.get_field('DataAcquis|TLM|FrameNumber|%s'%instance)))
-	    #if meta.get_field('DataAcquis|TLM|StackProcess|%s'%instance) is not None:
-		#info.append(('Stacking Process: ', meta.get_field('DataAcquis|TLM|StackProcess|%s'%instance)))
-	    #if meta.get_field('DataAcquis|TLM|PixelSize|%s'%instance) is not None:
-		#info.append(('Pixel Size: ', meta.get_field('DataAcquis|TLM|PixelSize|%s'%instance)))
-	    #if meta.get_field('DataAcquis|TLM|PixelConvert|%s'%instance) is not None:
-		#info.append(('Pixel Convertion: ', meta.get_field('DataAcquis|TLM|PixelConvert|%s'%instance)))
-	    #if meta.get_field('DataAcquis|TLM|PixelSoftware|%s'%instance) is not None:
-		#info.append(('Acquisition Software: ', meta.get_field('DataAcquis|TLM|PixelSoftware|%s'%instance)))	    
-	    #return (header, info)
-	
-	#if exp.get_tag_event(protocol) == 'HCS':	    
-	    #if meta.get_field('DataAcquis|HCS|MicroscopeInstance|%s'%instance) is not None:
-		#ch_name = meta.get_field('DataAcquis|HCS|MicroscopeInstance|%s'%instance)
-		#cytometer_instance=meta.get_instance_by_field_value('Instrument|Microscope|ChannelName|', ch_name) 
-		#header += ch_name+' channel was used (see microscope instance %s for details) for data acquisition.  '%cytometer_instance
-	    #if meta.get_field('DataAcquis|HCS|Format|%s'%instance) is not None:
-		#info.append(('Image Format: ', meta.get_field('DataAcquis|HCS|Format|%s'%instance)))
-	    #if meta.get_field('DataAcquis|HCS|PixelSize|%s'%instance) is not None:
-		#info.append(('Pixel Size: ', meta.get_field('DataAcquis|HCS|PixelSize|%s'%instance)))
-	    #if meta.get_field('DataAcquis|HCS|PixelConvert|%s'%instance) is not None:
-		#info.append(('Pixel Convertion: ', meta.get_field('DataAcquis|HCS|PixelConvert|%s'%instance)))
-	    #if meta.get_field('DataAcquis|HCS|Software|%s'%instance) is not None:
-		#info.append(('Acquisition Software: ', meta.get_field('DataAcquis|HCS|Software|%s'%instance)))	    
-	    #return (header, info)
-	
-	#if exp.get_tag_event(protocol) == 'FCS':	    
-	    #if meta.get_field('DataAcquis|FCS|FlowcytometerInstance|%s'%instance) is not None:
-		#cytometer_instance = meta.get_field('DataAcquis|FCS|FlowcytometerInstance|%s'%instance)
-		#header += meta.get_field('Instrument|Flowcytometer|Manufacter|%s'%cytometer_instance, default='')+' flowcytometer '
-		#if meta.get_field('Instrument|Flowcytometer|Model|%s'%cytometer_instance) is not None:
-		    #header += '(model: %s)' %meta.get_field('Instrument|Flowcytometer|Model|%s'%cytometer_instance, default = 'not specified')
-		#header += ' was used (see flowcytometer instance %s for details).'%cytometer_instance
-	    #if meta.get_field('DataAcquis|FCS|Format|%s'%instance) is not None:
-		#info.append(('File Format: ', meta.get_field('DataAcquis|FCS|Format|%s'%instance)))
-	    #if meta.get_field('DataAcquis|FCS|Software|%s'%instance) is not None:
-		#info.append(('Acquisition Software: ', meta.get_field('DataAcquis|FCS|Software|%s'%instance)))	
-	    #return (header, info)
-	  
-            #if event == 'Harvest':
-                    ##if meta.get_field('Transfer|Harvest|CellLineInstance|%s'%instance) is not None:
-                        ##text += meta.get_field('Sample|CellLine|Name|%s'%meta.get_field('Transfer|Harvest|CellLineInstance|%s'%instance))
-                    #if meta.get_field('Transfer|Seed|Trypsinizatiton|%s'%instance) is 'Yes':   
-                        #text += ' cells were harvested by trypsinisation '
-                    #text += 'cell density was %s. ' %meta.get_field('Transfer|Seed|SeedingDensity|%s'%instance, default = '')
-                    #if meta.get_field('Transfer|Seed|MediumUsed|%s'%instance) is not None:
-                        #text += meta.get_field('Transfer|Seed|MediumUsed|%s'%instance)+' medium was used '
-                    #if meta.get_field('Transfer|Seed|MediumAddatives|%s'%instance) is not None:
-                        #text += 'with following medium additives: %s. ' %meta.get_field('Transfer|Seed|MediumAddatives|%s'%instance)
-              
-         
+
 
 
     def decode_event_location(self, plate_well_info):

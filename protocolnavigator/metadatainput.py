@@ -927,7 +927,7 @@ class CellLinePanel(wx.Panel):
 	curr_protocol = dict(passage_info)
 	
 	steps = sorted([step for step in curr_protocol.keys()
-		 if not step.startswith('ADMIN')] , key = meta.stringSplitByNumbers)
+		 if step.startswith('Step')] , key = meta.stringSplitByNumbers)
 	
 	string = ''
 	for s in steps:
@@ -952,7 +952,7 @@ class CellLinePanel(wx.Panel):
 	passage_info = meta.get_field(self.tag_stump+'|%s|%s' %(passage, str(self.tab_number)))
 	admin_info = dict(passage_info).get('ADMIN')
 	
-	return 'Operator %s Date %s Split 1:%s Cell Count %s/%s' %(admin_info[0], admin_info[1], admin_info[2], admin_info[3], admin_info[4])
+	return '%s passaged on %s at %s ' %(admin_info[0], admin_info[1], admin_info[2])
     
     def OnAttachPropFile(self, event):
 	if meta.checkMandatoryTags(self.mandatory_tags):	
