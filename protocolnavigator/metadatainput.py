@@ -19,17 +19,18 @@ import wx.media
 import glob
 import icons
 import subprocess
+import wx.lib.plot as plot
 from functools import partial
 from experimentsettings import *
 from instancelist import *
 from utils import *
 from makechannel import ChannelBuilder
-#from stepbuilder import StepBuilder
 from rheometerstepbuilder import RheometerStepBuilder
 from addrow import RowBuilder
 from passagestepwriter import *
 from collections import OrderedDict
 from draganddrop import FileListDialog
+
 
 ICON_SIZE = 22.0
 
@@ -546,6 +547,8 @@ class CellLinePanel(wx.Panel):
 	                       self.tag_stump+'|CatalogueNo|%s'%str(self.tab_number),
 	                       self.tag_stump+'|Organism|%s'%str(self.tab_number)]
 	self.currpassageNo = 0	
+	self.elapsed_time = [0] 
+	self.cumulative_pd = [0] 
 	
 	# Panel
 	self.splitwindow = wx.SplitterWindow(self)
@@ -834,10 +837,14 @@ class CellLinePanel(wx.Panel):
 	self.recordPassageBtn = wx.Button(self.top_panel, -1, label="Record")
 	self.recordPassageBtn.Bind(wx.EVT_BUTTON, self.onRecordPassage)	
 	prop_fgs.Add(wx.StaticText(self.top_panel, -1, 'Passage History'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	prop_fgs.Add(self.recordPassageBtn, 0)
+	prop_fgs.Add(self.recordPassageBtn, 0)	
 
 	propSizer = wx.StaticBoxSizer(prop_staticbox, wx.VERTICAL)	
-	propSizer.Add(prop_fgs,  0, wx.ALIGN_LEFT|wx.ALL, 5 )	
+	propSizer.Add(prop_fgs,  0, wx.ALIGN_LEFT|wx.ALL, 5 )
+	
+	self.canvas = plot.PlotCanvas(self.top_panel)
+	self.canvas.SetInitialSize(size=(400, 300))
+	#self.canvas.Draw(self.drawBarGraph())	
 	
 	# show the perviously encoded passages
 	pass_title = wx.StaticText(self.bot_panel, -1, 'Passage History')
@@ -857,6 +864,7 @@ class CellLinePanel(wx.Panel):
 	topsizer.Add(adminSizer, 0, wx.EXPAND|wx.ALL, 10)
 	topsizer.Add(bioSizer, 0, wx.EXPAND|wx.ALL, 10)
 	topsizer.Add(propSizer, 0, wx.EXPAND|wx.ALL, 10)
+	topsizer.Add(self.canvas, 0, wx.EXPAND|wx.ALL, 10)
         self.top_panel.SetSizer(topsizer)
 	self.bot_panel.SetSizer(self.fpbsizer)
 	self.top_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
@@ -865,6 +873,7 @@ class CellLinePanel(wx.Panel):
         self.Sizer = wx.BoxSizer(wx.VERTICAL)
 	self.Sizer.Add(self.splitwindow, 1, wx.EXPAND)
 	self.SetSizer(self.Sizer)
+  
   
     def onRecordPassage(self, event):
         if meta.checkMandatoryTags(self.mandatory_tags):
@@ -893,11 +902,29 @@ class CellLinePanel(wx.Panel):
 	if passages: 
 	    self.fpbsizer.Clear(deleteWindows=True)
 	    self.settings_controls[self.tag_stump+'|OrgPassageNo|%s'%str(self.tab_number)].Disable()
-	    
 	    pass_title = wx.StaticText(self.bot_panel, -1, 'Passage History')
 	    font = wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD)
 	    pass_title.SetFont(font)
-	    self.fpbsizer.Add(pass_title, 0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)	    
+	    self.fpbsizer.Add(pass_title, 0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)	  
+	    self.elapsed_time = [0]
+	    self.cumulative_pd = [0]
+	    for passage in sorted(passages, key=meta.alphanumeric_sort):
+		passage_info = meta.get_field(self.tag_stump+'|%s|%s' %(passage, str(self.tab_number)))
+		pd_info = dict(passage_info).get('PD')
+		if pd_info:
+		    self.elapsed_time.append(self.elapsed_time[-1]+pd_info[2]) 
+		    self.cumulative_pd.append(self.cumulative_pd[-1]+pd_info[1])
+		data = []
+		for i, timepoint in enumerate(self.elapsed_time):
+		    data.append((timepoint, self.cumulative_pd[i]))
+		line = plot.PolyLine(data, colour='green', width=1)
+			## also draw markers, default colour is black and size is 2
+			## other shapes 'circle', 'cross', 'square', 'dot', 'plus'
+		marker = plot.PolyMarker(data, marker='circle', colour='green')
+			## set up text, axis and draw
+		gc = plot.PlotGraphics([line, marker], 'Population double chart', 'Accumulated Time (hours)', 'Accumulated PDs')
+		self.canvas.Refresh()
+		self.canvas.Draw(gc, xAxis=(0,max(self.elapsed_time)+24), yAxis=(0,max(self.cumulative_pd)+1))		
     
 	    for passage in reversed(sorted(passages, key=meta.alphanumeric_sort)):
 		# make a foldable panel for each passage
@@ -906,13 +933,12 @@ class CellLinePanel(wx.Panel):
 		self.Bind(wx.EVT_COLLAPSIBLEPANE_CHANGED, self.OnPaneChanged, passagepane)
 		self.passagePane(passagepane.GetPane(), passage)	
 		self.fpbsizer.Add(passagepane, 0, wx.RIGHT|wx.LEFT, 25)	
-    
+
 	    # Sizers update	
 	    self.bot_panel.SetSizer(self.fpbsizer)
 	    self.top_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
 	    self.bot_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
-	
-
+    
     def OnPaneChanged(self, evt=None):
 	self.top_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
 	self.bot_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
@@ -951,7 +977,6 @@ class CellLinePanel(wx.Panel):
 	meta = ExperimentSettings.getInstance()
 	passage_info = meta.get_field(self.tag_stump+'|%s|%s' %(passage, str(self.tab_number)))
 	admin_info = dict(passage_info).get('ADMIN')
-	
 	return '%s passaged on %s at %s ' %(admin_info[0], admin_info[1], admin_info[2])
     
     def OnAttachPropFile(self, event):

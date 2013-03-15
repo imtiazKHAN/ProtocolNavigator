@@ -1,10 +1,10 @@
 import wx
 import re
 import datetime
-import time
 import experimentsettings as exp
 import wx.lib.masked as masked
 import locale
+import math
 from experimentsettings import ExperimentSettings
 from wx.lib.masked import NumCtrl
 from addrow import RowBuilder
@@ -15,8 +15,12 @@ meta = exp.ExperimentSettings.getInstance()
 locale.setlocale(locale.LC_ALL, "")
 
 Default_Protocol ={
-    'ADMIN' : ['Your name', '', '', '','', ''],
-    'STAT' : ['', '', ''],
+    'ADMIN' : ['Your Name', '', ''],
+    'SEED' : None,
+    'HARVEST' : None,
+    'RESEED' : None,
+    'VESSEL' : None,
+    'PD': None,
     'Step1' : ['Remove medium with a stripette','','', ''],
     'Step2' : ['Add trypsin in the following volumes - 1ml for the 60mm dish or T25 flask OR 2ml for 100mm dish or T75 flask','','', ''],
     'Step3' : ['Gently tip to ensure trypsin reaches all surfaces','','', ''],
@@ -40,8 +44,7 @@ class PassageStepBuilder(wx.Dialog):
 	
 	self.settings_controls = {}
 	self.curr_protocol = {}
-	self.admin_info = {}      
-	self.prev_datetime = None
+	self.admin_info = {}  	
 	
 	self.today_datetime = datetime.datetime.now()
 	
@@ -54,76 +57,90 @@ class PassageStepBuilder(wx.Dialog):
 	    d =  meta.get_field(self.tag_stump+'|Passage%s|%s' %(str(self.currpassageNo-1), self.instance))
 	    for k, v in d:
 		self.curr_protocol[k] = v	
+		
+	date= None	
+	self.initial_datetime = None
+	self.initial_seed_density = None	
+	self.curr_protocol['PD'] = []
+	self.curr_protocol['HARVEST'] = []
+	self.curr_protocol['RESEED'] = []	
 	
 	#datetime.datetime.fromtimestamp(wx.DateTime.Now().GetTicks()) 
 	#wx.DateTimeFromTimeT(time.mktime(datetime.datetime.now().timetuple())) 
 	if self.curr_protocol['ADMIN'][1]:
 	    date = self.curr_protocol['ADMIN'][1].split('/')
 	    time = self.curr_protocol['ADMIN'][2].split(':')
-	    self.prev_datetime = datetime.datetime(*map(int, [date[2],date[1],date[0],time[0],time[1], time[2]]))
+	    self.initial_datetime = datetime.datetime(*map(int, [date[2],date[1],date[0],time[0],time[1], time[2]]))
+	if self.curr_protocol['SEED']:
+	    self.initial_seed_density = self.curr_protocol['SEED'][0]
 
-	
-	#Admin
-	staticbox = wx.StaticBox(self.top_panel, -1, "Admin")
-	adminsizer = wx.StaticBoxSizer(staticbox, wx.HORIZONTAL)	
-	self.settings_controls['Admin|0'] = wx.TextCtrl(self.top_panel, size=(70,-1), value=self.curr_protocol['ADMIN'][0])
+	#Admin	
+	self.settings_controls['Admin|0'] = wx.TextCtrl(self.top_panel, size=(70,-1), value=self.curr_protocol['ADMIN'][0])	
 	self.settings_controls['Admin|1'] = wx.DatePickerCtrl(self.top_panel, style = wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
-	if meta.get_field(self.tag_stump+'|Passage%s|%s' %(str(self.currpassageNo-1), self.instance)) is not None:
-	    d =  meta.get_field(self.tag_stump+'|Passage%s|%s' %(str(self.currpassageNo-1), self.instance))
-	    for k, v in d:
-		self.curr_protocol[k] = v
-		if k == 'ADMIN':
-		    day, month, year = v[1].split('/')
-		    this_date = wx.DateTimeFromDMY(int(day), int(month)-1, int(year))	 
-		    
-	else:
+	if date is None:
 	    self.curr_protocol['ADMIN'][1] = str(self.today_datetime.day)+'/'+str(self.today_datetime.month)+'/'+str(self.today_datetime.year)
-	    this_date = wx.DateTimeFromDMY(int(self.today_datetime.day), int(self.today_datetime.month)-1, int(self.today_datetime.year))
-	  
-	    
-	self.settings_controls['Admin|1'].SetValue(this_date)	
+	else:
+	    self.settings_controls['Admin|1'].SetValue(wx.DateTimeFromDMY(int(date[0]), int(date[1])-1, int(date[2])))
 	self.settings_controls['Admin|2'] = masked.TimeCtrl( self.top_panel, -1, name="24 hour control", fmt24hr=True )
 	h = self.settings_controls['Admin|2'].GetSize().height
 	spin1 = wx.SpinButton( self.top_panel, -1, wx.DefaultPosition, (-1,h), wx.SP_VERTICAL )
-	self.settings_controls['Admin|2'].BindSpinButton( spin1 )
+	self.settings_controls['Admin|2'].BindSpinButton( spin1 )	
+	self.curr_protocol['ADMIN'][2] = str(self.today_datetime.hour)+':'+str(self.today_datetime.minute)+':'+str(self.today_datetime.second)
+	self.settings_controls['Admin|2'].SetValue(self.curr_protocol['ADMIN'][2])
 	
-	#now = wx.DateTimeFromTimeT(time.mktime(self.today_datetime.timetuple())) 
-	
-	self.settings_controls['Admin|2'].SetValue(wx.DateTime_Now())	
-	
-	vessel_types =['T75', 'T25', '6WellPlate','12WellPlate', 'Other']
-	self.settings_controls['Admin|3'] = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (100,20), vessel_types, wx.LB_SINGLE)
-	if self.curr_protocol['ADMIN'][3] is not None:
-	    self.settings_controls['Admin|3'].Append(self.curr_protocol['ADMIN'][3])
-	    self.settings_controls['Admin|3'].SetStringSelection(self.curr_protocol['ADMIN'][3]) 
+	self.set_curr_time = wx.Button(self.top_panel, -1, 'Set Current Date Time')
+
+    
+	self.settings_controls['Seed|0'] = wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)
+	unit_choices =['nM2', 'uM2', 'mM2','Other']
+	self.settings_controls['Seed|1'] = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
+	if self.curr_protocol['SEED']:
+	    self.settings_controls['Seed|0'].SetValue(self.curr_protocol['SEED'][0])
+	    self.settings_controls['Seed|0'].Disable()	
+	    self.settings_controls['Seed|1'].Append(self.curr_protocol['SEED'][1])
+	    self.settings_controls['Seed|1'].SetStringSelection(self.curr_protocol['SEED'][1])
+	    self.settings_controls['Seed|1'].Disable()
 	    
+	self.settings_controls['Harvest|0'] = wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)
+	unit_choices =['nM2', 'uM2', 'mM2','Other']
+	self.settings_controls['Harvest|1'] = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
+	self.settings_controls['Reseed|0'] = wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)
+	unit_choices =['nM2', 'uM2', 'mM2','Other']
+	self.settings_controls['Reseed|1'] = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
+	
+	# CHANGE IT VESSEL DESIGN TWO SELECTIONS
+	vessel_types =['T75', 'T25', '6WellPlate','12WellPlate', 'Other']
+	self.settings_controls['Vessel|0'] = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (100,20), vessel_types, wx.LB_SINGLE)
+	if self.curr_protocol['VESSEL']:
+	    self.settings_controls['Vessel|0'].Append(self.curr_protocol['VESSEL'][0])
+	    self.settings_controls['Vessel|0'].SetStringSelection(self.curr_protocol['VESSEL'][0]) 
+	    
+	    
+	self.pd_text = wx.StaticText(self.top_panel, -1, '')
+	font = wx.Font(12, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
+	self.pd_text.SetFont(font)	
+	
+	self.selection_btn = wx.Button(self, wx.ID_OK, 'Record Passage')
+        self.close_btn = wx.Button(self, wx.ID_CANCEL)  
+	
+	self.selection_btn.Disable()
+	
+	#Bind
 	self.settings_controls['Admin|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
 	self.settings_controls['Admin|1'].Bind(wx.EVT_DATE_CHANGED, self.OnSavingData)
-	self.settings_controls['Admin|2'].Bind(wx.EVT_TEXT, self.OnSavingData)
-	self.settings_controls['Admin|3'].Bind(wx.EVT_TEXT, self.OnSavingData)	
-	    
-	#Statistics
-	staticbox = wx.StaticBox(self.top_panel, -1, "Staistics")
-	statsizer = wx.StaticBoxSizer(staticbox, wx.HORIZONTAL)
-    
-	self.settings_controls['Stat|0'] = wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)
-	if isinstance(self.curr_protocol['STAT'][0], int): #it had value
-	    self.settings_controls['Stat|0'].SetValue(self.curr_protocol['STAT'][0])
-	unit_choices =['nM2', 'uM2', 'mM2','Other']
-	self.settings_controls['Stat|1'] = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
-	if self.curr_protocol['STAT'][1] is not None:
-	    self.settings_controls['Stat|1'].Append(self.curr_protocol['STAT'][1])
-	    self.settings_controls['Stat|1'].SetStringSelection(self.curr_protocol['STAT'][1])
-	self.settings_controls['Stat|2'] = wx.TextCtrl(self.top_panel, size=(70,-1), value=self.curr_protocol['STAT'][2])
-	  
-	self.settings_controls['Stat|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
-	self.settings_controls['Stat|1'].Bind(wx.EVT_LISTBOX, self.OnSavingData)
-	self.settings_controls['Stat|2'].Bind(wx.EVT_TEXT, self.OnSavingData)	
-	
-        self.selection_btn = wx.Button(self, wx.ID_OK, 'Record Passage')
-        self.close_btn = wx.Button(self, wx.ID_CANCEL)
+	self.settings_controls['Admin|2'].Bind(wx.EVT_TEXT, self.OnSavingData)	
+	self.settings_controls['Seed|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.settings_controls['Seed|1'].Bind(wx.EVT_LISTBOX, self.OnSavingData)
+	self.settings_controls['Harvest|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.settings_controls['Harvest|1'].Bind(wx.EVT_LISTBOX, self.OnSavingData)	
+	self.settings_controls['Reseed|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.settings_controls['Reseed|1'].Bind(wx.EVT_LISTBOX, self.OnSavingData) 
+	self.settings_controls['Vessel|0'].Bind(wx.EVT_LISTBOX, self.OnSavingData)
+	self.set_curr_time.Bind(wx.EVT_BUTTON, self.setCurrDateTime)
 
 	# Sizers and layout
+	staticbox = wx.StaticBox(self.top_panel, -1, "Admin")
+	adminsizer = wx.StaticBoxSizer(staticbox, wx.HORIZONTAL)	
 	adminsizer.Add(wx.StaticText(self.top_panel, -1, 'Operator Name'),0, wx.RIGHT, 5)
 	adminsizer.Add(self.settings_controls['Admin|0'] , 0, wx.EXPAND)
 	adminsizer.Add(wx.StaticText(self.top_panel, -1, 'Date'),0, wx.RIGHT|wx.LEFT, 5)
@@ -131,19 +148,29 @@ class PassageStepBuilder(wx.Dialog):
 	adminsizer.Add(wx.StaticText(self.top_panel, -1, 'Time'),0, wx.LEFT, 5)
 	adminsizer.Add(self.settings_controls['Admin|2'], 0, wx.EXPAND)
 	adminsizer.Add( spin1, 0, wx.ALIGN_CENTRE )
-	adminsizer.Add(wx.StaticText(self.top_panel, -1, ' Vessel Type'),0, wx.RIGHT|wx.LEFT, 5)
-	adminsizer.Add(self.settings_controls['Admin|3'], 0, wx.EXPAND)
+	adminsizer.Add(self.set_curr_time, 0, wx.ALIGN_RIGHT|wx.LEFT, 15)
+
+	stat_fgs = wx.FlexGridSizer(cols=4, hgap=5, vgap=5)
+	stat_fgs.Add(wx.StaticText(self.top_panel, -1, 'Seed Density'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	stat_fgs.Add(self.settings_controls['Seed|0'], 0, wx.EXPAND)
+	stat_fgs.Add(wx.StaticText(self.top_panel, -1, ' cells/'),0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)
+	stat_fgs.Add(self.settings_controls['Seed|1'], 0, wx.EXPAND)
+	stat_fgs.Add(wx.StaticText(self.top_panel, -1, 'Harvest Density'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	stat_fgs.Add(self.settings_controls['Harvest|0'], 0, wx.EXPAND)
+	stat_fgs.Add(wx.StaticText(self.top_panel, -1, ' cells/'),0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)
+	stat_fgs.Add(self.settings_controls['Harvest|1'], 0, wx.EXPAND)	
+	stat_fgs.Add(wx.StaticText(self.top_panel, -1, 'Reseed Density'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	stat_fgs.Add(self.settings_controls['Reseed|0'], 0, wx.EXPAND)
+	stat_fgs.Add(wx.StaticText(self.top_panel, -1, ' cells/'),0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)
+	stat_fgs.Add(self.settings_controls['Reseed|1'], 0, wx.EXPAND)	
+	stat_fgs.Add(wx.StaticText(self.top_panel, -1, 'Vessel Type'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	stat_fgs.Add(self.settings_controls['Vessel|0'], 0, wx.EXPAND)
 	
-	if isinstance(self.curr_protocol['STAT'][0], int): #it had value
-	    statsizer.Add(wx.StaticText(self.top_panel, -1, locale.format('%d', self.curr_protocol['STAT'][0], True)), 0, wx.RIGHT|wx.LEFT, 5)
-	else:
-	    statsizer.Add(wx.StaticText(self.top_panel, -1, '0'), 0, wx.RIGHT|wx.LEFT, 5)
-	statsizer.Add(wx.StaticText(self.top_panel, -1, 'Cell Count'),0, wx.RIGHT|wx.LEFT, 5)
-	statsizer.Add(self.settings_controls['Stat|0'], 0, wx.EXPAND)
-	statsizer.Add(wx.StaticText(self.top_panel, -1, ' cells/'),0)
-	statsizer.Add(self.settings_controls['Stat|1'], 0, wx.EXPAND)
-	statsizer.Add(wx.StaticText(self.top_panel, -1, 'Split 1:'),0, wx.LEFT, 5)
-	statsizer.Add(self.settings_controls['Stat|2'], 0, wx.EXPAND)	
+	staticbox = wx.StaticBox(self.top_panel, -1, "Statistics")
+	statsizer = wx.StaticBoxSizer(staticbox, wx.HORIZONTAL)	
+	statsizer.Add(stat_fgs, 0, wx.ALIGN_LEFT)
+	statsizer.Add(self.pd_text, 0, wx.ALIGN_CENTRE|wx.ALIGN_RIGHT|wx.ALL, 20)
+	
 
  	self.top_panel_sizer = wx.BoxSizer(wx.VERTICAL)
 	self.top_panel_sizer.Add(adminsizer, 0, wx.EXPAND|wx.ALL, 5)
@@ -308,48 +335,42 @@ class PassageStepBuilder(wx.Dialog):
 	self.showSteps()
     
 
+    #----------------------------------------------------------------------
+    def setCurrDateTime(self, event):
+	"""This method sets current date and time to the ctrl"""
+	now = wx.DateTime_Now()
+	self.settings_controls['Admin|1'].SetValue(now)
+	self.settings_controls['Admin|2'].SetValue(now)
+    
 
     def OnSavingData(self, event):
 	ctrl = event.GetEventObject()
 	tag = [t for t, c in self.settings_controls.items() if c==ctrl][0]
-	
-	date = self.settings_controls['Admin|1'].GetValue()
-	tm = self.settings_controls['Admin|2'].GetValue().split(':')
-	
-	
-	selected_datetime = datetime.datetime(*map(int, [date.Year,date.Month+1,date.Day,tm[0],tm[1], tm[2]]))	
-	
-	
-	if self.prev_datetime and selected_datetime>self.prev_datetime:
-	    time_elapsed =  (selected_datetime-self.prev_datetime)
-	    print (time_elapsed.days * 1440) + (time_elapsed.seconds / 60)
+	if isinstance(ctrl, wx.ListBox) and ctrl.GetStringSelection() == 'Other':
+		other = wx.GetTextFromUser('Insert Other', 'Other')
+		ctrl.Append(other)
+		ctrl.SetStringSelection(other)
 	
 	if tag.startswith('Admin'): # if this is an Admin 
-	    if isinstance(ctrl, wx.ListBox) and ctrl.GetStringSelection() == 'Other':
-		other = wx.GetTextFromUser('Insert Other', 'Other')
-		ctrl.Append(other)
-		ctrl.SetStringSelection(other)	
-	    
 	    date = self.settings_controls['Admin|1'].GetValue()
-	    passage_date = '%02d/%02d/%4d'%(date.Day, date.Month+1, date.Year)
-	    
-	    #if self.settings_controls['Admin|2'].GetValue() is None:
-		#self.settings_controls['Admin|2'].
-			
 	    self.curr_protocol['ADMIN'] = [self.settings_controls['Admin|0'].GetValue(), 
-	                                   passage_date, 
-	                                   self.settings_controls['Admin|2'].GetValue(),
-	                                   self.settings_controls['Admin|3'].GetStringSelection()
+	                                   '%02d/%02d/%4d'%(date.Day, date.Month+1, date.Year), 
+	                                   self.settings_controls['Admin|2'].GetValue()
 	                                   ]
-	elif tag.startswith('Stat'):
-	    if isinstance(ctrl, wx.ListBox) and ctrl.GetStringSelection() == 'Other':
-		other = wx.GetTextFromUser('Insert Other', 'Other')
-		ctrl.Append(other)
-		ctrl.SetStringSelection(other)	
-	    self.curr_protocol['STAT'] = [self.settings_controls['Stat|0'].GetValue(), 
-	                                  self.settings_controls['Stat|1'].GetStringSelection(),
-	                                  self.settings_controls['Stat|2'].GetValue()
+	elif tag.startswith('Seed'):	
+	    self.curr_protocol['SEED'] = [self.settings_controls['Seed|0'].GetValue(), 
+	                                  self.settings_controls['Seed|1'].GetStringSelection()
 	                                    ]	    
+	elif tag.startswith('Harvest'):	
+	    self.curr_protocol['HARVEST'] = [self.settings_controls['Harvest|0'].GetValue(), 
+	                                  self.settings_controls['Harvest|1'].GetStringSelection()
+	                                    ]
+	elif tag.startswith('Reseed'):	
+	    self.curr_protocol['SEED'] = [self.settings_controls['Reseed|0'].GetValue(), 
+	                                  self.settings_controls['Reseed|1'].GetStringSelection()
+	                                    ]
+	elif tag.startswith('Vessel'):	
+	    self.curr_protocol['VESSEL'] = [self.settings_controls['Vessel|0'].GetStringSelection()]
 	    
 	else:   # if this is a step 
 	    step = tag.split('|')[0]
@@ -370,3 +391,30 @@ class PassageStepBuilder(wx.Dialog):
 		    
 	    self.curr_protocol[step] = info
 	
+	date = self.curr_protocol['ADMIN'][1].split('/')
+	time = self.curr_protocol['ADMIN'][2].split(':')
+	selected_datetime = datetime.datetime(*map(int, [date[2],date[1],date[0],time[0],time[1], time[2]]))
+	
+	if (self.initial_datetime and self.initial_seed_density and self.curr_protocol['HARVEST']):
+	    # *** Harvest density can be less then seed density if cells die
+	    # the forumula is different check with Paul  #=elapsedtime*LN(2)/LN(harvest density/seed density)
+	    # ** time resloution can be days or hours
+	    time_elapsed =  (selected_datetime-self.initial_datetime)
+	    elapsed_minutes = (time_elapsed.days * 1440) + (time_elapsed.seconds / 60)
+	    if elapsed_minutes < 360:
+		dlg = wx.MessageDialog(None, 'Difference of seed-harvest time should be minimum 6 hr.\nReselect time', 'Time selection error', wx.OK| wx.ICON_STOP)
+		dlg.ShowModal()
+		return 		
+	    if (selected_datetime>self.initial_datetime and self.curr_protocol['HARVEST'][0] > self.initial_seed_density):
+		cell_growth = max(math.log(self.curr_protocol['HARVEST'][0]/self.initial_seed_density), 1)
+		pdt = (elapsed_minutes*math.log(2)/cell_growth)/60
+		self.pd_text.SetLabel('PD Time %.2f Hr' %pdt)
+		self.curr_protocol['PD'].append(pdt)
+		self.curr_protocol['PD'].append((elapsed_minutes/60)/pdt)
+		self.curr_protocol['PD'].append((elapsed_minutes/60))
+    
+		
+	if self.initial_seed_density and self.curr_protocol['HARVEST']:
+	    self.selection_btn.Enable()
+	if (self.initial_seed_density is None) and self.curr_protocol['SEED']:
+	    self.selection_btn.Enable()	
