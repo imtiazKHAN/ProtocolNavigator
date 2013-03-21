@@ -236,26 +236,49 @@ class PrintProtocol(wx.Frame):
 		
 	if centrifuges:
 	    for instance in centrifuges:
-		protocol_info = self.decode_event_description('Instrument|Centrifuge|%s'%instance)	
-		
+		protocol_info = self.decode_event_description('Instrument|Centrifuge|%s'%instance)
+		self.printfile.write('<br /><table border="1"><tr><th align="center"><i>'+ 'Centrifuge (%s %s %s) was used. This will be referred as instance %s' %(protocol_info.get('Manufacturer', ''), protocol_info.get('Model', ''), protocol_info.get('Type', ''), str(instance))+'</i></th></tr></table><p></p>')		
+	
 	if incubators:
 	    for instance in incubators:
 		protocol_info = self.decode_event_description('Instrument|Incubator|%s'%instance)
-
+		self.printfile.write('<br /><table border="1"><tr><th align="center"><i>'+ 'Incubator (%s %s) with a capacity of %s was used. This will be referred as instance %s' %(protocol_info.get('Manufacturer', ''), protocol_info.get('Model', ''), protocol_info.get('Capacity', ''), str(instance))+'</i></th></tr></table><p></p>')		
+		
 	if ovens:
 	    for instance in ovens:
 		protocol_info = self.decode_event_description('Instrument|Oven|%s'%instance)
+		self.printfile.write('<br /><table border="1"><tr><th colspan="2" align="center"><i>'+ 'Oven (%s %s) was used. This will be referred as instance %s' %(protocol_info.get('Manufacturer', ''), protocol_info.get('Model', ''), str(instance))+'</i></th></tr></table><p></p>')		
 
 	if rheometers:
 	    for instance in rheometers:
 		protocol_info = self.decode_event_description('Instrument|Rheometer|%s'%instance)
-		
+		self.printfile.write('<br /><table border="1"><tr><th colspan="2" align="center"><i>'+' Rheometer (%s %s) with a capacity of %s was used. This will be referred as instance %s' %(protocol_info.get('Manufacturer', ''), protocol_info.get('Model', ''), protocol_info.get('Capacity', ''),str(instance))+'</i></th></tr>')		
+		if protocol_info['GeometryType'] == 'Parallel':
+		    self.printfile.write('<tr><code><td width=20% align="center"><font size="2"><b>Parallel geometry was used </b></font></code></td>')
+		    diameter = protocol_info.get('GeometryDiameter', ['',''])
+		    gap = protocol_info.get('GeometryGap', ['',''])
+		    self.printfile.write('<code><td width=80% align="left"><font size="1">'+'Diameter: %s %s; Material: %s; Gap: %s %s'%(diameter[0],diameter[1], protocol_info.get('GeometryMaterial',''),gap[0],gap[1])+'</font></td></code></tr>')			    
+		if protocol_info['GeometryType'] == 'Cone':
+		    self.printfile.write('<tr><code><td width=20% align="center"><font size="2"><b>Cone geometry was used </b></font></code></td>')
+		    diameter = protocol_info.get('GeometryDiameter', ['',''])
+		    angle = protocol_info.get('GeometryAngel', ['',''])
+		    turncate = protocol_info.get('GeometryTurncate', ['',''])
+		    self.printfile.write('<code><td width=80% align="left"><font size="1">'+'Diameter: %s %s; Material: %s; Angle: %s %s; Turncation: %s %s'%(diameter[0],diameter[1], protocol_info.get('GeometryMaterial',''),angle[0],angle[1], turncate[0],turncate[1])+'</font></td></code></tr>')			    		
+		if 'Gas' in protocol_info:
+		    self.printfile.write('<tr><td width=20% align="center"><code><font size="1"><b>Gas</b></font></code></td>')
+		    self.printfile.write('<td width=80% align="left"><code><font size="1">')
+		    for row in protocol_info['Gas']:
+			self.printfile.write(row+'<br />')
+		    self.printfile.write('</font></code></td></tr>')
+		self.printfile.write('</table><p></p>')		
+		    
+		    
+		    
         #---- Material and Method Secion ---#
         self.printfile.write('<h3>4. Materials and Methods</h3>')  
         for i, timepoint in enumerate(timepoints):
 	    for protocol in self.ordered_list(list(set([exp.get_tag_protocol(ev.get_welltag()) for ev in self.events_by_timepoint[timepoint]]))):
             #for protocol in set([exp.get_tag_protocol(ev.get_welltag()) for ev in self.events_by_timepoint[timepoint]]):
-		
 		self.printfile.write('<tr>')
 		
 		instance = exp.get_tag_attribute(protocol)
@@ -283,7 +306,10 @@ class PrintProtocol(wx.Frame):
 		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
 		                        '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Seeding from Stock Culture</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
 		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')
-		    if 'Cell Line' in protocol_info:
+		    #First differentiate whether it is seed from stock or harvest seed
+		    # if seed from stock then just mention what cell line and seeding density
+		    # if harvest-seed then 
+		    if 'CellLineInstance' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Cell Line']+' were seeded')
 		    if 'Seeding Density' in protocol_info:
 			self.printfile.write(' with a density of '+protocol_info['Seeding Density'])
@@ -749,7 +775,14 @@ class PrintProtocol(wx.Frame):
 	    if passages:
 		passage_info = []
 		for passage in sorted(passages, key=meta.stringSplitByNumbers):
-		    passage_info.append('%s was done by %s'%(passage, self.get_passage_admin_info(meta.get_field('Sample|CellLine|%s|%s'%(passage,instance)))))
+		    admin = ''
+		    cell_count = ''
+		    for stp in meta.get_field('Sample|CellLine|%s|%s'%(passage,instance)):
+	                if stp[0] == 'ADMIN':
+	                    admin = '%s on %s at %s.'%(stp[1][0], stp[1][1], stp[1][2])
+	                if stp[0] == 'SEED':
+	                    cell_count = ' Cells were seeded at a density of %s %s'%(stp[1][0],stp[1][1])		    
+		    passage_info.append('%s was done by %s'%(passage, admin+cell_count))
 		metadata['Passage'] = passage_info
 	    return metadata         
 	
@@ -761,21 +794,19 @@ class PrintProtocol(wx.Frame):
 		    metadata[attr] = [f for f in meta.get_field(tag_stump+'|'+attr+'|'+instance)] 
 	    return metadata
 	
-	if exp.get_tag_event(protocol) in ('Flowcytometer', 'Centrifuge', 'Incubator', 'Oven', 'Rheometer'):
-	    for attr in meta.get_attribute_list(tag_stump):
-		metadata[attr] = meta.get_field(tag_stump+'|'+attr+'|'+instance)
-	    return metadata
 		
-	if exp.get_tag_event(protocol) == 'Seed':
-	    if meta.get_field('Transfer|Seed|CellLineInstance|%s'%instance) is not None:                    
-		metadata['Cell Line']= meta.get_field('Sample|CellLine|Name|%s'%meta.get_field('Transfer|Seed|CellLineInstance|%s'%instance))	  
-	    if meta.get_field('Transfer|Seed|SeedingDensity|%s'%instance) is not None: 
-		metadata['Seeding Density']= '%s %s' %(meta.get_field('Transfer|Seed|SeedingDensity|%s'%instance)[0], meta.get_field('Transfer|Seed|SeedingDensity|%s'%instance)[1]) 	    
-	    if meta.get_field('Transfer|Seed|Step1|%s'%instance) is not None: # At least one step/additive is present
-		metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	
-	    return metadata
+	#if exp.get_tag_event(protocol) == 'Seed':
+	    #if meta.get_field('Transfer|Seed|CellLineInstance|%s'%instance) is not None:                    
+		#metadata['Cell Line']= meta.get_field('Sample|CellLine|Name|%s'%meta.get_field('Transfer|Seed|CellLineInstance|%s'%instance))	  
+	    #if meta.get_field('Transfer|Seed|SeedingDensity|%s'%instance) is not None: 
+		#metadata['Seeding Density']= '%s %s' %(meta.get_field('Transfer|Seed|SeedingDensity|%s'%instance)[0], meta.get_field('Transfer|Seed|SeedingDensity|%s'%instance)[1]) 	    
+	    #if meta.get_field('Transfer|Seed|Step1|%s'%instance) is not None: # At least one step/additive is present
+		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	
+	    #return metadata
 	
-	if exp.get_tag_event(protocol) in ('Seed', 'Chemical', 'Biological', 'Physical', 'Dye', 'Immuno', 'Genetic', 'Medium', 'Wash', 'Storage', 'Initiation',
+	if exp.get_tag_event(protocol) in ('Flowcytometer', 'Centrifuge', 'Incubator', 'Oven', 'Rheometer', 
+	                                   'Seed', 'Chemical', 'Biological', 'Physical', 'Dye', 'Immuno', 'Genetic', 
+	                                   'Medium', 'Wash', 'Storage', 'Initiation',
 	                                   'Centrifugation', 'Incubation', 'RheoManipulation', 'Drying',	                                   
 	                                   'TLM', 'HCS','FCS', 'RHE', 'Text', 'Hint', 'Rest', 'URL', 'MultiMedia'):
 	    for attr in meta.get_attribute_list_by_instance(tag_stump, instance):
@@ -787,6 +818,7 @@ class PrintProtocol(wx.Frame):
 		    metadata['URL'] = ' %s'%meta.get_field(tag_stump+'|URL|%s'%instance)		
 		else:
 		    metadata[attr] = meta.get_field(tag_stump+'|'+attr+'|'+instance)	
+	    print metadata
 	    return metadata
 
         #if exp.get_tag_event(protocol) == 'Biological':	
@@ -1057,11 +1089,16 @@ class PrintProtocol(wx.Frame):
 		
 	return d 
     
-    def get_passage_admin_info(self, passage):
-	for stp in passage:
-	    if stp[0] == 'ADMIN':
-		return '%s on %s. Cells were splited at a ratio of 1:%s, and the seeding density was %s cells per %s'%(stp[1][0], stp[1][1], stp[1][2], stp[1][3], stp[1][4])
-    
+    #def get_passage_admin_info(self, passage):
+	#admin = ''
+	#cell_count = ''
+	#for stp in passage:
+	    #if stp[0] == 'ADMIN':
+		#admin = '%s on %s at %s.'%(stp[1][0], stp[1][1], stp[1][2])
+	    #if stp[0] == 'SEED':
+		#cell_count = ' Cells were seeded at a density of %s %s'%(stp[1][0],stp[1][1])
+	#return admin+cell_count
+		
     #----------------------------------------------------------------------
     def decode_subprocess(self, protocol, token):
 	"""This method organize the steps of a subprocess and format it for printing"""
