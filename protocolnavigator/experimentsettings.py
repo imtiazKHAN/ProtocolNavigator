@@ -7,7 +7,7 @@ from utils import *
 from timeline import Timeline
 
 
-VERSION = 'ProtocolNavigator_v1.02.13'
+VERSION = 'ProtocolNavigator_v1.03.21'
 # TODO: Updating PlateDesign could be done entirely within 
 #       set_field and remove_field.
 #

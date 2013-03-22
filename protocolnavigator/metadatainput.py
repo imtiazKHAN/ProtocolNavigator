@@ -5185,7 +5185,7 @@ class DyePanel(wx.Panel):
         self.tab_number = tab_number
 	self.tag_stump = tag_stump
 	self.protocol = self.tag_stump+'|'+str(self.tab_number)
-	self.mandatory_tags = [self.tag_stump+'|DyeName|'+str(self.tab_number), self.tag_stump+'|LabelingConc|'+str(self.tab_number)]
+	self.mandatory_tags = [self.tag_stump+'|DyeName|'+str(self.tab_number), self.tag_stump+'|LabellingConc|'+str(self.tab_number)]
 		
 	# Panel
 	self.sw = wx.ScrolledWindow(self)
@@ -5273,13 +5273,13 @@ class DyePanel(wx.Panel):
         attributesizer.Add(self.settings_controls[chemnamTAG], 0, wx.EXPAND)
         attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)
 	
-	perturbconcTAG = self.tag_stump+'|LabelingConc|'+str(self.tab_number)
+	perturbconcTAG = self.tag_stump+'|LabellingConc|'+str(self.tab_number)
 	conc = meta.get_field(perturbconcTAG, [])
 	self.settings_controls[perturbconcTAG+'|0'] = wx.TextCtrl(self.sw, size=(20,-1), style=wx.TE_PROCESS_ENTER)
 	if len(conc) > 0:
 	    self.settings_controls[perturbconcTAG+'|0'].SetValue(conc[0])
 	self.settings_controls[perturbconcTAG+'|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
-	self.labels[perturbconcTAG] = wx.StaticText(self.sw, -1, 'Perturbing Conc.')
+	self.labels[perturbconcTAG] = wx.StaticText(self.sw, -1, 'Labelling Conc.')
 	self.labels[perturbconcTAG].SetToolTipString('Concentration of dye applied as VALUE-UNIT, if your unit is not available in the list please click Other')
 	attributesizer.Add(self.labels[perturbconcTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	attributesizer.Add(self.settings_controls[perturbconcTAG+'|0'], 0, wx.EXPAND)
@@ -6509,15 +6509,31 @@ class StoragePanel(wx.Panel):
 
 	dimensionTAG = self.tag_stump+'|Dimension|'+str(self.tab_number)
 	dimn = meta.get_field(dimensionTAG, [])
-	self.settings_controls[dimensionTAG+'|0'] = wx.TextCtrl(self.sw, size=(20,-1), style=wx.TE_PROCESS_ENTER)
+	dimn_sizer = wx.BoxSizer(wx.HORIZONTAL)
+	self.settings_controls[dimensionTAG+'|0'] = wx.TextCtrl(self.sw, size=(30,-1), style=wx.TE_PROCESS_ENTER)
 	if len(dimn) > 0:
 	    self.settings_controls[dimensionTAG+'|0'].SetValue(dimn[0])
-	self.settings_controls[dimensionTAG+'|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
-	fgs.Add(wx.StaticText(self.sw, -1, 'Width'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	fgs.Add(self.settings_controls[dimensionTAG+'|0'], 0, wx.EXPAND)
-	fgs.Add(wx.StaticText(self.sw, -1, ''), 0)
+	self.settings_controls[dimensionTAG+'|1'] = wx.TextCtrl(self.sw, size=(30,-1), style=wx.TE_PROCESS_ENTER)
+	if len(dimn) > 1:
+	    self.settings_controls[dimensionTAG+'|1'].SetValue(dimn[1])
+	self.settings_controls[dimensionTAG+'|2'] = wx.TextCtrl(self.sw, size=(30,-1), style=wx.TE_PROCESS_ENTER)
+	if len(dimn) > 2:
+	    self.settings_controls[dimensionTAG+'|2'].SetValue(dimn[2])
+	    
+	dimn_sizer.Add(wx.StaticText(self.sw, -1, 'W'), 0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)    
+	dimn_sizer.Add(self.settings_controls[dimensionTAG+'|0'], 0, wx.EXPAND)
+	dimn_sizer.Add(wx.StaticText(self.sw, -1, 'H'), 0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
+	dimn_sizer.Add(self.settings_controls[dimensionTAG+'|1'], 0, wx.EXPAND)
+	dimn_sizer.Add(wx.StaticText(self.sw, -1, 'D'), 0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5)
+	dimn_sizer.Add(self.settings_controls[dimensionTAG+'|2'], 0, wx.EXPAND)
+
+	fgs.Add(wx.StaticText(self.sw, -1, 'Dimension (cm)'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	fgs.Add(dimn_sizer, 0, wx.EXPAND)
 	fgs.Add(wx.StaticText(self.sw, -1, ''), 0)
 	
+	self.settings_controls[dimensionTAG+'|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.settings_controls[dimensionTAG+'|1'].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.settings_controls[dimensionTAG+'|2'].Bind(wx.EVT_TEXT, self.OnSavingData)
 	# Procedure
 	staticbox = wx.StaticBox(self.sw, -1, "Sample Placement")
 	proceduresizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)

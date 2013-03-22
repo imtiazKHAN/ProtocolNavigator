@@ -224,7 +224,7 @@ class PrintProtocol(wx.Frame):
 	if flowcytometers:
 	    for instance in flowcytometers:
 		protocol_info = self.decode_event_description('Instrument|Flowcytometer|%s'%instance)
-		self.printfile.write('<br /><table border="1"><tr><th colspan="2" align="center"><i>'+protocol_info['Name']+ ' Flowcytometer (%s %s) was used. This will be referred as instance %s' %(protocol_info.get('Manufacturer', ''), protocol_info.get('Model', ''), str(instance))+'</i></th></tr>')		
+		self.printfile.write('<br /><table border="1"><tr><th colspan="2" align="center"><i>Settings Name: %s'%protocol_info.get('Name', '')+ ' Flowcytometer (%s %s) was used. This will be referred as instance %s' %(protocol_info.get('Manufacturer', ''), protocol_info.get('Model', ''), str(instance))+'</i></th></tr>')		
 		for ch, components in protocol_info.iteritems():
 		    if ch not in ['Name', 'Manufacturer', 'Model']:
 			self.printfile.write('<tr><code><td width=10% align="center"><font size="2"><b>'+ch+'</b></font></code></td>')
@@ -253,17 +253,18 @@ class PrintProtocol(wx.Frame):
 	    for instance in rheometers:
 		protocol_info = self.decode_event_description('Instrument|Rheometer|%s'%instance)
 		self.printfile.write('<br /><table border="1"><tr><th colspan="2" align="center"><i>'+' Rheometer (%s %s) with a capacity of %s was used. This will be referred as instance %s' %(protocol_info.get('Manufacturer', ''), protocol_info.get('Model', ''), protocol_info.get('Capacity', ''),str(instance))+'</i></th></tr>')		
-		if protocol_info['GeometryType'] == 'Parallel':
-		    self.printfile.write('<tr><code><td width=20% align="center"><font size="2"><b>Parallel geometry was used </b></font></code></td>')
-		    diameter = protocol_info.get('GeometryDiameter', ['',''])
-		    gap = protocol_info.get('GeometryGap', ['',''])
-		    self.printfile.write('<code><td width=80% align="left"><font size="1">'+'Diameter: %s %s; Material: %s; Gap: %s %s'%(diameter[0],diameter[1], protocol_info.get('GeometryMaterial',''),gap[0],gap[1])+'</font></td></code></tr>')			    
-		if protocol_info['GeometryType'] == 'Cone':
-		    self.printfile.write('<tr><code><td width=20% align="center"><font size="2"><b>Cone geometry was used </b></font></code></td>')
-		    diameter = protocol_info.get('GeometryDiameter', ['',''])
-		    angle = protocol_info.get('GeometryAngel', ['',''])
-		    turncate = protocol_info.get('GeometryTurncate', ['',''])
-		    self.printfile.write('<code><td width=80% align="left"><font size="1">'+'Diameter: %s %s; Material: %s; Angle: %s %s; Turncation: %s %s'%(diameter[0],diameter[1], protocol_info.get('GeometryMaterial',''),angle[0],angle[1], turncate[0],turncate[1])+'</font></td></code></tr>')			    		
+		if 'GeometryType' in protocol_info:
+		    if protocol_info['GeometryType'] == 'Parallel':
+			self.printfile.write('<tr><code><td width=20% align="center"><font size="2"><b>Parallel geometry was used </b></font></code></td>')
+			diameter = protocol_info.get('GeometryDiameter', ['',''])
+			gap = protocol_info.get('GeometryGap', ['',''])
+			self.printfile.write('<code><td width=80% align="left"><font size="1">'+'Diameter: %s %s; Material: %s; Gap: %s %s'%(diameter[0],diameter[1], protocol_info.get('GeometryMaterial',''),gap[0],gap[1])+'</font></td></code></tr>')			    
+		    if protocol_info['GeometryType'] == 'Cone':
+			self.printfile.write('<tr><code><td width=20% align="center"><font size="2"><b>Cone geometry was used </b></font></code></td>')
+			diameter = protocol_info.get('GeometryDiameter', ['',''])
+			angle = protocol_info.get('GeometryAngel', ['',''])
+			turncate = protocol_info.get('GeometryTurncate', ['',''])
+			self.printfile.write('<code><td width=80% align="left"><font size="1">'+'Diameter: %s %s; Material: %s; Angle: %s %s; Turncation: %s %s'%(diameter[0],diameter[1], protocol_info.get('GeometryMaterial',''),angle[0],angle[1], turncate[0],turncate[1])+'</font></td></code></tr>')			    		
 		if 'Gas' in protocol_info:
 		    self.printfile.write('<tr><td width=20% align="center"><code><font size="1"><b>Gas</b></font></code></td>')
 		    self.printfile.write('<td width=80% align="left"><code><font size="1">')
@@ -290,33 +291,36 @@ class PrintProtocol(wx.Frame):
 		spatial_info = self.decode_event_location(welltag)
 		
 		## -- write the description and location of the event --#
-                #if (exp.get_tag_event(protocol) == 'Seed') and (meta.get_field('Transfer|Seed|CellLineInstance|%s'%instance) is not None):  
-                    #self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
-		                         #'</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Seeding from Stock Culture</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
-                    #self.printfile.write('<code><font size="1">'+protocol_info[0]+'</font></code><br />')
-		    #self.printlocation(spatial_info)
-			
-                #if exp.get_tag_event(protocol) == 'Harvest': 
-                    #self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
-		                         #'</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Cell Transfer (Harvest->Seed)</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i)+' & '+str(i+1)+'</font></th></tr></table>')
-		    ##self.printfile.write('<code>'+protocol_info[0]+'</code><br />')
-		    #self.printCellTransfer(instance, timepoint)
-		
-		if exp.get_tag_event(protocol) == 'Seed':
+		# Seed from flask
+		if exp.get_tag_event(protocol) == 'Seed' and 'CellLineInstance' in protocol_info:
 		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
 		                        '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Seeding from Stock Culture</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
 		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')
-		    #First differentiate whether it is seed from stock or harvest seed
-		    # if seed from stock then just mention what cell line and seeding density
-		    # if harvest-seed then 
-		    if 'CellLineInstance' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Cell Line']+' were seeded')
-		    if 'Seeding Density' in protocol_info:
-			self.printfile.write(' with a density of '+protocol_info['Seeding Density'])
-		    self.printfile.write('</font></code></td></tr>')			   
-		    self.printfile.write('</table>')		
-		    self.printlocation(spatial_info)		    
-		
+		    self.printfile.write('<tr><td align="left"><code><font size="1">'+meta.get_field('Sample|CellLine|Name|%s'%str(protocol_info['CellLineInstance']))+' cells were seeded')
+		    if 'SeedingDensity' in protocol_info:
+			self.printfile.write(' at a density of '+' '.join(map(str, (protocol_info['SeedingDensity']))))  
+		    self.printfile.write('</font></code></td></tr>')
+		    if 'Step' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure </b></font></code></td></tr>')
+			for row in protocol_info['Step']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')		    			   
+			self.printfile.write('</table>')		
+		    self.printlocation(spatial_info)
+		# Harvest
+		if exp.get_tag_event(protocol) == 'Harvest': 
+		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
+		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Cell Transfer (Harvest->Seed)</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+' & '+str(i+2)+'</font></th></tr></table>')
+		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')
+		    self.printfile.write('<tr><td align="left"><code><font size="1">'+meta.get_field('Sample|CellLine|Name|%s'%str(protocol_info['CellLineInstance']))+' cells were harvested')
+		    if 'HarvestingDensity' in protocol_info:
+			self.printfile.write(' at a density of '+' '.join(map(str, (protocol_info['HarvestingDensity']))))  
+		    self.printfile.write('</font></code></td></tr>')
+		    if 'Step' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure </b></font></code></td></tr>')
+			for row in protocol_info['Step']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')		    			   
+			self.printfile.write('</table>')
+		    self.printCellTransfer(instance, timepoint)		
 		#Chemical perturbation
 		if exp.get_tag_event(protocol) == 'Chemical': 
 		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
@@ -325,9 +329,9 @@ class PrintProtocol(wx.Frame):
 		    if 'Name' in protocol_info:	
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Chemical Name </b>'+protocol_info['Name']+'</font></code></td></tr>')
 		    if 'PerturbConc' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Perturbing Concentration </b>'+' '.join(protocol_info['PerturbConc'])+'</font></code></td></tr>')	
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Perturbing Concentration </b>'+' '.join(map(str, (protocol_info['PerturbConc'])))+'</font></code></td></tr>')	
 		    if 'StockConc' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Stock Concentration </b>'+' '.join(protocol_info['StockConc'])+'</font></code></td></tr>')	
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Stock Concentration </b>'+' '.join(map(str, (protocol_info['StockConc'])))+'</font></code></td></tr>')	
 		    if 'Manufacturer' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Manufacturer </b>'+protocol_info['Manufacturer']+'</font></code></td></tr>')	
 		    if 'CatNum' in protocol_info:
@@ -367,10 +371,23 @@ class PrintProtocol(wx.Frame):
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Target</b></font></code></td></tr>')
 			for row in protocol_info['Target']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')		    
-		    if 'Procedure' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure</b></font></code></td></tr>')
-			for row in protocol_info['Procedure']:
-			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')
+		    if 'Other' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information </b>'+protocol_info['Other']+'</font></code></td></tr>')
+		    if 'Additive' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Additive </b></font></code></td></tr>')
+			for row in protocol_info['Additive']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	    
+		    if 'Step' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure </b></font></code></td></tr>')
+			for row in protocol_info['Step']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
+		    if 'URL' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related website </b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['URL']+'</font></code></td></tr>')
+		    if 'AttachFiles' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files </b></font></code></td></tr>')
+			for row in protocol_info['AttachFiles']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')						    
 		    self.printfile.write('</table>')		
 		    self.printlocation(spatial_info)			    
 			    
@@ -383,10 +400,23 @@ class PrintProtocol(wx.Frame):
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Material Used</b></font></code></td></tr>')
 			for row in protocol_info['Material']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	    
-		    if 'Procedure' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure</b></font></code></td></tr>')
-			for row in protocol_info['Procedure']:
-			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')
+		    if 'Other' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information </b>'+protocol_info['Other']+'</font></code></td></tr>')
+		    if 'Additive' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Additive </b></font></code></td></tr>')
+			for row in protocol_info['Additive']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	    
+		    if 'Step' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure </b></font></code></td></tr>')
+			for row in protocol_info['Step']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
+		    if 'URL' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related website </b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['URL']+'</font></code></td></tr>')
+		    if 'AttachFiles' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files </b></font></code></td></tr>')
+			for row in protocol_info['AttachFiles']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')						    
 		    self.printfile.write('</table>')		
 		    self.printlocation(spatial_info)	
 		    
@@ -395,47 +425,43 @@ class PrintProtocol(wx.Frame):
 		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
 		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Dye Labeling</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
 		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')
-		    if 'Protocol Name' in protocol_info:
+		    if 'Name' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Protocol Name</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Protocol Name']+'</font></code></td></tr>')
-		    if 'Dye Name' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Name']+'</font></code></td></tr>')
+		    if 'DyeName' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Dye Name</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Dye Name']+'</font></code></td></tr>')
-		    if 'Dye Concentration' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Dye Concentration</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Dye Concentration']+'</font></code></td></tr>')
-		    if 'Labeling Concentration' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Labeling Concentration</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Labeling Concentration']+'</font></code></td></tr>')	
-		    if 'Stock Concentration' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['DyeName']+'</font></code></td></tr>')
+		    if 'LabellingConc' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Labelling Concentration</b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+' '.join(map(str(protocol_info['LabellingConc'])))+'</font></code></td></tr>')	
+		    if 'StockConc' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Stock Concentration</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Stock Concentration']+'</font></code></td></tr>')	
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+' '.join(map(str(protocol_info['StockConc'])))+'</font></code></td></tr>')	
 		    if 'Manufacturer' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Manufacturer</b></font></code></td></tr>')
 			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Manufacturer']+'</font></code></td></tr>')	
-		    if 'Catalogue Number' in protocol_info:
+		    if 'CatNum' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Catalogue Number</b></font></code></td></tr>')
 			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Catalogue Number']+'</font></code></td></tr>')	
 		    if 'Storage' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Storage</b></font></code></td></tr>')
 			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Storage']+'</font></code></td></tr>')			
-		    if 'Other Information' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Other Information']+'</font></code></td></tr>')
+		    if 'Other' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information </b>'+protocol_info['Other']+'</font></code></td></tr>')
 		    if 'Additive' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Additive</b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Additive </b></font></code></td></tr>')
 			for row in protocol_info['Additive']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	    
-		    if 'Procedure' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure</b></font></code></td></tr>')
-			for row in protocol_info['Procedure']:
+		    if 'Step' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure </b></font></code></td></tr>')
+			for row in protocol_info['Step']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
 		    if 'URL' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related website</b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related website </b></font></code></td></tr>')
 			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['URL']+'</font></code></td></tr>')
-		    if 'Attached Files' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files</b></font></code></td></tr>')
-			for row in protocol_info['Attached Files']:
+		    if 'AttachFiles' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files </b></font></code></td></tr>')
+			for row in protocol_info['AttachFiles']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')						    
 		    self.printfile.write('</table>')		
 		    self.printlocation(spatial_info)
@@ -445,26 +471,29 @@ class PrintProtocol(wx.Frame):
 		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
 		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Immunofluroscence Labeling</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
 		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')
-		    if 'Protocol Name' in protocol_info:
+		    if 'Name' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Protocol Name</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Protocol Name']+'</font></code></td></tr>')	
-		    if 'Other Information' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Other Information']+'</font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Name']+'</font></code></td></tr>')	
+		    if 'URL' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related website </b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['URL']+'</font></code></td></tr>')		    
+		    if 'Other' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information </b>'+protocol_info['Other']+'</font></code></td></tr>')
 		    if 'Antibody' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Antibody</b></font></code></td></tr>')
 			for row in protocol_info['Antibody']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	    
-		    if 'Procedure' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure</b></font></code></td></tr>')
-			for row in protocol_info['Procedure']:
+		    if 'Additive' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Additive </b></font></code></td></tr>')
+			for row in protocol_info['Additive']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	    
+		    if 'Step' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure </b></font></code></td></tr>')
+			for row in protocol_info['Step']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
-		    if 'URL' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related website</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['URL']+'</font></code></td></tr>')
-		    if 'Attached Files' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files</b></font></code></td></tr>')
-			for row in protocol_info['Attached Files']:
+		    if 'AttachFiles' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files </b></font></code></td></tr>')
+			for row in protocol_info['AttachFiles']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')						    
 		    self.printfile.write('</table>')		
 		    self.printlocation(spatial_info)		
@@ -474,26 +503,29 @@ class PrintProtocol(wx.Frame):
 		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
 		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Genetic Labeling</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
 		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')
-		    if 'Protocol Name' in protocol_info:
+		    if 'Name' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Protocol Name</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Protocol Name']+'</font></code></td></tr>')	
-		    if 'Other Information' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Other Information']+'</font></code></td></tr>')
-		    if 'Sequence' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Sequence</b></font></code></td></tr>')
-			for row in protocol_info['Sequence']:
-			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	    
-		    if 'Procedure' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure</b></font></code></td></tr>')
-			for row in protocol_info['Procedure']:
-			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Name']+'</font></code></td></tr>')	
 		    if 'URL' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related website</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['URL']+'</font></code></td></tr>')
-		    if 'Attached Files' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files</b></font></code></td></tr>')
-			for row in protocol_info['Attached Files']:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related website </b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['URL']+'</font></code></td></tr>')		    
+		    if 'Other' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information </b>'+protocol_info['Other']+'</font></code></td></tr>')
+		    if 'Sequence' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Sequence </b></font></code></td></tr>')
+			for row in protocol_info['Sequence']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
+		    if 'Additive' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Additive </b></font></code></td></tr>')
+			for row in protocol_info['Additive']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	    
+		    if 'Step' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure </b></font></code></td></tr>')
+			for row in protocol_info['Step']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
+		    if 'AttachFiles' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files </b></font></code></td></tr>')
+			for row in protocol_info['AttachFiles']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')						    
 		    self.printfile.write('</table>')		
 		    self.printlocation(spatial_info)			
@@ -503,67 +535,151 @@ class PrintProtocol(wx.Frame):
 		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
 		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Add Medium</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
 		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')
-		    if 'Protocol Name' in protocol_info:
+		    if 'Name' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Protocol Name</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Protocol Name']+'</font></code></td></tr>')	
-		    if 'Other Information' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Other Information']+'</font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Name']+'</font></code></td></tr>')	
+		    if 'Other' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information </b>'+protocol_info['Other']+'</font></code></td></tr>')
 		    if 'Additive' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Additive</b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Additive </b></font></code></td></tr>')
 			for row in protocol_info['Additive']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	    
-		    if 'Procedure' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure</b></font></code></td></tr>')
-			for row in protocol_info['Procedure']:
+		    if 'Step' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure </b></font></code></td></tr>')
+			for row in protocol_info['Step']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
 		    if 'URL' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure</b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related website </b></font></code></td></tr>')
 			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['URL']+'</font></code></td></tr>')
-		    if 'Attached Files' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files</b></font></code></td></tr>')
-			for row in protocol_info['Attached Files']:
+		    if 'AttachFiles' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files </b></font></code></td></tr>')
+			for row in protocol_info['AttachFiles']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')						    
 		    self.printfile.write('</table>')		
 		    self.printlocation(spatial_info)	
-		
+		# Initiation    
+		if exp.get_tag_event(protocol) == 'Initiation': 
+		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
+		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Initiation </th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
+		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')			
+		    if 'Name' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Protocol Name</b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Name']+'</font></code></td></tr>')	
+		    if 'Other' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information </b>'+protocol_info['Other']+'</font></code></td></tr>')
+		    if 'Additive' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Additive </b></font></code></td></tr>')
+			for row in protocol_info['Additive']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	    
+		    if 'Step' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure </b></font></code></td></tr>')
+			for row in protocol_info['Step']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
+		    if 'URL' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related website </b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['URL']+'</font></code></td></tr>')
+		    if 'AttachFiles' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files </b></font></code></td></tr>')
+			for row in protocol_info['AttachFiles']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')						    
+		    self.printfile.write('</table>')		
+		    self.printlocation(spatial_info)
+		    
+		# Storage
+		if exp.get_tag_event(protocol) == 'Storage': 
+		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
+			                 '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Storage </th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
+		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')			
+		    if 'Name' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Protocol Name</b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Name']+'</font></code></td></tr>')
+		    if 'Other' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information </b>'+protocol_info['Other']+'</font></code></td></tr>')
+		    if 'Type' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Type'])
+			self.printfile.write(' (%s, %s, Dimension: %s)'%(protocol_info['Manufacturer'], protocol_info['Model'], ' '.join(map(str, (protocol_info['Dimension'])))))
+			self.printfile.write('</font></code></td></tr>')	
+		    if 'Placement' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Placement </b></font></code></td></tr>')
+			for row in protocol_info['Placement']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
+		    if 'Additive' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Additive </b></font></code></td></tr>')
+			for row in protocol_info['Additive']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	    
+		    if 'Step' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure </b></font></code></td></tr>')
+			for row in protocol_info['Step']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
+		    if 'URL' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related website </b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['URL']+'</font></code></td></tr>')
+		    if 'AttachFiles' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files </b></font></code></td></tr>')
+			for row in protocol_info['AttachFiles']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')						    
+		    self.printfile.write('</table>')		
+		    self.printlocation(spatial_info)
 		# Wash    
 		if exp.get_tag_event(protocol) == 'Wash': 
 		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
 		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Washing </th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
 		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')			
-		    if 'Protocol Name' in protocol_info:
+		    if 'Name' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Protocol Name</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Protocol Name']+'</font></code></td></tr>')	
-		    if 'Other Information' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Other Information']+'</font></code></td></tr>')						    
-		    if 'Procedure' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure</b></font></code></td></tr>')
-			for row in protocol_info['Procedure']:
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Name']+'</font></code></td></tr>')	
+		    if 'Other' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information </b>'+protocol_info['Other']+'</font></code></td></tr>')
+		    if 'Additive' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Additive </b></font></code></td></tr>')
+			for row in protocol_info['Additive']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	    
+		    if 'Step' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure </b></font></code></td></tr>')
+			for row in protocol_info['Step']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
+		    if 'URL' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related website </b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['URL']+'</font></code></td></tr>')
+		    if 'AttachFiles' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files </b></font></code></td></tr>')
+			for row in protocol_info['AttachFiles']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')						    
 		    self.printfile.write('</table>')		
-		    self.printlocation(spatial_info)		
+		    self.printlocation(spatial_info)	
 		
 		# Centrifugation    
 		if exp.get_tag_event(protocol) == 'Centrifugation': 
 		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
 		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Centrifugation</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
 		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')
-		    if 'Protocol Name' in protocol_info:
+		    if 'Name' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Protocol Name</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Protocol Name']+'</font></code></td></tr>')	
-		    if 'Instrument Instance' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Name']+'</font></code></td></tr>')	
+		    if 'CentrifugeInstance' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Instrument Used</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">Centrifuge instance '+protocol_info['Instrument Instance']+' was used for this purpose</font></code></td></tr>')				
-		    if 'RPM' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1">Centrifuge instance '+protocol_info['CentrifugeInstance']+' was used for this purpose</font></code></td></tr>')				
+		    if 'RPM' in protocol_info :
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>RPM Profile</b></font></code></td></tr>')
 			for row in protocol_info['RPM']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')			    
-		    if 'Procedure' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure</b></font></code></td></tr>')
-			for row in protocol_info['Procedure']:
+		    if 'Other' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information </b>'+protocol_info['Other']+'</font></code></td></tr>')
+		    if 'Additive' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Additive </b></font></code></td></tr>')
+			for row in protocol_info['Additive']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	    
+		    if 'Step' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure </b></font></code></td></tr>')
+			for row in protocol_info['Step']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
+		    if 'URL' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related website </b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['URL']+'</font></code></td></tr>')
+		    if 'AttachFiles' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files </b></font></code></td></tr>')
+			for row in protocol_info['AttachFiles']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')						    
 		    self.printfile.write('</table>')		
 		    self.printlocation(spatial_info)			    
 
@@ -572,32 +688,45 @@ class PrintProtocol(wx.Frame):
 		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
 		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Drying</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
 		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')
-		    if 'Protocol Name' in protocol_info:
+		    if 'Name' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Protocol Name</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Protocol Name']+'</font></code></td></tr>')	
-		    if 'Instrument Instance' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Name']+'</font></code></td></tr>')	
+		    if 'OvenInstance' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Instrument Used</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">Oven instance '+protocol_info['Instrument Instance']+' was used for this purpose</font></code></td></tr>')				
-		    if 'Gas Composition' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1">Oven instance '+protocol_info['OvenInstance']+' was used for this purpose</font></code></td></tr>')				
+		    if 'Gas' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Gas Composition</b></font></code></td></tr>')
-			for row in protocol_info['Gas Composition']:
+			for row in protocol_info['Gas']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')			    
-		    if 'Temperature Gradient' in protocol_info:
+		    if 'Temperature' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Temperature Gradient</b></font></code></td></tr>')
-			for row in protocol_info['Temperature Gradient']:
+			for row in protocol_info['Temperature']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
-		    if 'Humidity Gradient' in protocol_info:
+		    if 'Humidity' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Humidity Gradient</b></font></code></td></tr>')
-			for row in protocol_info['Humidity Gradient']:
+			for row in protocol_info['Humidity']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')
-		    if 'Pressure Gradient' in protocol_info:
+		    if 'Pressure' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Pressure Gradient</b></font></code></td></tr>')
-			for row in protocol_info['Pressure Gradient']:
+			for row in protocol_info['Pressure']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')		    
-		    if 'Procedure' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure</b></font></code></td></tr>')
-			for row in protocol_info['Procedure']:
-			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')		
+		    if 'Other' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information </b>'+protocol_info['Other']+'</font></code></td></tr>')
+		    if 'Additive' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Additive </b></font></code></td></tr>')
+			for row in protocol_info['Additive']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	    
+		    if 'Step' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure </b></font></code></td></tr>')
+			for row in protocol_info['Step']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
+		    if 'URL' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related website </b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['URL']+'</font></code></td></tr>')
+		    if 'AttachFiles' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files </b></font></code></td></tr>')
+			for row in protocol_info['AttachFiles']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')						    
 		    self.printfile.write('</table>')		
 		    self.printlocation(spatial_info)		
 		
@@ -606,28 +735,45 @@ class PrintProtocol(wx.Frame):
 		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
 		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Incubation</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
 		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')
-		    if 'Protocol Name' in protocol_info:
+		    if 'Name' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Protocol Name</b></font></code></td></tr>')
 			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Protocol Name']+'</font></code></td></tr>')	
-		    if 'Instrument Instance' in protocol_info:
+		    if 'IncubatorInstance' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Instrument Used</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">Incubator instance '+protocol_info['Instrument Instance']+' was used for this purpose</font></code></td></tr>')				
-		    if 'Gas Composition' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1">Incubator instance '+protocol_info['IncubatorInstance']+' was used for this purpose</font></code></td></tr>')				
+		    if 'Gas' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Gas Composition</b></font></code></td></tr>')
-			for row in protocol_info['Gas Composition']:
+			for row in protocol_info['Gas']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')			    
-		    if 'Temperature Gradient' in protocol_info:
+		    if 'Temperature' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Temperature Gradient</b></font></code></td></tr>')
-			for row in protocol_info['Temperature Gradient']:
+			for row in protocol_info['Temperature']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
-		    if 'Humidity Gradient' in protocol_info:
+		    if 'Humidity' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Humidity Gradient</b></font></code></td></tr>')
-			for row in protocol_info['Humidity Gradient']:
+			for row in protocol_info['Humidity']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')
-		    if 'Procedure' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure</b></font></code></td></tr>')
-			for row in protocol_info['Procedure']:
-			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')		
+		    if 'Pressure' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Pressure Gradient</b></font></code></td></tr>')
+			for row in protocol_info['Pressure']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')
+		    if 'Other' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information </b>'+protocol_info['Other']+'</font></code></td></tr>')
+		    if 'Additive' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Additive </b></font></code></td></tr>')
+			for row in protocol_info['Additive']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	    
+		    if 'Step' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure </b></font></code></td></tr>')
+			for row in protocol_info['Step']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
+		    if 'URL' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related website </b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['URL']+'</font></code></td></tr>')
+		    if 'AttachFiles' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files </b></font></code></td></tr>')
+			for row in protocol_info['AttachFiles']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')						    
 		    self.printfile.write('</table>')		
 		    self.printlocation(spatial_info)	
 		
@@ -636,24 +782,37 @@ class PrintProtocol(wx.Frame):
 		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
 		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Rheological Manipulation</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
 		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')
-		    if 'Protocol Name' in protocol_info:
+		    if 'Name' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Protocol Name</b></font></code></td></tr>')
 			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Protocol Name']+'</font></code></td></tr>')	
-		    if 'Instrument Instance' in protocol_info:
+		    if 'RheometerInstance' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Instrument Used</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">Rheometer instance '+protocol_info['Instrument Instance']+' was used for this purpose</font></code></td></tr>')				
-		    if 'Gel Composition' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1">Rheometer instance '+protocol_info['RheometerInstance']+' was used for this purpose</font></code></td></tr>')				
+		    if 'GelComposition' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Gel Composition</b></font></code></td></tr>')
-			for row in protocol_info['Gel Composition']:
+			for row in protocol_info['GelComposition']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')			    
-		    if 'Gel Profile' in protocol_info:
+		    if 'GelProfile' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Gel Profile</b></font></code></td></tr>')
-			for row in protocol_info['Gel Profile']:
+			for row in protocol_info['GelProfile']:
 			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
-		    if 'Procedure' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure</b></font></code></td></tr>')
-			for row in protocol_info['Procedure']:
-			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')		
+		    if 'Other' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information </b>'+protocol_info['Other']+'</font></code></td></tr>')
+		    if 'Additive' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Additive </b></font></code></td></tr>')
+			for row in protocol_info['Additive']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	    
+		    if 'Step' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure </b></font></code></td></tr>')
+			for row in protocol_info['Step']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
+		    if 'URL' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related website </b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['URL']+'</font></code></td></tr>')
+		    if 'AttachFiles' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files </b></font></code></td></tr>')
+			for row in protocol_info['AttachFiles']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')						    
 		    self.printfile.write('</table>')		
 		    self.printlocation(spatial_info)
 		
@@ -661,65 +820,132 @@ class PrintProtocol(wx.Frame):
 		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
 		                         '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Flow Data</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
 		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')	
-		    if 'Instrument Instance' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Instrument Used: </b>Flowcytometer instance '+protocol_info['Instrument Instance']+' was used for this purpose</font></code></td></tr>')				
-		    if 'File Format' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>File Format: </b>'+protocol_info['File Format']+'</font></code></td></tr>')
+		    if 'FlowcytometerInstance' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Instrument Used: </b>Flowcytometer instance '+protocol_info['FlowcytometerInstance']+' was used for this purpose</font></code></td></tr>')				
+		    if 'Format' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>File Format: </b>'+protocol_info['Format']+'</font></code></td></tr>')
 		    if 'Software' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Software: </b>'+protocol_info['Software']+'</font></code></td></tr>')				
-		    self.printfile.write('</table>')
+		    if 'Other' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information </b>'+protocol_info['Other']+'</font></code></td></tr>')
+		    if 'Additive' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Additive </b></font></code></td></tr>')
+			for row in protocol_info['Additive']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	    
+		    if 'Step' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure </b></font></code></td></tr>')
+			for row in protocol_info['Step']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
+		    if 'URL' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related website </b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['URL']+'</font></code></td></tr>')
+		    if 'AttachFiles' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files </b></font></code></td></tr>')
+			for row in protocol_info['AttachFiles']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')						    
+		    self.printfile.write('</table>')		
+		    self.printlocation(spatial_info)
 		    self.printLoacationandURL(spatial_info, instance,timepoint, 'FCS')
 		           
                 if exp.get_tag_event(protocol) == 'HCS': 
 		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
 		                        '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Static Image Data</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
 		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')	
-		    if 'Instrument Instance' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Instrument Used: </b>Microscope instance '+protocol_info['Instrument Instance']+' was used for this purpose</font></code></td></tr>')				
-		    if 'File Format' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>File Format: </b>'+protocol_info['File Format']+'</font></code></td></tr>')
-		    if 'Pixel Size' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Pixel Size: </b>'+protocol_info['Pixel Size']+'</font></code></td></tr>')
-		    if 'Pixel Convertion' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Pixel Convertion: </b>'+protocol_info['Pixel Convertion']+'</font></code></td></tr>')
+		    if 'MicroscopeInstance' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Instrument Used: </b>Microscope instance '+protocol_info['MicroscopeInstance']+' was used for this purpose</font></code></td></tr>')				
+		    if 'Format' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>File Format: </b>'+protocol_info['Format']+'</font></code></td></tr>')
+		    if 'PixelSize' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Pixel Size: </b>'+protocol_info['PixelSize']+'</font></code></td></tr>')
+		    if 'PixelConvert' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Pixel Convertion: </b>'+protocol_info['PixelConvert']+'</font></code></td></tr>')
 		    if 'Software' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Software: </b>'+protocol_info['Software']+'</font></code></td></tr>')				
-		    self.printfile.write('</table>')
+		    if 'Other' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information </b>'+protocol_info['Other']+'</font></code></td></tr>')
+		    if 'Additive' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Additive </b></font></code></td></tr>')
+			for row in protocol_info['Additive']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	    
+		    if 'Step' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure </b></font></code></td></tr>')
+			for row in protocol_info['Step']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
+		    if 'URL' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related website </b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['URL']+'</font></code></td></tr>')
+		    if 'AttachFiles' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files </b></font></code></td></tr>')
+			for row in protocol_info['AttachFiles']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')						    
+		    self.printfile.write('</table>')		
 		    self.printLoacationandURL(spatial_info, instance,timepoint, 'HCS')
 
 		if exp.get_tag_event(protocol) == 'TLM': 
 		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
 		                        '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Timelapse Image Data</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
 		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')	
-		    if 'Instrument Instance' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Instrument Used: </b>Microscope instance '+protocol_info['Instrument Instance']+' was used for this purpose</font></code></td></tr>')				
-		    if 'File Format' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>File Format: </b>'+protocol_info['File Format']+'</font></code></td></tr>')
-		    if 'Time Interval' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Time Interval: </b>'+protocol_info['Time Interval']+'</font></code></td></tr>')
-		    if 'Frame Number' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Frame Number: </b>'+protocol_info['Frame Number']+'</font></code></td></tr>')
-		    if 'Stack Process' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Stack Process: </b>'+protocol_info['Stack Process']+'</font></code></td></tr>')
-		    if 'Pixel Size' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Pixel Size: </b>'+protocol_info['Pixel Size']+'</font></code></td></tr>')
-		    if 'Pixel Convertion' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Pixel Convertion: </b>'+protocol_info['Pixel Convertion']+'</font></code></td></tr>')
+		    if 'MicroscopeInstance' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Instrument Used: </b>Microscope instance '+protocol_info['MicroscopeInstance']+' was used for this purpose</font></code></td></tr>')				
+		    if 'Format' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>File Format: </b>'+protocol_info['Format']+'</font></code></td></tr>')
+		    if 'TimeInterval' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Time Interval: </b>'+protocol_info['TimeInterval']+'</font></code></td></tr>')
+		    if 'FrameNumber' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Frame Number: </b>'+protocol_info['FrameNumber']+'</font></code></td></tr>')
+		    if 'StackProcess' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Stack Process: </b>'+protocol_info['StackProcess']+'</font></code></td></tr>')
+		    if 'PixelSize' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Pixel Size: </b>'+protocol_info['PixelSize']+'</font></code></td></tr>')
+		    if 'PixelConvert' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Pixel Convertion: </b>'+protocol_info['PixelConvert']+'</font></code></td></tr>')
 		    if 'Software' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Software: </b>'+protocol_info['Software']+'</font></code></td></tr>')				
-		    self.printfile.write('</table>')
+		    if 'Other' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information </b>'+protocol_info['Other']+'</font></code></td></tr>')
+		    if 'Additive' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Additive </b></font></code></td></tr>')
+			for row in protocol_info['Additive']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	    
+		    if 'Step' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure </b></font></code></td></tr>')
+			for row in protocol_info['Step']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
+		    if 'URL' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related website </b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['URL']+'</font></code></td></tr>')
+		    if 'AttachFiles' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files </b></font></code></td></tr>')
+			for row in protocol_info['AttachFiles']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')						    
+		    self.printfile.write('</table>')		
 		    self.printLoacationandURL(spatial_info, instance,timepoint, 'TLM')		    
 
 		if exp.get_tag_event(protocol) == 'RHE': 
 		    self.printfile.write('<br /><table border="0"><tr><th align="left" width="20%" BGCOLOR=#CCCCCC><b>'+exp.format_time_string(timepoint)+
 		                        '</b><i> hr</i></th><th align="center" width="65%" BGCOLOR=#CCCCCC>Rheometer Data</th><th align="right" width="15%" BGCOLOR=#CCCCCC><font size=-2>Step '+str(i+1)+'</font></th></tr></table>')
 		    self.printfile.write('<br /><table border="0"><tr><th align="left"><code><font size="1"></font></code></th></tr>')	
-		    if 'Instrument Instance' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Instrument Used: </b>Rheometer instance '+protocol_info['Instrument Instance']+' was used for this purpose</font></code></td></tr>')				
-		    if 'Procedure' in protocol_info:
-			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure</b></font></code></td></tr>')
-			for row in protocol_info['Procedure']:
-			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')
+		    if 'RheometerInstance' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Instrument Used: </b>Rheometer instance '+protocol_info['RheometerInstance']+' was used for this purpose</font></code></td></tr>')				
+		    if 'Other' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Other Information </b>'+protocol_info['Other']+'</font></code></td></tr>')
+		    if 'Additive' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Additive </b></font></code></td></tr>')
+			for row in protocol_info['Additive']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	    
+		    if 'Step' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Procedure </b></font></code></td></tr>')
+			for row in protocol_info['Step']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')	
+		    if 'URL' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related website </b></font></code></td></tr>')
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['URL']+'</font></code></td></tr>')
+		    if 'AttachFiles' in protocol_info:
+			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Attached Files </b></font></code></td></tr>')
+			for row in protocol_info['AttachFiles']:
+			    self.printfile.write('<tr><td align="left"><code><font size="1">'+row+'</font></code></td></tr>')						    
+		    self.printfile.write('</table>')		
+		    self.printLoacationandURL(spatial_info, instance,timepoint, 'RHE')	
 				
                 #if exp.get_tag_event(protocol) == 'Text': # to implement if there are events at the same timepoint write those event first then the critical point
                     #self.printfile.write('<code><font size="1" color="#FF0000">Critical point: '+meta.get_field('Notes|Text|Description|%s'%instance)+'</font></code><br />')                
@@ -736,9 +962,9 @@ class PrintProtocol(wx.Frame):
 		#if exp.get_tag_event(protocol) == 'MultiMedia': 
 		    #self.printfile.write('<code><font size="1" color="#99CC33">MultiMedia: For more information please watch the media file: '+meta.get_field('Notes|MultiMedia|Description|%s'%instance)+'</font></code><br />')
 		    
-            self.printfile.write('</tr>')
+            #self.printfile.write('</tr>')
             #self.printfile.write('<br />')   
-	self.printfile.write('</table>')      
+	#self.printfile.write('</table>')      
         
         #---- Protocol Map ---#             
         self.printfile.write('<br />'.join(['<h3>5. Methodology Map</h3>',                                 
@@ -793,19 +1019,9 @@ class PrintProtocol(wx.Frame):
 		else:
 		    metadata[attr] = [f for f in meta.get_field(tag_stump+'|'+attr+'|'+instance)] 
 	    return metadata
-	
-		
-	#if exp.get_tag_event(protocol) == 'Seed':
-	    #if meta.get_field('Transfer|Seed|CellLineInstance|%s'%instance) is not None:                    
-		#metadata['Cell Line']= meta.get_field('Sample|CellLine|Name|%s'%meta.get_field('Transfer|Seed|CellLineInstance|%s'%instance))	  
-	    #if meta.get_field('Transfer|Seed|SeedingDensity|%s'%instance) is not None: 
-		#metadata['Seeding Density']= '%s %s' %(meta.get_field('Transfer|Seed|SeedingDensity|%s'%instance)[0], meta.get_field('Transfer|Seed|SeedingDensity|%s'%instance)[1]) 	    
-	    #if meta.get_field('Transfer|Seed|Step1|%s'%instance) is not None: # At least one step/additive is present
-		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	
-	    #return metadata
-	
+
 	if exp.get_tag_event(protocol) in ('Flowcytometer', 'Centrifuge', 'Incubator', 'Oven', 'Rheometer', 
-	                                   'Seed', 'Chemical', 'Biological', 'Physical', 'Dye', 'Immuno', 'Genetic', 
+	                                   'Seed', 'Harvest', 'Chemical', 'Biological', 'Physical', 'Dye', 'Immuno', 'Genetic', 
 	                                   'Medium', 'Wash', 'Storage', 'Initiation',
 	                                   'Centrifugation', 'Incubation', 'RheoManipulation', 'Drying',	                                   
 	                                   'TLM', 'HCS','FCS', 'RHE', 'Text', 'Hint', 'Rest', 'URL', 'MultiMedia'):
@@ -813,269 +1029,13 @@ class PrintProtocol(wx.Frame):
 		if attr.endswith('1'):
 		    metadata[attr[:-1]] = self.decode_subprocess(protocol, attr[:-1])
 		elif attr.startswith('AttachFiles'):
-		    metadata['AttachFiles'] = [f for f in meta.get_field(tag_stump+'|AttachFiles|%s'%instance)] 
+		    metadata[attr] = [f for f in meta.get_field(tag_stump+'|AttachFiles|%s'%instance)] 
 		elif attr.startswith('URL'):
-		    metadata['URL'] = ' %s'%meta.get_field(tag_stump+'|URL|%s'%instance)		
+		    metadata[attr] = ' %s'%meta.get_field(tag_stump+'|URL|%s'%instance)		
 		else:
 		    metadata[attr] = meta.get_field(tag_stump+'|'+attr+'|'+instance)	
-	    print metadata
 	    return metadata
-
-        #if exp.get_tag_event(protocol) == 'Biological':	
-	    #for attr in meta.get_attribute_list_by_instance(tag_stump, instance):
-		#if attr.startswith('RNAi1'):
-		    #metadata['RNAi'] = self.decode_subprocess(protocol, 'RNAi')
-		#elif attr.startswith('Target1'):
-		    #metadata['Target'] = self.decode_subprocess(protocol, 'Target')
-		#elif attr.startswith('Target1'):
-		    #metadata['Target'] = self.decode_subprocess(protocol, 'Target')		
-		#elif attr.startswith('AttachFiles'):
-		    #metadata['AttachFiles'] = [f for f in meta.get_field(tag_stump+'|AttachFiles|%s'%instance)] 
-		#elif attr.startswith('URL'):
-		    #metadata['URL'] = ' %s'%meta.get_field(tag_stump+'|URL|%s'%instance)		
-		#else:
-		    #metadata[attr] = meta.get_field(tag_stump+'|'+attr+'|'+instance)	
-	    #return metadata	  
 	
-	    #if meta.get_field('Perturbation|Biological|RNAi1|%s'%instance) is not None:
-		#metadata['RNAi']  = self.decode_subprocess(protocol, 'RNAi')	    
-	    #if meta.get_field('Perturbation|Biological|Target1|%s'%instance) is not None:
-		#metadata['Target'] = self.decode_subprocess(protocol, 'Target')		    
-	    #if meta.get_field('Perturbation|Biological|Additive1|%s'%instance) is not None:
-		#metadata['Additive'] = self.decode_subprocess(protocol, 'Additive')	
-	    #if meta.get_field('Perturbation|Biological|Step1|%s'%instance) is not None:
-		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')		    
-            #return metadata
-	
-	#if exp.get_tag_event(protocol) == 'Physical':	    
-	    #if meta.get_field('Perturbation|Physical|Material1|%s'%instance) is not None:
-		#metadata['Material'] = self.decode_subprocess(protocol, 'Material')	    
-	    #if meta.get_field('Perturbation|Physical|Step1|%s'%instance) is not None:
-		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')		    
-	    #return metadata	
-	
-	#if exp.get_tag_event(protocol) == 'Dye':
-	    #if meta.get_field('Labeling|Dye|Name|%s'%instance) is not None:
-		#metadata['Protocol Name'] = meta.get_field('Labeling|Dye|Name|%s'%instance)
-	    #if meta.get_field('Labeling|Dye|DyeName|%s'%instance) is not None:                    
-		#metadata['Dye Name'] = meta.get_field('Labeling|Dye|DyeName|%s'%instance)
-	    #if meta.get_field('Labeling|Dye|Manufacturer|%s'%instance) is not None:
-		#metadata['Dye Concentration'] = '%s,%s' %(meta.get_field('Labeling|Dye|Manufacturer|%s'%instance, default=''), meta.get_field('Labeling|Dye|CatNum|%s'%instance, default=''))
-	    #if meta.get_field('Labeling|Dye|LabelingConc|%s'%instance) is not None: 
-		#metadata['Labeling Concentration']= ' at a concentration of %s %s' %(meta.get_field('Labeling|Dye|LabelingConc|%s'%instance)[0], meta.get_field('Labeling|Dye|LabelingConc|%s'%instance)[1]) 
-	    #if meta.get_field('Labeling|Dye|StockConc|%s'%instance) is not None:    
-		#metadata['Stock Concentration']= '%s %s' %(meta.get_field('Labeling|Dye|StockConc|%s'%instance)[0], meta.get_field('Labeling|Dye|StockConc|%s'%instance)[1])
-	    #if meta.get_field('Labeling|Dye|Manufacturer|%s'%instance) is not None: 
-		#metadata['Manufacturer'] = meta.get_field('Labeling|Dye|Manufacturer|%s'%instance)
-	    #if meta.get_field('Labeling|Dye|CatNum|%s'%instance) is not None: 
-		#metadata['Catalogue Number'] = meta.get_field('Labeling|Dye|CatNum|%s'%instance)
-	    #if meta.get_field('Labeling|Dye|Storage|%s'%instance) is not None: 
-		#metadata['Storage'] = meta.get_field('Labeling|Dye|Storage|%s'%instance) 
-	    #if meta.get_field('Labeling|Dye|Other|%s'%instance) is not None: 
-		#metadata['Other Information'] = meta.get_field('Labeling|Dye|Other|%s'%instance) 	
-	    #if meta.get_field('Labeling|Dye|AttachFiles|%s'%instance) is not None:
-		#metadata['Attached Files'] = [f for f in meta.get_field('Labeling|Dye|AttachFiles|%s'%instance)]   	    
-	    #if meta.get_field('Labeling|Dye|URL|%s'%instance) is not None: 
-		#metadata['URL'] = ' %s'%meta.get_field('Labeling|Dye|URL|%s'%instance)	    
-	    #if meta.get_field('Labeling|Dye|Additive1|%s'%instance) is not None: 
-		#metadata['Additive'] = self.decode_subprocess(protocol, 'Additive')
-	    #if meta.get_field('Labeling|Dye|Step1|%s'%instance) is not None: 
-		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	
-	    #return metadata	
-	
-	#if exp.get_tag_event(protocol) == 'Immuno':
-	    #if meta.get_field('Labeling|Immuno|Name|%s'%instance) is not None:
-		#metadata['Protocol Name'] = meta.get_field('Labeling|Immuno|Name|%s'%instance)
-	    #if meta.get_field('Labeling|Immuno|Other|%s'%instance) is not None: 
-		#metadata['Other Information'] = meta.get_field('Labeling|Immuno|Other|%s'%instance) 	
-	    #if meta.get_field('Labeling|Immuno|AttachFiles|%s'%instance) is not None: 
-		#metadata['Attached Files'] = [f for f in meta.get_field('Labeling|Immuno|AttachFiles|%s'%instance)]    	    
-	    #if meta.get_field('Labeling|Immuno|URL|%s'%instance) is not None: 
-		#metadata['URL'] = meta.get_field('Labeling|Immuno|URL|%s'%instance)	    
-	    #if meta.get_field('Labeling|Immuno|Antibody1|%s'%instance) is not None: 
-		#metadata['Antibody'] = self.decode_subprocess(protocol, 'Antibody')
-	    #if meta.get_field('Labeling|Immuno|Step1|%s'%instance) is not None: 
-		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	
-	    #return metadata	
-	
-	#if exp.get_tag_event(protocol) == 'Genetic':
-	    #if meta.get_field('Labeling|Genetic|Name|%s'%instance) is not None:
-		#metadata['Protocol Name'] = meta.get_field('Labeling|Genetic|Name|%s'%instance)
-	    #if meta.get_field('Labeling|Genetic|Other|%s'%instance) is not None: 
-		#metadata['Other Information'] = meta.get_field('Labeling|Genetic|Other|%s'%instance) 	
-	    #if meta.get_field('Labeling|Genetic|AttachFiles|%s'%instance) is not None: 
-		#metadata['Attached Files'] = [f for f in meta.get_field('Labeling|Genetic|AttachFiles|%s'%instance)]    	    
-	    #if meta.get_field('Labeling|Genetic|URL|%s'%instance) is not None: 
-		#metadata['URL'] = meta.get_field('Labeling|Genetic|URL|%s'%instance)	    
-	    #if meta.get_field('Labeling|Genetic|Sequence1|%s'%instance) is not None: 
-		#metadata['RPM']  = self.decode_subprocess(protocol, 'Sequence')
-	    #if meta.get_field('Labeling|Genetic|Step1|%s'%instance) is not None: 
-		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	    
-	    #return metadata  	    
-
-	#if exp.get_tag_event(protocol) == 'Medium':
-	    #if meta.get_field('AddProcess|Medium|Name|%s'%instance) is not None:
-		#metadata['Protocol Name'] = meta.get_field('AddProcess|Medium|Name|%s'%instance)
-	    #if meta.get_field('AddProcess|Medium|Other|%s'%instance) is not None: 
-		#metadata['Other Information'] = meta.get_field('AddProcess|Medium|Other|%s'%instance) 	
-	    #if meta.get_field('AddProcess|Medium|AttachFiles|%s'%instance) is not None:
-		#metadata['Attached Files'] = [f for f in meta.get_field('AddProcess|Medium|AttachFiles|%s'%instance)]    	    
-	    #if meta.get_field('AddProcess|Medium|URL|%s'%instance) is not None: 
-		#metadata['URL'] = meta.get_field('AddProcess|Medium|URL|%s'%instance)	    
-	    #if meta.get_field('AddProcess|Medium|Additive1|%s'%instance) is not None: 
-		#metadata['Additive'] = self.decode_subprocess(protocol, 'Additive')
-	    #if meta.get_field('AddProcess|Medium|Step1|%s'%instance) is not None: 
-		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	
-	    #return metadata	
-			
-	#if exp.get_tag_event(protocol) == 'Wash':
-	    #if meta.get_field('AddProcess|Wash|Name|%s'%instance) is not None:
-		#metadata['Protocol Name'] = meta.get_field('AddProcess|Wash|Name|%s'%instance)
-	    #if meta.get_field('AddProcess|Wash|Other|%s'%instance) is not None: 
-		#metadata['Other Information'] = meta.get_field('AddProcess|Wash|Other|%s'%instance) 	
-	    #if meta.get_field('AddProcess|Wash|AttachFiles|%s'%instance) is not None: 
-		#metadata['Attached Files'] = [f for f in meta.get_field('AddProcess|Wash|AttachFiles|%s'%instance)] 	    
-	    #if meta.get_field('AddProcess|Wash|URL|%s'%instance) is not None: 
-		#metadata['URL'] = meta.get_field('AddProcess|Wash|URL|%s'%instance)	    
-	    #if meta.get_field('AddProcess|Wash|Step1|%s'%instance) is not None: 
-		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	
-	    #return metadata 
-	
-	#if exp.get_tag_event(protocol) == 'Centrifugation':
-	    #if meta.get_field('InstProcess|Centrifugation|Name|%s'%instance) is not None:
-		#metadata['Protocol Name'] = meta.get_field('InstProcess|Centrifugation|Name|%s'%instance)
-	    #if meta.get_field('InstProcess|Centrifugation|CentrifugeInstance|%s'%instance) is not None: 
-		#metadata['Instrument Instance'] = meta.get_field('InstProcess|Centrifugation|CentrifugeInstance|%s'%instance) 	
-	    #if meta.get_field('InstProcess|Centrifugation|AttachFiles|%s'%instance) is not None: 
-		#metadata['Attached Files'] = [f for f in meta.get_field('InstProcess|Centrifugation|AttachFiles|%s'%instance)]    	    
-	    #if meta.get_field('InstProcess|Centrifugation|URL|%s'%instance) is not None: 
-		#metadata['URL'] = meta.get_field('InstProcess|Centrifugation|URL|%s'%instance)	    
-	    #if meta.get_field('InstProcess|Centrifugation|RPM1|%s'%instance) is not None: 
-		#metadata['RPM']  = self.decode_subprocess(protocol, 'RPM')
-	    #if meta.get_field('InstProcess|Centrifugation|Step1|%s'%instance) is not None: 
-		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	    
-	    #return metadata             
-
-	#if exp.get_tag_event(protocol) == 'Drying':
-	    #if meta.get_field('InstProcess|Drying|Name|%s'%instance) is not None:
-		#metadata['Protocol Name'] = meta.get_field('InstProcess|Drying|Name|%s'%instance)
-	    #if meta.get_field('InstProcess|Drying|OvenInstance|%s'%instance) is not None: 
-		#metadata['Instrument Instance'] = meta.get_field('InstProcess|Drying|OvenInstance|%s'%instance) 	
-	    #if meta.get_field('InstProcess|Drying|AttachFiles|%s'%instance) is not None: 
-		#metadata['Attached Files'] = [f for f in meta.get_field('InstProcess|Drying|AttachFiles|%s'%instance)]
-	    #if meta.get_field('InstProcess|Drying|URL|%s'%instance) is not None: 
-		#metadata['URL'] = meta.get_field('InstProcess|Drying|URL|%s'%instance)	    
-	    #if meta.get_field('InstProcess|Drying|Gas1|%s'%instance) is not None: 
-		#metadata['Gas Gradient'] = self.decode_subprocess(protocol, 'Gas')
-	    #if meta.get_field('InstProcess|Drying|Temperature1|%s'%instance) is not None: 
-		#metadata['Temperature Gradient'] = self.decode_subprocess(protocol, 'Temperature')	 
-	    #if meta.get_field('InstProcess|Drying|Humidity1|%s'%instance) is not None: 
-		#metadata['Humidity Gradient'] = self.decode_subprocess(protocol, 'Humidity')
-	    #if meta.get_field('InstProcess|Drying|Pressure1|%s'%instance) is not None: 
-		#metadata['Pressure Gradient'] = self.decode_subprocess(protocol, 'Pressure')	    
-	    #if meta.get_field('InstProcess|Drying|Step1|%s'%instance) is not None: 
-		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	    
-	    #return metadata   
-	
-	#if exp.get_tag_event(protocol) == 'Incubation':
-	    
-	    #if meta.get_field('InstProcess|Incubation|Name|%s'%instance) is not None:
-		#metadata['Protocol Name'] = meta.get_field('InstProcess|Incubation|Name|%s'%instance)
-	    #if meta.get_field('InstProcess|Incubation|IncubatorInstance|%s'%instance) is not None: 
-		#metadata['Instrument Instance'] = meta.get_field('InstProcess|Incubation|IncubatorInstance|%s'%instance) 	
-	    #if meta.get_field('InstProcess|Incubation|AttachFiles|%s'%instance) is not None: 
-		#metadata['Attached Files'] = [f for f in meta.get_field('InstProcess|Incubation|AttachFiles|%s'%instance)]
-	    #if meta.get_field('InstProcess|Incubation|URL|%s'%instance) is not None: 
-		#metadata['URL'] = meta.get_field('InstProcess|Incubation|URL|%s'%instance)	    
-	    #if meta.get_field('InstProcess|Incubation|Gas1|%s'%instance) is not None: 
-		#metadata['Gas Gradient'] = self.decode_subprocess(protocol, 'Gas')
-	    #if meta.get_field('InstProcess|Incubation|Temperature1|%s'%instance) is not None: 
-		#metadata['Temperature Gradient'] = self.decode_subprocess(protocol, 'Temperature')	 
-	    #if meta.get_field('InstProcess|Incubation|Humidity1|%s'%instance) is not None: 
-		#metadata['Humidity Gradient'] = self.decode_subprocess(protocol, 'Humidity')
-	    #if meta.get_field('InstProcess|Incubation|Pressure1|%s'%instance) is not None: 
-		#metadata['Pressure Gradient'] = self.decode_subprocess(protocol, 'Pressure')	    
-	    #if meta.get_field('InstProcess|Incubation|Step1|%s'%instance) is not None: 
-		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	    
-	    #return metadata 
-	
-	#if exp.get_tag_event(protocol) == 'RheoManipulation':
-	    #if meta.get_field('InstProcess|RheoManipulation|Name|%s'%instance) is not None:
-		#metadata['Protocol Name'] = meta.get_field('InstProcess|RheoManipulation|Name|%s'%instance)
-	    #if meta.get_field('InstProcess|RheoManipulation|RheometerInstance|%s'%instance) is not None: 
-		#metadata['Instrument Instance'] = meta.get_field('InstProcess|RheoManipulation|RheometerInstance|%s'%instance) 	
-	    #if meta.get_field('InstProcess|RheoManipulation|AttachFiles|%s'%instance) is not None: 
-		#metadata['Attached Files'] = [f for f in meta.get_field('InstProcess|RheoManipulation|AttachFiles|%s'%instance)]
-	    #if meta.get_field('InstProcess|RheoManipulation|URL|%s'%instance) is not None: 
-		#metadata['URL'] = meta.get_field('InstProcess|RheoManipulation|URL|%s'%instance)	    
-	    #if meta.get_field('InstProcess|RheoManipulation|GelComposition1|%s'%instance) is not None: 
-		#metadata['Gel Composition'] = self.decode_subprocess(protocol, 'GelComposition')
-	    #if meta.get_field('InstProcess|RheoManipulation|GelProfile1|%s'%instance) is not None: 
-		#metadata['Gel Profile'] = self.decode_subprocess(protocol, 'GelProfile')		    
-	    #if meta.get_field('InstProcess|RheoManipulation|Step1|%s'%instance) is not None: 
-		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')	    
-	    #return metadata    
-
-	#if exp.get_tag_event(protocol) == 'FCS':
-	    #if meta.get_field('DataAcquis|FCS|FlowcytometerInstance|%s'%instance) is not None:
-		#metadata['Instrument Instance'] = meta.get_field('DataAcquis|FCS|FlowcytometerInstance|%s'%instance)
-	    #if meta.get_field('DataAcquis|FCS|Format|%s'%instance) is not None:
-		#metadata['File Format'] = meta.get_field('DataAcquis|FCS|Format|%s'%instance)
-	    #if meta.get_field('DataAcquis|FCS|Software|%s'%instance) is not None:
-		#metadata['Software'] = meta.get_field('DataAcquis|FCS|Software|%s'%instance)
-	    #return metadata
-	
-	#if exp.get_tag_event(protocol) == 'RHE':
-	    #if meta.get_field('DataAcquis|RHE|RheometerInstance|%s'%instance) is not None:
-		#metadata['Instrument Instance'] = meta.get_field('DataAcquis|RHE|RheometerInstance|%s'%instance)
-	    #if meta.get_field('DataAcquis|RHE|Step1|%s'%instance) is not None: 
-		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')
-	    #return metadata
-
-	#if exp.get_tag_event(protocol) == 'HCS':
-	    #if meta.get_field('DataAcquis|HCS|MicroscopeInstance|%s'%instance) is not None:
-		#metadata['Instrument Instance'] = meta.get_field('DataAcquis|HCS|MicroscopeInstance|%s'%instance)
-	    #if meta.get_field('DataAcquis|HCS|Format|%s'%instance) is not None: 
-		#metadata['File Format'] = meta.get_field('DataAcquis|HCS|Format|%s'%instance)
-	    #if meta.get_field('DataAcquis|HCS|PixelSize|%s'%instance) is not None: 
-		#metadata['Pixel Size'] = meta.get_field('DataAcquis|HCS|PixelSize|%s'%instance)
-	    #if meta.get_field('DataAcquis|HCS|PixelConvert|%s'%instance) is not None: 
-		#metadata['Pixel Convertion'] = meta.get_field('DataAcquis|HCS|PixelConvert|%s'%instance)
-	    #if meta.get_field('DataAcquis|HCS|Software|%s'%instance) is not None:
-		#metadata['Software'] = meta.get_field('DataAcquis|HCS|Software|%s'%instance)	    
-	    #return metadata
-
-	#if exp.get_tag_event(protocol) == 'TLM':
-	    #if meta.get_field('DataAcquis|TLM|MicroscopeInstance|%s'%instance) is not None:
-		#metadata['Instrument Instance'] = meta.get_field('DataAcquis|TLM|MicroscopeInstance|%s'%instance)
-	    #if meta.get_field('DataAcquis|TLM|Format|%s'%instance) is not None: 
-		#metadata['File Format'] = meta.get_field('DataAcquis|TLM|Format|%s'%instance)
-	    #if meta.get_field('DataAcquis|TLM|TimeInterval|%s'%instance) is not None: 
-		#metadata['Time Interval'] = meta.get_field('DataAcquis|TLM|TimeInterval|%s'%instance)	    
-	    #if meta.get_field('DataAcquis|TLM|FrameNumber|%s'%instance) is not None: 
-		#metadata['Frame Number'] = meta.get_field('DataAcquis|TLM|FrameNumber|%s'%instance)	    
-	    #if meta.get_field('DataAcquis|TLM|StackProcess|%s'%instance) is not None: 
-		#metadata['Stack Process'] = meta.get_field('DataAcquis|TLM|StackProcess|%s'%instance)	    	    
-	    #if meta.get_field('DataAcquis|TLM|PixelSize|%s'%instance) is not None: 
-		#metadata['Pixel Size'] = meta.get_field('DataAcquis|TLM|PixelSize|%s'%instance)
-	    #if meta.get_field('DataAcquis|TLM|PixelConvert|%s'%instance) is not None: 
-		#metadata['Pixel Convertion'] = meta.get_field('DataAcquis|TLM|PixelConvert|%s'%instance)
-	    #if meta.get_field('DataAcquis|TLM|Software|%s'%instance) is not None:
-		#metadata['Software'] = meta.get_field('DataAcquis|TLM|Software|%s'%instance)	    
-	    #return metadata
-        
-	#if exp.get_tag_event(protocol) == 'RHE':
-	    #if meta.get_field('DataAcquis|RHE|RheometerInstance|%s'%instance) is not None:
-		#metadata['Instrument Instance'] = meta.get_field('DataAcquis|RHE|RheometerInstance|%s'%instance) 
-	    #if meta.get_field('DataAcquis|RHE|Step1|%s'%instance) is not None: 
-		#metadata['Procedure'] = self.decode_subprocess(protocol, 'Step')
-	    #return metadata
-
-        # ***********************************   CHANGE ENDS    ******************************#
-	
-
-
-
     def decode_event_location(self, plate_well_info):
 	d = {}
 	for pw in meta.get_field(plate_well_info):
@@ -1088,16 +1048,6 @@ class PrintProtocol(wx.Frame):
 		d[plate] += [well]
 		
 	return d 
-    
-    #def get_passage_admin_info(self, passage):
-	#admin = ''
-	#cell_count = ''
-	#for stp in passage:
-	    #if stp[0] == 'ADMIN':
-		#admin = '%s on %s at %s.'%(stp[1][0], stp[1][1], stp[1][2])
-	    #if stp[0] == 'SEED':
-		#cell_count = ' Cells were seeded at a density of %s %s'%(stp[1][0],stp[1][1])
-	#return admin+cell_count
 		
     #----------------------------------------------------------------------
     def decode_subprocess(self, protocol, token):
