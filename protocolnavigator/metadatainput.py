@@ -1136,6 +1136,52 @@ class MicroscopePanel(wx.Panel):
 	attributesizer.Add(self.gauge, 0)
 	self.progpercent = wx.StaticText(self.sw, -1, '')
 	attributesizer.Add(self.progpercent, 0)
+	staticbox = wx.StaticBox(self.sw, -1, "Instrument Information")			
+	attribute_Sizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)	
+	attribute_Sizer.Add(attributesizer,  0, wx.ALIGN_LEFT|wx.ALL, 5 )		
+
+	# ==== Local  ====
+	localsizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
+
+	nickTAG = self.tag_stump+'|NickName|'+str(self.tab_number)
+	self.settings_controls[nickTAG] = wx.TextCtrl(self.sw, name='Nick Name' ,  value=meta.get_field(nickTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[nickTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[nickTAG] = wx.StaticText(self.sw, -1, 'Nick Name')
+	self.labels[nickTAG].SetToolTipString('Nick Name of the instrument')
+	localsizer.Add(self.labels[nickTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[nickTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.sw, -1, ''), 0)
+
+	srlTAG = self.tag_stump+'|SerialNo|'+str(self.tab_number)
+	self.settings_controls[srlTAG] = wx.TextCtrl(self.sw, name='Serial Number' ,  value=meta.get_field(srlTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[srlTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[srlTAG] = wx.StaticText(self.sw, -1, 'Serial Number')
+	self.labels[srlTAG].SetToolTipString('Serial Number')
+	localsizer.Add(self.labels[srlTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[srlTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.sw, -1, ''), 0)
+
+	adrsTAG = self.tag_stump+'|Address|'+str(self.tab_number)
+	self.settings_controls[adrsTAG] = wx.TextCtrl(self.sw, name='Address' ,  value=meta.get_field(adrsTAG, default=''), size=(-1, 50), style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER)
+	self.settings_controls[adrsTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[adrsTAG] = wx.StaticText(self.sw, -1, 'Address')
+	self.labels[adrsTAG].SetToolTipString('Address where of the instrument location')
+	localsizer.Add(self.labels[adrsTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[adrsTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.sw, -1, ''), 0)	
+	
+	roomTAG = self.tag_stump+'|Room|'+str(self.tab_number)
+	self.settings_controls[roomTAG] = wx.TextCtrl(self.sw, name='Room' ,  value=meta.get_field(roomTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[roomTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[roomTAG] = wx.StaticText(self.sw, -1, 'Room Number')
+	self.labels[roomTAG].SetToolTipString('Room where of the instrument location')
+	localsizer.Add(self.labels[roomTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[roomTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.sw, -1, ''), 0)
+	
+	staticbox = wx.StaticBox(self.sw, -1, "Local Information")			
+	local_Sizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)	
+	local_Sizer.Add(localsizer,  0, wx.ALIGN_LEFT|wx.ALL, 5 )	
 	
 	#-- COLLAPSIBLE PANES ---#
 	self.strucpane= wx.CollapsiblePane(self.sw, label="Hardware", style=wx.CP_DEFAULT_STYLE|wx.CP_NO_TLW_RESIZE)
@@ -1150,7 +1196,8 @@ class MicroscopePanel(wx.Panel):
 	self.swsizer = wx.BoxSizer(wx.VERTICAL)
 	self.swsizer.Add(titlesizer)
 	self.swsizer.Add((-1,10))
-	self.swsizer.Add(attributesizer, 0)
+	self.swsizer.Add(attribute_Sizer, 0, wx.EXPAND|wx.ALL, 5)
+	self.swsizer.Add(local_Sizer, 0, wx.EXPAND|wx.ALL, 5)
 	self.swsizer.Add((-1,10))
 	self.swsizer.Add(self.strucpane, 0, wx.RIGHT|wx.LEFT|wx.EXPAND, 25)
 	self.swsizer.Add(self.illumpane, 0, wx.RIGHT|wx.LEFT|wx.EXPAND, 25)
@@ -2220,10 +2267,56 @@ class FlowcytometerPanel(wx.Panel):
 	attributesizer.Add(self.settings_controls[modelTAG], 0, wx.EXPAND)
 	attributesizer.Add(wx.StaticText(self.top_panel, -1, ''), 0)	
 	
+	staticbox = wx.StaticBox(self.top_panel, -1, "Instrument Information")			
+	attribute_Sizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)	
+	attribute_Sizer.Add(attributesizer,  0, wx.ALIGN_LEFT|wx.ALL, 5 )		
+
+	# ==== Local  ====
+	localsizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
+
+	nickTAG = self.tag_stump+'|NickName|'+str(self.tab_number)
+	self.settings_controls[nickTAG] = wx.TextCtrl(self.top_panel, name='Nick Name' ,  value=meta.get_field(nickTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[nickTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[nickTAG] = wx.StaticText(self.top_panel, -1, 'Nick Name')
+	self.labels[nickTAG].SetToolTipString('Nick Name of the instrument')
+	localsizer.Add(self.labels[nickTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[nickTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.top_panel, -1, ''), 0)
+
+	srlTAG = self.tag_stump+'|SerialNo|'+str(self.tab_number)
+	self.settings_controls[srlTAG] = wx.TextCtrl(self.top_panel, name='Serial Number' ,  value=meta.get_field(srlTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[srlTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[srlTAG] = wx.StaticText(self.top_panel, -1, 'Serial Number')
+	self.labels[srlTAG].SetToolTipString('Serial Number')
+	localsizer.Add(self.labels[srlTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[srlTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.top_panel, -1, ''), 0)
+
+	adrsTAG = self.tag_stump+'|Address|'+str(self.tab_number)
+	self.settings_controls[adrsTAG] = wx.TextCtrl(self.top_panel, name='Address' ,  value=meta.get_field(adrsTAG, default=''), size=(-1, 50), style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER)
+	self.settings_controls[adrsTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[adrsTAG] = wx.StaticText(self.top_panel, -1, 'Address')
+	self.labels[adrsTAG].SetToolTipString('Address where of the instrument location')
+	localsizer.Add(self.labels[adrsTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[adrsTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.top_panel, -1, ''), 0)	
+	
+	roomTAG = self.tag_stump+'|Room|'+str(self.tab_number)
+	self.settings_controls[roomTAG] = wx.TextCtrl(self.top_panel, name='Room' ,  value=meta.get_field(roomTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[roomTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[roomTAG] = wx.StaticText(self.top_panel, -1, 'Room Number')
+	self.labels[roomTAG].SetToolTipString('Room where of the instrument location')
+	localsizer.Add(self.labels[roomTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[roomTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.top_panel, -1, ''), 0)
+	
+	staticbox = wx.StaticBox(self.top_panel, -1, "Local Information")			
+	local_Sizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)	
+	local_Sizer.Add(localsizer,  0, wx.ALIGN_LEFT|wx.ALL, 5 )	
+	
 	# Add Channel	
 	self.addCh = wx.Button(self.top_panel, 1, 'Add Channel +')
 	self.addCh.Bind(wx.EVT_BUTTON, self.onAddChnnel) 	
-	attributesizer.Add(self.addCh, 0)
 
 	# Show previously encoded channels in case of loading ch settings	
 	self.showChannels()
@@ -2234,7 +2327,9 @@ class FlowcytometerPanel(wx.Panel):
 	swsizer = wx.BoxSizer(wx.VERTICAL)
 	swsizer.Add(titlesizer)
 	swsizer.Add((-1,10))
-	swsizer.Add(attributesizer, 0 , wx.EXPAND)
+	swsizer.Add(attribute_Sizer, 0 , wx.EXPAND|wx.ALL, 5)
+	swsizer.Add(local_Sizer, 0, wx.EXPAND|wx.ALL, 5)
+	swsizer.Add(self.addCh, 0, wx.ALL, 5)
 	self.top_panel.SetSizer(swsizer)
 	self.bot_panel.SetSizer(self.bot_fgs)
 	self.bot_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
@@ -6867,6 +6962,53 @@ class IncubatorPanel(wx.Panel):
 	attributesizer.Add(self.labels[capacityTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	attributesizer.Add(self.settings_controls[capacityTAG], 0, wx.EXPAND)
 	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)	
+
+	staticbox = wx.StaticBox(self.sw, -1, "Instrument Information")			
+	attribute_Sizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)	
+	attribute_Sizer.Add(attributesizer,  0, wx.ALIGN_LEFT|wx.ALL, 5 )		
+
+	# ==== Local  ====
+	localsizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
+
+	nickTAG = self.tag_stump+'|NickName|'+str(self.tab_number)
+	self.settings_controls[nickTAG] = wx.TextCtrl(self.sw, name='Nick Name' ,  value=meta.get_field(nickTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[nickTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[nickTAG] = wx.StaticText(self.sw, -1, 'Nick Name')
+	self.labels[nickTAG].SetToolTipString('Nick Name of the instrument')
+	localsizer.Add(self.labels[nickTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[nickTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.sw, -1, ''), 0)
+
+	srlTAG = self.tag_stump+'|SerialNo|'+str(self.tab_number)
+	self.settings_controls[srlTAG] = wx.TextCtrl(self.sw, name='Serial Number' ,  value=meta.get_field(srlTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[srlTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[srlTAG] = wx.StaticText(self.sw, -1, 'Serial Number')
+	self.labels[srlTAG].SetToolTipString('Serial Number')
+	localsizer.Add(self.labels[srlTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[srlTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.sw, -1, ''), 0)
+
+	adrsTAG = self.tag_stump+'|Address|'+str(self.tab_number)
+	self.settings_controls[adrsTAG] = wx.TextCtrl(self.sw, name='Address' ,  value=meta.get_field(adrsTAG, default=''), size=(-1, 50), style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER)
+	self.settings_controls[adrsTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[adrsTAG] = wx.StaticText(self.sw, -1, 'Address')
+	self.labels[adrsTAG].SetToolTipString('Address where of the instrument location')
+	localsizer.Add(self.labels[adrsTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[adrsTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.sw, -1, ''), 0)	
+	
+	roomTAG = self.tag_stump+'|Room|'+str(self.tab_number)
+	self.settings_controls[roomTAG] = wx.TextCtrl(self.sw, name='Room' ,  value=meta.get_field(roomTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[roomTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[roomTAG] = wx.StaticText(self.sw, -1, 'Room Number')
+	self.labels[roomTAG].SetToolTipString('Room where of the instrument location')
+	localsizer.Add(self.labels[roomTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[roomTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.sw, -1, ''), 0)
+	
+	staticbox = wx.StaticBox(self.sw, -1, "Local Information")			
+	local_Sizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)	
+	local_Sizer.Add(localsizer,  0, wx.ALIGN_LEFT|wx.ALL, 5 )	
 	
 	# Set Mandatory Label colour
 	meta.setLabelColour(self.mandatory_tags, self.labels)
@@ -6874,7 +7016,8 @@ class IncubatorPanel(wx.Panel):
         #--- Layout ----
 	self.swsizer.Add(titlesizer,0,wx.ALL, 5)
 	self.swsizer.Add((-1,10))
-	self.swsizer.Add(attributesizer, 0, wx.EXPAND|wx.ALL, 5)
+	self.swsizer.Add(attribute_Sizer, 0, wx.EXPAND|wx.ALL, 5)
+	self.swsizer.Add(local_Sizer, 0, wx.EXPAND|wx.ALL, 5)
 	self.sw.SetSizer(self.swsizer)
 	self.sw.SetScrollbars(20, 20, self.Size[0]+10, self.Size[1]+10, 0, 0)
 
@@ -7014,6 +7157,53 @@ class RheometerPanel(wx.Panel):
 	attributesizer.Add(self.labels[capacityTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	attributesizer.Add(self.settings_controls[capacityTAG], 0, wx.EXPAND)
 	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)	
+
+	staticbox = wx.StaticBox(self.sw, -1, "Instrument Information")			
+	attribute_Sizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)	
+	attribute_Sizer.Add(attributesizer,  0, wx.ALIGN_LEFT|wx.ALL, 5 )		
+
+	# ==== Local  ====
+	localsizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
+
+	nickTAG = self.tag_stump+'|NickName|'+str(self.tab_number)
+	self.settings_controls[nickTAG] = wx.TextCtrl(self.sw, name='Nick Name' ,  value=meta.get_field(nickTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[nickTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[nickTAG] = wx.StaticText(self.sw, -1, 'Nick Name')
+	self.labels[nickTAG].SetToolTipString('Nick Name of the instrument')
+	localsizer.Add(self.labels[nickTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[nickTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.sw, -1, ''), 0)
+
+	srlTAG = self.tag_stump+'|SerialNo|'+str(self.tab_number)
+	self.settings_controls[srlTAG] = wx.TextCtrl(self.sw, name='Serial Number' ,  value=meta.get_field(srlTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[srlTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[srlTAG] = wx.StaticText(self.sw, -1, 'Serial Number')
+	self.labels[srlTAG].SetToolTipString('Serial Number')
+	localsizer.Add(self.labels[srlTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[srlTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.sw, -1, ''), 0)
+
+	adrsTAG = self.tag_stump+'|Address|'+str(self.tab_number)
+	self.settings_controls[adrsTAG] = wx.TextCtrl(self.sw, name='Address' ,  value=meta.get_field(adrsTAG, default=''), size=(-1, 50), style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER)
+	self.settings_controls[adrsTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[adrsTAG] = wx.StaticText(self.sw, -1, 'Address')
+	self.labels[adrsTAG].SetToolTipString('Address where of the instrument location')
+	localsizer.Add(self.labels[adrsTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[adrsTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.sw, -1, ''), 0)	
+	
+	roomTAG = self.tag_stump+'|Room|'+str(self.tab_number)
+	self.settings_controls[roomTAG] = wx.TextCtrl(self.sw, name='Room' ,  value=meta.get_field(roomTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[roomTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[roomTAG] = wx.StaticText(self.sw, -1, 'Room Number')
+	self.labels[roomTAG].SetToolTipString('Room where of the instrument location')
+	localsizer.Add(self.labels[roomTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[roomTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.sw, -1, ''), 0)
+	
+	staticbox = wx.StaticBox(self.sw, -1, "Local Information")			
+	local_Sizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)	
+	local_Sizer.Add(localsizer,  0, wx.ALIGN_LEFT|wx.ALL, 5 )	
 	
 	# Set Mandatory Label colour
 	meta.setLabelColour(self.mandatory_tags, self.labels)
@@ -7051,7 +7241,8 @@ class RheometerPanel(wx.Panel):
         #--- Layout ----
 	self.swsizer.Add(titlesizer,0,wx.ALL, 5)
 	self.swsizer.Add((-1,10))
-	self.swsizer.Add(attributesizer, 0, wx.EXPAND|wx.ALL, 5)
+	self.swsizer.Add(attribute_Sizer, 0, wx.EXPAND|wx.ALL, 5)
+	self.swsizer.Add(local_Sizer, 0, wx.EXPAND|wx.ALL, 5)
 	self.swsizer.Add(self.geometrysizer,0,wx.EXPAND|wx.ALL, 5)
 	self.swsizer.Add(self.gassizer,0, wx.EXPAND|wx.ALL, 5)
 	self.sw.SetSizer(self.swsizer)
@@ -7583,6 +7774,8 @@ class CentrifugePanel(wx.Panel):
 	titlesizer.AddSpacer((5,-1))
 	titlesizer.Add(self.attach_file_num)	
 	# Attributes	
+	
+	# ==== Instrument  ====
 	attributesizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
 
 	mfgTAG = self.tag_stump+'|Manufacturer|'+str(self.tab_number)
@@ -7615,14 +7808,62 @@ class CentrifugePanel(wx.Panel):
 	attributesizer.Add(self.labels[typeTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	attributesizer.Add(self.settings_controls[typeTAG], 0, wx.EXPAND)
 	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)	
+	
+	staticbox = wx.StaticBox(self.sw, -1, "Instrument Information")			
+	attribute_Sizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)	
+	attribute_Sizer.Add(attributesizer,  0, wx.ALIGN_LEFT|wx.ALL, 5 )		
 
+	# ==== Local  ====
+	localsizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
+
+	nickTAG = self.tag_stump+'|NickName|'+str(self.tab_number)
+	self.settings_controls[nickTAG] = wx.TextCtrl(self.sw, name='Nick Name' ,  value=meta.get_field(nickTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[nickTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[nickTAG] = wx.StaticText(self.sw, -1, 'Nick Name')
+	self.labels[nickTAG].SetToolTipString('Nick Name of the instrument')
+	localsizer.Add(self.labels[nickTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[nickTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.sw, -1, ''), 0)
+
+	srlTAG = self.tag_stump+'|SerialNo|'+str(self.tab_number)
+	self.settings_controls[srlTAG] = wx.TextCtrl(self.sw, name='Serial Number' ,  value=meta.get_field(srlTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[srlTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[srlTAG] = wx.StaticText(self.sw, -1, 'Serial Number')
+	self.labels[srlTAG].SetToolTipString('Serial Number')
+	localsizer.Add(self.labels[srlTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[srlTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.sw, -1, ''), 0)
+
+	adrsTAG = self.tag_stump+'|Address|'+str(self.tab_number)
+	self.settings_controls[adrsTAG] = wx.TextCtrl(self.sw, name='Address' ,  value=meta.get_field(adrsTAG, default=''), size=(-1, 50), style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER)
+	self.settings_controls[adrsTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[adrsTAG] = wx.StaticText(self.sw, -1, 'Address')
+	self.labels[adrsTAG].SetToolTipString('Address where of the instrument location')
+	localsizer.Add(self.labels[adrsTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[adrsTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.sw, -1, ''), 0)	
+	
+	roomTAG = self.tag_stump+'|Room|'+str(self.tab_number)
+	self.settings_controls[roomTAG] = wx.TextCtrl(self.sw, name='Room' ,  value=meta.get_field(roomTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[roomTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[roomTAG] = wx.StaticText(self.sw, -1, 'Room Number')
+	self.labels[roomTAG].SetToolTipString('Room where of the instrument location')
+	localsizer.Add(self.labels[roomTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[roomTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.sw, -1, ''), 0)
+	
+	staticbox = wx.StaticBox(self.sw, -1, "Local Information")			
+	local_Sizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)	
+	local_Sizer.Add(localsizer,  0, wx.ALIGN_LEFT|wx.ALL, 5 )	
+	
 	# Set Mandatory Label colour
 	meta.setLabelColour(self.mandatory_tags, self.labels)
 		
         #--- Layout ----
 	self.swsizer.Add(titlesizer,0,wx.ALL, 5)
 	self.swsizer.Add((-1,10))
-	self.swsizer.Add(attributesizer, 0, wx.EXPAND|wx.ALL, 5)
+	self.swsizer.Add(attribute_Sizer, 0, wx.EXPAND|wx.ALL, 5)
+	self.swsizer.Add(local_Sizer, 0, wx.EXPAND|wx.ALL, 5)
 	self.sw.SetSizer(self.swsizer)
 	self.sw.SetScrollbars(20, 20, self.Size[0]+10, self.Size[1]+10, 0, 0)
 
@@ -7974,6 +8215,53 @@ class OvenPanel(wx.Panel):
 	attributesizer.Add(self.labels[modelTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	attributesizer.Add(self.settings_controls[modelTAG], 0, wx.EXPAND)
 	attributesizer.Add(wx.StaticText(self.sw, -1, ''), 0)
+
+	staticbox = wx.StaticBox(self.sw, -1, "Instrument Information")			
+	attribute_Sizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)	
+	attribute_Sizer.Add(attributesizer,  0, wx.ALIGN_LEFT|wx.ALL, 5 )		
+
+	# ==== Local  ====
+	localsizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
+
+	nickTAG = self.tag_stump+'|NickName|'+str(self.tab_number)
+	self.settings_controls[nickTAG] = wx.TextCtrl(self.sw, name='Nick Name' ,  value=meta.get_field(nickTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[nickTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[nickTAG] = wx.StaticText(self.sw, -1, 'Nick Name')
+	self.labels[nickTAG].SetToolTipString('Nick Name of the instrument')
+	localsizer.Add(self.labels[nickTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[nickTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.sw, -1, ''), 0)
+
+	srlTAG = self.tag_stump+'|SerialNo|'+str(self.tab_number)
+	self.settings_controls[srlTAG] = wx.TextCtrl(self.sw, name='Serial Number' ,  value=meta.get_field(srlTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[srlTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[srlTAG] = wx.StaticText(self.sw, -1, 'Serial Number')
+	self.labels[srlTAG].SetToolTipString('Serial Number')
+	localsizer.Add(self.labels[srlTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[srlTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.sw, -1, ''), 0)
+
+	adrsTAG = self.tag_stump+'|Address|'+str(self.tab_number)
+	self.settings_controls[adrsTAG] = wx.TextCtrl(self.sw, name='Address' ,  value=meta.get_field(adrsTAG, default=''), size=(-1, 50), style=wx.TE_MULTILINE|wx.TE_PROCESS_ENTER)
+	self.settings_controls[adrsTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[adrsTAG] = wx.StaticText(self.sw, -1, 'Address')
+	self.labels[adrsTAG].SetToolTipString('Address where of the instrument location')
+	localsizer.Add(self.labels[adrsTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[adrsTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.sw, -1, ''), 0)	
+	
+	roomTAG = self.tag_stump+'|Room|'+str(self.tab_number)
+	self.settings_controls[roomTAG] = wx.TextCtrl(self.sw, name='Room' ,  value=meta.get_field(roomTAG, default=''), style=wx.TE_PROCESS_ENTER)
+	self.settings_controls[roomTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.labels[roomTAG] = wx.StaticText(self.sw, -1, 'Room Number')
+	self.labels[roomTAG].SetToolTipString('Room where of the instrument location')
+	localsizer.Add(self.labels[roomTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	localsizer.Add(self.settings_controls[roomTAG], 0, wx.EXPAND)
+	localsizer.Add(wx.StaticText(self.sw, -1, ''), 0)
+	
+	staticbox = wx.StaticBox(self.sw, -1, "Local Information")			
+	local_Sizer = wx.StaticBoxSizer(staticbox, wx.VERTICAL)	
+	local_Sizer.Add(localsizer,  0, wx.ALIGN_LEFT|wx.ALL, 5 )	
 	
 	# Set Mandatory Label colour
 	meta.setLabelColour(self.mandatory_tags, self.labels)
@@ -7981,7 +8269,8 @@ class OvenPanel(wx.Panel):
         #--- Layout ----
 	self.swsizer.Add(titlesizer,0,wx.ALL, 5)
 	self.swsizer.Add((-1,10))
-	self.swsizer.Add(attributesizer, 0, wx.EXPAND|wx.ALL, 5)
+	self.swsizer.Add(attribute_Sizer, 0, wx.EXPAND|wx.ALL, 5)
+	self.swsizer.Add(local_Sizer, 0, wx.EXPAND|wx.ALL, 5)
 	self.sw.SetSizer(self.swsizer)
 	self.sw.SetScrollbars(20, 20, self.Size[0]+10, self.Size[1]+10, 0, 0)
 
