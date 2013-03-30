@@ -20,6 +20,7 @@ import glob
 import icons
 import subprocess
 import wx.lib.plot as plot
+import datetime
 from functools import partial
 from experimentsettings import *
 from instancelist import *
@@ -27,9 +28,10 @@ from utils import *
 from makechannel import ChannelBuilder
 from rheometerstepbuilder import RheometerStepBuilder
 from addrow import RowBuilder
-from passagestepwriter import *
+from cellmaintainaction import *
 from collections import OrderedDict
 from draganddrop import FileListDialog
+from multilinetextshow import MultiLineShow
 
 
 ICON_SIZE = 22.0
@@ -547,24 +549,30 @@ class CellLinePanel(wx.Panel):
 	                       self.tag_stump+'|CatalogueNo|%s'%str(self.tab_number),
 	                       self.tag_stump+'|Organism|%s'%str(self.tab_number)]
 	self.currpassageNo = 0	
-	self.elapsed_time = [0] 
+	self.elapsed_time = [0]
+	self.master_elapsed_min = 0
 	self.cumulative_pd = [0] 
+	self.action_buttons = {}
 	
 	# Panel
-	self.splitwindow = wx.SplitterWindow(self)
-	self.top_panel = wx.ScrolledWindow(self.splitwindow)
-	self.bot_panel = wx.ScrolledWindow(self.splitwindow)
-        self.splitwindow.SplitHorizontally(self.top_panel, self.bot_panel)
+	self.sw = wx.ScrolledWindow(self)
 	
+	self.prohibit_actions = {
+		    'Seed': ['Seed','Freeze'],
+		    'Passage': ['Seed'],
+		    'Freeze': ['Freeze','Passage', 'Enrich'],
+		    'Enrich': ['Enrich','Seed']
+		}	
+
 	# Title
-	text = wx.StaticText(self.top_panel, -1, exp.get_tag_event(tag_stump))
+	text = wx.StaticText(self.sw, -1, exp.get_tag_event(tag_stump))
 	font = wx.Font(12, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
 	text.SetFont(font)	
 	self.attfileTAG = self.tag_stump+'|AttachFiles|%s'%str(self.tab_number)	
 	attach_bmp = icons.clip.Scale(16.0, 16.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
-	attach_btn = wx.BitmapButton(self.top_panel, -1, attach_bmp)
+	attach_btn = wx.BitmapButton(self.sw, -1, attach_bmp)
 	attach_btn.SetToolTipString("Attach file links.")
-	self.attach_file_num = wx.StaticText(self.top_panel, -1, '(%s)' %str(len(meta.get_field(self.attfileTAG, default=[]))))
+	self.attach_file_num = wx.StaticText(self.sw, -1, '(%s)' %str(len(meta.get_field(self.attfileTAG, default=[]))))
 	attach_btn.Bind (wx.EVT_BUTTON, self.OnAttachPropFile)	
 	titlesizer = wx.BoxSizer(wx.HORIZONTAL)	
 	titlesizer.Add(text, 0)
@@ -572,17 +580,21 @@ class CellLinePanel(wx.Panel):
 	titlesizer.Add(attach_btn, 0)
 	titlesizer.AddSpacer((5,-1))
 	titlesizer.Add(self.attach_file_num)	
+	
+	# History
+	self.historyTAG = self.tag_stump+'|History|%s'%str(self.tab_number)
+	self.cell_history = meta.get_field(self.historyTAG, default=[])
 
 	# Attributes
 	attributesizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
 	
 	self.nameTAG = self.tag_stump+'|Name|'+str(self.tab_number)
-	self.settings_controls[self.nameTAG] = wx.TextCtrl(self.top_panel, style=wx.TE_PROCESS_ENTER, value=meta.get_field(self.nameTAG, default=''))
+	self.settings_controls[self.nameTAG] = wx.TextCtrl(self.sw, style=wx.TE_PROCESS_ENTER, value=meta.get_field(self.nameTAG, default=''))
 	self.settings_controls[self.nameTAG].Bind(wx.EVT_TEXT, self.OnSavingData)	
 	self.settings_controls[self.nameTAG].SetToolTipString('Cell Line selection')
-	self.labels[self.nameTAG] = wx.StaticText(self.top_panel, -1, 'Cell Line/Designation')
+	self.labels[self.nameTAG] = wx.StaticText(self.sw, -1, 'Cell Line/Designation')
 	save_bmp = icons.save.Scale(20.0, 20.0, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
-	self.save_btn = wx.BitmapButton(self.top_panel, -1, save_bmp)
+	self.save_btn = wx.BitmapButton(self.sw, -1, save_bmp)
 	self.save_btn.SetToolTipString("Save instance for future reuse")	
 	self.save_btn.Bind(wx.EVT_BUTTON, self.OnSavingSettings)
 	
@@ -592,54 +604,54 @@ class CellLinePanel(wx.Panel):
 	
 	
 	#===== Administrative Information =====#
-	admin_staticbox = wx.StaticBox(self.top_panel, -1, "Administrative Information")
+	admin_staticbox = wx.StaticBox(self.sw, -1, "Administrative Information")
 	admin_fgs = wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
 
 	authorityTAG = self.tag_stump+'|Authority|%s'%str(self.tab_number)
-	self.settings_controls[authorityTAG] = wx.TextCtrl(self.top_panel, style=wx.TE_PROCESS_ENTER, value=meta.get_field(authorityTAG, default=''))
+	self.settings_controls[authorityTAG] = wx.TextCtrl(self.sw, style=wx.TE_PROCESS_ENTER, value=meta.get_field(authorityTAG, default=''))
 	self.settings_controls[authorityTAG].Bind(wx.EVT_TEXT, self.OnSavingData)	
 	self.settings_controls[authorityTAG].SetToolTipString('Cell Line selection')
-	self.labels[authorityTAG] = wx.StaticText(self.top_panel, -1, 'Authority')
+	self.labels[authorityTAG] = wx.StaticText(self.sw, -1, 'Authority')
 	admin_fgs.Add(self.labels[authorityTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	admin_fgs.Add(self.settings_controls[authorityTAG], 0, wx.EXPAND)	
 
         acttTAG = self.tag_stump+'|CatalogueNo|%s'%str(self.tab_number)
-        self.settings_controls[acttTAG] = wx.TextCtrl(self.top_panel, style=wx.TE_PROCESS_ENTER, value=meta.get_field(acttTAG, default=''))
+        self.settings_controls[acttTAG] = wx.TextCtrl(self.sw, style=wx.TE_PROCESS_ENTER, value=meta.get_field(acttTAG, default=''))
         self.settings_controls[acttTAG].Bind(wx.EVT_TEXT, self.OnSavingData)	
         self.settings_controls[acttTAG].SetToolTipString('ATCC reference')
-	self.labels[acttTAG] = wx.StaticText(self.top_panel, -1, 'Reference/Catalogue Number')
+	self.labels[acttTAG] = wx.StaticText(self.sw, -1, 'Reference/Catalogue Number')
         admin_fgs.Add(self.labels[acttTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
         admin_fgs.Add(self.settings_controls[acttTAG], 0, wx.EXPAND)	
 
 	depositTAG = self.tag_stump+'|Depositors|%s'%str(self.tab_number)
-	self.settings_controls[depositTAG] = wx.TextCtrl(self.top_panel, style=wx.TE_PROCESS_ENTER, value=meta.get_field(depositTAG, default=''))
+	self.settings_controls[depositTAG] = wx.TextCtrl(self.sw, style=wx.TE_PROCESS_ENTER, value=meta.get_field(depositTAG, default=''))
 	self.settings_controls[depositTAG].Bind(wx.EVT_TEXT, self.OnSavingData)	
 	self.settings_controls[depositTAG].SetToolTipString('Depositors')
-	self.labels[depositTAG] = wx.StaticText(self.top_panel, -1, 'Depositors')
+	self.labels[depositTAG] = wx.StaticText(self.sw, -1, 'Depositors')
 	admin_fgs.Add(self.labels[depositTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	admin_fgs.Add(self.settings_controls[depositTAG], 0, wx.EXPAND)	
 
 	biosafeTAG = self.tag_stump+'|Biosafety|%s'%str(self.tab_number)
-	self.settings_controls[biosafeTAG] = wx.TextCtrl(self.top_panel, style=wx.TE_PROCESS_ENTER, value=meta.get_field(biosafeTAG, default=''))
+	self.settings_controls[biosafeTAG] = wx.TextCtrl(self.sw, style=wx.TE_PROCESS_ENTER, value=meta.get_field(biosafeTAG, default=''))
 	self.settings_controls[biosafeTAG].Bind(wx.EVT_TEXT, self.OnSavingData)	
 	self.settings_controls[biosafeTAG].SetToolTipString('Biosafety Level')
-	self.labels[biosafeTAG] = wx.StaticText(self.top_panel, -1, 'Biosafety Level')
+	self.labels[biosafeTAG] = wx.StaticText(self.sw, -1, 'Biosafety Level')
 	admin_fgs.Add(self.labels[biosafeTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	admin_fgs.Add(self.settings_controls[biosafeTAG], 0, wx.EXPAND)	
 
 	shipmentTAG = self.tag_stump+'|Shipment|%s'%str(self.tab_number)
-	self.settings_controls[shipmentTAG] = wx.TextCtrl(self.top_panel, style=wx.TE_PROCESS_ENTER, value=meta.get_field(shipmentTAG, default=''))
+	self.settings_controls[shipmentTAG] = wx.TextCtrl(self.sw, style=wx.TE_PROCESS_ENTER, value=meta.get_field(shipmentTAG, default=''))
 	self.settings_controls[shipmentTAG].Bind(wx.EVT_TEXT, self.OnSavingData)	
 	self.settings_controls[shipmentTAG].SetToolTipString('Shipment')
-	self.labels[shipmentTAG] = wx.StaticText(self.top_panel, -1, 'Shipment')
+	self.labels[shipmentTAG] = wx.StaticText(self.sw, -1, 'Shipment')
 	admin_fgs.Add(self.labels[shipmentTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	admin_fgs.Add(self.settings_controls[shipmentTAG], 0, wx.EXPAND)
 
 	permitTAG = self.tag_stump+'|Permit|%s'%str(self.tab_number)
-	self.settings_controls[permitTAG] = wx.TextCtrl(self.top_panel, style=wx.TE_PROCESS_ENTER, value=meta.get_field(permitTAG, default=''))
+	self.settings_controls[permitTAG] = wx.TextCtrl(self.sw, style=wx.TE_PROCESS_ENTER, value=meta.get_field(permitTAG, default=''))
 	self.settings_controls[permitTAG].Bind(wx.EVT_TEXT, self.OnSavingData)	
 	self.settings_controls[permitTAG].SetToolTipString('Shipment')
-	self.labels[permitTAG] = wx.StaticText(self.top_panel, -1, 'Permits Reference')
+	self.labels[permitTAG] = wx.StaticText(self.sw, -1, 'Permits Reference')
 	admin_fgs.Add(self.labels[permitTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	admin_fgs.Add(self.settings_controls[permitTAG], 0, wx.EXPAND)	
 	
@@ -648,156 +660,156 @@ class CellLinePanel(wx.Panel):
 	
 	
 	#===== Biological Information=====#        
-	bio_staticbox = wx.StaticBox(self.top_panel, -1, "Biological Information")
+	bio_staticbox = wx.StaticBox(self.sw, -1, "Biological Information")
 	bio_fgs = wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
 
 	growpropTAG = self.tag_stump+'|GrowthProperty|%s'%str(self.tab_number)
-	self.settings_controls[growpropTAG] = wx.TextCtrl(self.top_panel, style=wx.TE_PROCESS_ENTER, value=meta.get_field(growpropTAG, default=''))
+	self.settings_controls[growpropTAG] = wx.TextCtrl(self.sw, style=wx.TE_PROCESS_ENTER, value=meta.get_field(growpropTAG, default=''))
 	self.settings_controls[growpropTAG].Bind(wx.EVT_TEXT, self.OnSavingData)	
 	self.settings_controls[growpropTAG].SetToolTipString('e.g adherent, suspended')
-	self.labels[growpropTAG] = wx.StaticText(self.top_panel, -1, 'Growth Properties')
+	self.labels[growpropTAG] = wx.StaticText(self.sw, -1, 'Growth Properties')
 	bio_fgs.Add(self.labels[growpropTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	bio_fgs.Add(self.settings_controls[growpropTAG], 0, wx.EXPAND) 
 
 	taxIdTAG = self.tag_stump+'|Organism|%s'%str(self.tab_number)
 	organism_choices =['Homo Sapiens', 'Mus Musculus', 'Rattus Norvegicus', 'Other']
-	self.settings_controls[taxIdTAG]= wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (120,30), organism_choices, wx.LB_SINGLE)
+	self.settings_controls[taxIdTAG]= wx.ListBox(self.sw, -1, wx.DefaultPosition, (220,30), organism_choices, wx.LB_SINGLE)
 	if meta.get_field(taxIdTAG) is not None:
 	    self.settings_controls[taxIdTAG].Append(meta.get_field(taxIdTAG))
 	    self.settings_controls[taxIdTAG].SetStringSelection(meta.get_field(taxIdTAG))
 	self.settings_controls[taxIdTAG].Bind(wx.EVT_LISTBOX, self.OnSavingData)   
 	self.settings_controls[taxIdTAG].SetToolTipString('Taxonomic ID of the species') 
-	self.labels[taxIdTAG] = wx.StaticText(self.top_panel, -1, 'Organism')
+	self.labels[taxIdTAG] = wx.StaticText(self.sw, -1, 'Organism')
 	bio_fgs.Add(self.labels[taxIdTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	bio_fgs.Add(self.settings_controls[taxIdTAG], 0, wx.EXPAND)	
 
 	morphTAG = self.tag_stump+'|Morphology|%s'%str(self.tab_number)
-	self.settings_controls[morphTAG] = wx.TextCtrl(self.top_panel, style=wx.TE_PROCESS_ENTER, value=meta.get_field(morphTAG, default=''))
+	self.settings_controls[morphTAG] = wx.TextCtrl(self.sw, style=wx.TE_PROCESS_ENTER, value=meta.get_field(morphTAG, default=''))
 	self.settings_controls[morphTAG].Bind(wx.EVT_TEXT, self.OnSavingData)	
 	self.settings_controls[morphTAG].SetToolTipString('Cell morphology e.g epithelial')
-	self.labels[morphTAG] = wx.StaticText(self.top_panel, -1, 'Morphology')
+	self.labels[morphTAG] = wx.StaticText(self.sw, -1, 'Morphology')
 	bio_fgs.Add(self.labels[morphTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	bio_fgs.Add(self.settings_controls[morphTAG], 0, wx.EXPAND) 
 
 	organTAG = self.tag_stump+'|Organ|%s'%str(self.tab_number)
-	self.settings_controls[organTAG] = wx.TextCtrl(self.top_panel, style=wx.TE_PROCESS_ENTER, value=meta.get_field(organTAG, default=''))
+	self.settings_controls[organTAG] = wx.TextCtrl(self.sw, style=wx.TE_PROCESS_ENTER, value=meta.get_field(organTAG, default=''))
 	self.settings_controls[organTAG].Bind(wx.EVT_TEXT, self.OnSavingData)	
 	self.settings_controls[organTAG].SetToolTipString('Source organ')
-	self.labels[organTAG] = wx.StaticText(self.top_panel, -1, 'Organ')
+	self.labels[organTAG] = wx.StaticText(self.sw, -1, 'Organ')
 	bio_fgs.Add(self.labels[organTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	bio_fgs.Add(self.settings_controls[organTAG], 0, wx.EXPAND) 	
 
 	diseaseTAG = self.tag_stump+'|Disease|%s'%str(self.tab_number)
-	self.settings_controls[diseaseTAG] = wx.TextCtrl(self.top_panel, style=wx.TE_PROCESS_ENTER, value=meta.get_field(diseaseTAG, default=''))
+	self.settings_controls[diseaseTAG] = wx.TextCtrl(self.sw, style=wx.TE_PROCESS_ENTER, value=meta.get_field(diseaseTAG, default=''))
 	self.settings_controls[diseaseTAG].Bind(wx.EVT_TEXT, self.OnSavingData)	
 	self.settings_controls[diseaseTAG].SetToolTipString('Disease specificity e.g. osteosarcoma')
-	self.labels[diseaseTAG] = wx.StaticText(self.top_panel, -1, 'Disease')
+	self.labels[diseaseTAG] = wx.StaticText(self.sw, -1, 'Disease')
 	bio_fgs.Add(self.labels[diseaseTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	bio_fgs.Add(self.settings_controls[diseaseTAG], 0, wx.EXPAND) 
 
 	productTAG = self.tag_stump+'|Products|%s'%str(self.tab_number)
-	self.settings_controls[productTAG] = wx.TextCtrl(self.top_panel, style=wx.TE_PROCESS_ENTER, value=meta.get_field(productTAG, default=''))
+	self.settings_controls[productTAG] = wx.TextCtrl(self.sw, style=wx.TE_PROCESS_ENTER, value=meta.get_field(productTAG, default=''))
 	self.settings_controls[productTAG].Bind(wx.EVT_TEXT, self.OnSavingData)	
 	self.settings_controls[productTAG].SetToolTipString('e.g osteosarcoma derived cell product (ODGF)')
-	self.labels[productTAG] = wx.StaticText(self.top_panel, -1, 'Cellular Products')
+	self.labels[productTAG] = wx.StaticText(self.sw, -1, 'Cellular Products')
 	bio_fgs.Add(self.labels[productTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	bio_fgs.Add(self.settings_controls[productTAG], 0, wx.EXPAND) 	
 
 	appTAG = self.tag_stump+'|Applications|%s'%str(self.tab_number)
-	self.settings_controls[appTAG] = wx.TextCtrl(self.top_panel, style=wx.TE_PROCESS_ENTER, value=meta.get_field(appTAG, default=''))
+	self.settings_controls[appTAG] = wx.TextCtrl(self.sw, style=wx.TE_PROCESS_ENTER, value=meta.get_field(appTAG, default=''))
 	self.settings_controls[appTAG].Bind(wx.EVT_TEXT, self.OnSavingData)	
 	self.settings_controls[appTAG].SetToolTipString('e.g transfection hosts')
-	self.labels[appTAG] = wx.StaticText(self.top_panel, -1, 'Applications')
+	self.labels[appTAG] = wx.StaticText(self.sw, -1, 'Applications')
 	bio_fgs.Add(self.labels[appTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	bio_fgs.Add(self.settings_controls[appTAG], 0, wx.EXPAND) 	
 
 	receptorTAG = self.tag_stump+'|Receptors|%s'%str(self.tab_number)
-	self.settings_controls[receptorTAG] = wx.TextCtrl(self.top_panel, style=wx.TE_PROCESS_ENTER, value=meta.get_field(receptorTAG, default=''))
+	self.settings_controls[receptorTAG] = wx.TextCtrl(self.sw, style=wx.TE_PROCESS_ENTER, value=meta.get_field(receptorTAG, default=''))
 	self.settings_controls[receptorTAG].Bind(wx.EVT_TEXT, self.OnSavingData)	
 	self.settings_controls[receptorTAG].SetToolTipString('e.g insuline like growth factors I')
-	self.labels[receptorTAG] = wx.StaticText(self.top_panel, -1, 'Receptors')
+	self.labels[receptorTAG] = wx.StaticText(self.sw, -1, 'Receptors')
 	bio_fgs.Add(self.labels[receptorTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	bio_fgs.Add(self.settings_controls[receptorTAG], 0, wx.EXPAND) 
 
 	antigenTAG = self.tag_stump+'|Antigen|%s'%str(self.tab_number)
-	self.settings_controls[antigenTAG] = wx.TextCtrl(self.top_panel, style=wx.TE_PROCESS_ENTER|wx.TE_MULTILINE, value=meta.get_field(antigenTAG, default=''))
+	self.settings_controls[antigenTAG] = wx.TextCtrl(self.sw, style=wx.TE_PROCESS_ENTER|wx.TE_MULTILINE, value=meta.get_field(antigenTAG, default=''))
 	self.settings_controls[antigenTAG].Bind(wx.EVT_TEXT, self.OnSavingData)	
 	self.settings_controls[antigenTAG].SetToolTipString('e.g Blood type A')
-	self.labels[antigenTAG] = wx.StaticText(self.top_panel, -1, 'Antigen Expression')
+	self.labels[antigenTAG] = wx.StaticText(self.sw, -1, 'Antigen Expression')
 	bio_fgs.Add(self.labels[antigenTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	bio_fgs.Add(self.settings_controls[antigenTAG], 0, wx.EXPAND)  	
 
 	dnaTAG = self.tag_stump+'|DNA|%s'%str(self.tab_number)
-	self.settings_controls[dnaTAG] = wx.TextCtrl(self.top_panel, style=wx.TE_PROCESS_ENTER|wx.TE_MULTILINE, value=meta.get_field(dnaTAG, default=''))
+	self.settings_controls[dnaTAG] = wx.TextCtrl(self.sw, style=wx.TE_PROCESS_ENTER|wx.TE_MULTILINE, value=meta.get_field(dnaTAG, default=''))
 	self.settings_controls[dnaTAG].Bind(wx.EVT_TEXT, self.OnSavingData)	
 	self.settings_controls[dnaTAG].SetToolTipString('DNA profile')
-	self.labels[dnaTAG] = wx.StaticText(self.top_panel, -1, 'DNA Profile')
+	self.labels[dnaTAG] = wx.StaticText(self.sw, -1, 'DNA Profile')
 	bio_fgs.Add(self.labels[dnaTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	bio_fgs.Add(self.settings_controls[dnaTAG], 0, wx.EXPAND)
 
 	cytogenTAG = self.tag_stump+'|Cytogenetic|%s'%str(self.tab_number)
-	self.settings_controls[cytogenTAG] = wx.TextCtrl(self.top_panel, style=wx.TE_PROCESS_ENTER|wx.TE_MULTILINE, value=meta.get_field(cytogenTAG, default=''))
+	self.settings_controls[cytogenTAG] = wx.TextCtrl(self.sw, style=wx.TE_PROCESS_ENTER|wx.TE_MULTILINE, value=meta.get_field(cytogenTAG, default=''))
 	self.settings_controls[cytogenTAG].Bind(wx.EVT_TEXT, self.OnSavingData)	
 	self.settings_controls[cytogenTAG].SetToolTipString('Cytogenetic Analysis')
-	self.labels[cytogenTAG] = wx.StaticText(self.top_panel, -1, 'Cytogenetic Analysis')
+	self.labels[cytogenTAG] = wx.StaticText(self.sw, -1, 'Cytogenetic Analysis')
 	bio_fgs.Add(self.labels[cytogenTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	bio_fgs.Add(self.settings_controls[cytogenTAG], 0, wx.EXPAND) 	
 
 	enzymeTAG = self.tag_stump+'|Isoenzymes|%s'%str(self.tab_number)
-	self.settings_controls[enzymeTAG] = wx.TextCtrl(self.top_panel, style=wx.TE_PROCESS_ENTER|wx.TE_MULTILINE, value=meta.get_field(enzymeTAG, default=''))
+	self.settings_controls[enzymeTAG] = wx.TextCtrl(self.sw, style=wx.TE_PROCESS_ENTER|wx.TE_MULTILINE, value=meta.get_field(enzymeTAG, default=''))
 	self.settings_controls[enzymeTAG].Bind(wx.EVT_TEXT, self.OnSavingData)	
 	self.settings_controls[enzymeTAG].SetToolTipString('Isoenzymes')
-	self.labels[enzymeTAG] = wx.StaticText(self.top_panel, -1, 'Isoenzymes')
+	self.labels[enzymeTAG] = wx.StaticText(self.sw, -1, 'Isoenzymes')
 	bio_fgs.Add(self.labels[enzymeTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	bio_fgs.Add(self.settings_controls[enzymeTAG], 0, wx.EXPAND) 
 
 	ageTAG = self.tag_stump+'|Age|%s'%str(self.tab_number)
-	self.settings_controls[ageTAG] = wx.TextCtrl(self.top_panel,  style=wx.TE_PROCESS_ENTER, value=meta.get_field(ageTAG, default=''))
+	self.settings_controls[ageTAG] = wx.TextCtrl(self.sw,  style=wx.TE_PROCESS_ENTER, value=meta.get_field(ageTAG, default=''))
 	self.settings_controls[ageTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
 	self.settings_controls[ageTAG].SetToolTipString('Age of the organism in days when the cells were collected. .')
-	self.labels[ageTAG] = wx.StaticText(self.top_panel, -1, 'Age of Organism (days)')
+	self.labels[ageTAG] = wx.StaticText(self.sw, -1, 'Age of Organism (days)')
 	bio_fgs.Add(self.labels[ageTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	bio_fgs.Add(self.settings_controls[ageTAG], 0, wx.EXPAND)
 
 	gendTAG = self.tag_stump+'|Gender|%s'%str(self.tab_number)
-	self.settings_controls[gendTAG] = wx.Choice(self.top_panel, -1,  choices=['Male', 'Female', 'Neutral'])
+	self.settings_controls[gendTAG] = wx.Choice(self.sw, -1,  choices=['Male', 'Female', 'Neutral'])
 	if meta.get_field(gendTAG) is not None:
 	    self.settings_controls[gendTAG].SetStringSelection(meta.get_field(gendTAG))
 	self.settings_controls[gendTAG].Bind(wx.EVT_CHOICE, self.OnSavingData)
 	self.settings_controls[gendTAG].SetToolTipString('Gender of the organism')
-	self.labels[gendTAG] = wx.StaticText(self.top_panel, -1, 'Gender')
+	self.labels[gendTAG] = wx.StaticText(self.sw, -1, 'Gender')
 	bio_fgs.Add(self.labels[gendTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	bio_fgs.Add(self.settings_controls[gendTAG], 0, wx.EXPAND) 
 
 	ethnicityTAG = self.tag_stump+'|Ethnicity|%s'%str(self.tab_number)
-	self.settings_controls[ethnicityTAG] = wx.TextCtrl(self.top_panel, style=wx.TE_PROCESS_ENTER, value=meta.get_field(ethnicityTAG, default=''))
+	self.settings_controls[ethnicityTAG] = wx.TextCtrl(self.sw, style=wx.TE_PROCESS_ENTER, value=meta.get_field(ethnicityTAG, default=''))
 	self.settings_controls[ethnicityTAG].Bind(wx.EVT_TEXT, self.OnSavingData)	
 	self.settings_controls[ethnicityTAG].SetToolTipString('Ethnicity')
-	self.labels[ethnicityTAG] = wx.StaticText(self.top_panel, -1, 'Ethnicity')
+	self.labels[ethnicityTAG] = wx.StaticText(self.sw, -1, 'Ethnicity')
 	bio_fgs.Add(self.labels[ethnicityTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	bio_fgs.Add(self.settings_controls[ethnicityTAG], 0, wx.EXPAND)
 
 	commentTAG = self.tag_stump+'|Comments|%s'%str(self.tab_number)
-	self.settings_controls[commentTAG] = wx.TextCtrl(self.top_panel, style=wx.TE_PROCESS_ENTER|wx.TE_MULTILINE, value=meta.get_field(commentTAG, default=''))
+	self.settings_controls[commentTAG] = wx.TextCtrl(self.sw, style=wx.TE_PROCESS_ENTER|wx.TE_MULTILINE, value=meta.get_field(commentTAG, default=''))
 	self.settings_controls[commentTAG].Bind(wx.EVT_TEXT, self.OnSavingData)	
 	self.settings_controls[commentTAG].SetToolTipString('Comments on the cell line')
-	self.labels[commentTAG] = wx.StaticText(self.top_panel, -1, 'Comments')
+	self.labels[commentTAG] = wx.StaticText(self.sw, -1, 'Comments')
 	bio_fgs.Add(self.labels[commentTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	bio_fgs.Add(self.settings_controls[commentTAG], 0, wx.EXPAND) 		
 
 	publicationTAG = self.tag_stump+'|Publications|%s'%str(self.tab_number)
-	self.settings_controls[publicationTAG] = wx.TextCtrl(self.top_panel, style=wx.TE_PROCESS_ENTER|wx.TE_MULTILINE, value=meta.get_field(publicationTAG, default=''))
+	self.settings_controls[publicationTAG] = wx.TextCtrl(self.sw, style=wx.TE_PROCESS_ENTER|wx.TE_MULTILINE, value=meta.get_field(publicationTAG, default=''))
 	self.settings_controls[publicationTAG].Bind(wx.EVT_TEXT, self.OnSavingData)	
 	self.settings_controls[publicationTAG].SetToolTipString('Reference Publications')
-	self.labels[publicationTAG] = wx.StaticText(self.top_panel, -1, 'Publications')
+	self.labels[publicationTAG] = wx.StaticText(self.sw, -1, 'Publications')
 	bio_fgs.Add(self.labels[publicationTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	bio_fgs.Add(self.settings_controls[publicationTAG], 0, wx.EXPAND) 
 
 	relprodTAG = self.tag_stump+'|RelProduct|%s'%str(self.tab_number)
-	self.settings_controls[relprodTAG] = wx.TextCtrl(self.top_panel, style=wx.TE_PROCESS_ENTER, value=meta.get_field(relprodTAG, default=''))
+	self.settings_controls[relprodTAG] = wx.TextCtrl(self.sw, style=wx.TE_PROCESS_ENTER, value=meta.get_field(relprodTAG, default=''))
 	self.settings_controls[relprodTAG].Bind(wx.EVT_TEXT, self.OnSavingData)	
 	self.settings_controls[relprodTAG].SetToolTipString('Related Product')
-	self.labels[relprodTAG] = wx.StaticText(self.top_panel, -1, 'Related Product')
+	self.labels[relprodTAG] = wx.StaticText(self.sw, -1, 'Related Product')
 	bio_fgs.Add(self.labels[relprodTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	bio_fgs.Add(self.settings_controls[relprodTAG], 0, wx.EXPAND) 	       
 
@@ -806,52 +818,61 @@ class CellLinePanel(wx.Panel):
 	
 	
 	# ==== Propagation  ====
-	prop_staticbox = wx.StaticBox(self.top_panel, -1, "Cell Culture Information")	
+	prop_staticbox = wx.StaticBox(self.sw, -1, "Cell History")	
 	prop_fgs = wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
-	self.fpbsizer = wx.FlexGridSizer(cols=1, vgap=5)
 
-        passTAG = self.tag_stump+'|OrgPassageNo|%s'%str(self.tab_number)
-        self.settings_controls[passTAG] = wx.lib.masked.NumCtrl(self.top_panel,  size=(20,-1), style=wx.TE_PROCESS_ENTER, value=meta.get_field(passTAG, default=0))
-        self.settings_controls[passTAG].Bind(wx.EVT_TEXT, self.OnSavingData)    
-        self.settings_controls[passTAG].SetToolTipString('Numeric value of the passage of the cells under investigation')
-	self.labels[passTAG] = wx.StaticText(self.top_panel, -1, 'Original Passage Number')
-        prop_fgs.Add(self.labels[passTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-        prop_fgs.Add(self.settings_controls[passTAG], 0, wx.EXPAND)
-
-	preserveTAG = self.tag_stump+'|Preservation|%s'%str(self.tab_number)
-	self.settings_controls[preserveTAG] = wx.TextCtrl(self.top_panel,  style=wx.TE_PROCESS_ENTER|wx.TE_MULTILINE, value=meta.get_field(preserveTAG, default=''))
-	self.settings_controls[preserveTAG].Bind(wx.EVT_TEXT, self.OnSavingData)    
-	self.settings_controls[preserveTAG].SetToolTipString('95% culture medium, 5% DMSO')
-	self.labels[preserveTAG] = wx.StaticText(self.top_panel, -1, 'Preservation')
-	prop_fgs.Add(self.labels[preserveTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	prop_fgs.Add(self.settings_controls[preserveTAG], 0, wx.EXPAND)	
-
-	gmediumTAG =self.tag_stump+'|GrowthMedium|%s'%str(self.tab_number)
-	self.settings_controls[gmediumTAG] = wx.TextCtrl(self.top_panel,  style=wx.TE_PROCESS_ENTER|wx.TE_MULTILINE, value=meta.get_field(gmediumTAG, default=''))
-	self.settings_controls[gmediumTAG].Bind(wx.EVT_TEXT, self.OnSavingData)
-	self.settings_controls[gmediumTAG].SetToolTipString('Age of the organism in days when the cells were collected. .')
-	self.labels[gmediumTAG] = wx.StaticText(self.top_panel, -1, 'Growth Medium')
-	prop_fgs.Add(self.labels[gmediumTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	prop_fgs.Add(self.settings_controls[gmediumTAG], 0, wx.EXPAND)
-
-	self.recordPassageBtn = wx.Button(self.top_panel, -1, label="Record")
-	self.recordPassageBtn.Bind(wx.EVT_BUTTON, self.onRecordPassage)	
-	prop_fgs.Add(wx.StaticText(self.top_panel, -1, 'Passage History'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	prop_fgs.Add(self.recordPassageBtn, 0)	
-
+        orgpassTAG = self.tag_stump+'|OrgPassageNo|%s'%str(self.tab_number)
+        self.settings_controls[orgpassTAG] = wx.lib.masked.NumCtrl(self.sw,  size=(20,-1), style=wx.TE_PROCESS_ENTER, value=meta.get_field(orgpassTAG, default=0))
+        self.settings_controls[orgpassTAG].Bind(wx.EVT_TEXT, self.OnSavingData)    
+        self.settings_controls[orgpassTAG].SetToolTipString('Numeric value of the passage of the cells under investigation')
+	self.labels[orgpassTAG] = wx.StaticText(self.sw, -1, 'Original Passage No')
+        prop_fgs.Add(self.labels[orgpassTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+        prop_fgs.Add(self.settings_controls[orgpassTAG], 0, wx.EXPAND)
+	
+	self.curr_pass_text = wx.StaticText(self.sw, -1, '')
+	prop_fgs.Add(wx.StaticText(self.sw, -1, 'Current Passage No'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)	
+	prop_fgs.Add(self.curr_pass_text, 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)	
+	
+	self.canvas = plot.PlotCanvas(self.sw)
+	self.canvas.SetInitialSize(size=(400, 300))
+	
+	passages = [attr for attr in meta.get_attribute_list_by_instance(self.tag_stump, str(self.tab_number))
+		                            if attr.startswith('Passage')]	
+	if passages:
+	    self.curr_pass_text.SetLabel('%d' %len(passages))
+	    
+	self.showpasshisBut  = wx.Button(self.sw, -1, label="Show History")
+	self.showpasshisBut.Bind(wx.EVT_BUTTON, self.onshowPassHistory)
+	
 	propSizer = wx.StaticBoxSizer(prop_staticbox, wx.VERTICAL)	
 	propSizer.Add(prop_fgs,  0, wx.ALIGN_LEFT|wx.ALL, 5 )
+	propSizer.Add(self.showpasshisBut, 0, wx.EXPAND|wx.ALL, 5)
+	propSizer.Add(self.canvas, 0, wx.EXPAND|wx.ALL, 5)
+
+	act_staticbox = wx.StaticBox(self.sw, -1, "Actions")
+	act_fgs = wx.FlexGridSizer(cols=5, hgap=5, vgap=5)
 	
-	self.canvas = plot.PlotCanvas(self.top_panel)
-	self.canvas.SetInitialSize(size=(400, 300))
-	#self.canvas.Draw(self.drawBarGraph())	
+	self.action_buttons['Seed'] = wx.Button(self.sw, -1, label="Seed")
+	self.action_buttons['Seed'].actiontype = "Seed"
+	self.action_buttons['Passage'] = wx.Button(self.sw, -1, label="Passage")
+	self.action_buttons['Passage'].actiontype = "Passage"
+	self.action_buttons['Freeze'] = wx.Button(self.sw, -1, label="Freeze")
+	self.action_buttons['Freeze'].actiontype = "Freeze"
+	self.action_buttons['Enrich'] = wx.Button(self.sw, -1, label="Enrich")
+	self.action_buttons['Enrich'].actiontype = "Enrich"
 	
-	# show the perviously encoded passages
-	pass_title = wx.StaticText(self.bot_panel, -1, 'Passage History')
-	font = wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD)
-	pass_title.SetFont(font)
-	self.fpbsizer.Add(pass_title, 0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)	
-	self.showPassages()	
+	self.action_buttons['Seed'].Bind(wx.EVT_BUTTON, self.onRecordAction)
+	self.action_buttons['Passage'].Bind(wx.EVT_BUTTON, self.onRecordAction)
+	self.action_buttons['Freeze'].Bind(wx.EVT_BUTTON, self.onRecordAction)
+	self.action_buttons['Enrich'].Bind(wx.EVT_BUTTON, self.onRecordAction)
+	#self.recordPassageBtn.Bind(wx.EVT_BUTTON, self.onRecordPassage)
+	
+	act_fgs.Add(self.action_buttons['Seed'], 0)
+	act_fgs.Add(self.action_buttons['Passage'], 0)
+	act_fgs.Add(self.action_buttons['Freeze'], 0)
+	act_fgs.Add(self.action_buttons['Enrich'], 0)
+	actSizer = wx.StaticBoxSizer(act_staticbox, wx.VERTICAL)
+	actSizer.Add(act_fgs, 0, wx.EXPAND|wx.ALL, 5)
 	
 	# Set Mandatory Label colour
 	meta.setLabelColour(self.mandatory_tags, self.labels)	
@@ -864,17 +885,79 @@ class CellLinePanel(wx.Panel):
 	topsizer.Add(adminSizer, 0, wx.EXPAND|wx.ALL, 10)
 	topsizer.Add(bioSizer, 0, wx.EXPAND|wx.ALL, 10)
 	topsizer.Add(propSizer, 0, wx.EXPAND|wx.ALL, 10)
-	topsizer.Add(self.canvas, 0, wx.EXPAND|wx.ALL, 10)
-        self.top_panel.SetSizer(topsizer)
-	self.bot_panel.SetSizer(self.fpbsizer)
-	self.top_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
-        self.bot_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
-	self.splitwindow.SetSashGravity(0.5)
+	topsizer.Add(actSizer, 0, wx.EXPAND|wx.ALL, 10)
+        self.sw.SetSizer(topsizer)
+	self.sw.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
         self.Sizer = wx.BoxSizer(wx.VERTICAL)
-	self.Sizer.Add(self.splitwindow, 1, wx.EXPAND)
+	self.Sizer.Add(self.sw, 1, wx.EXPAND)
 	self.SetSizer(self.Sizer)
   
-  
+    def onRecordAction(self, event):
+	if meta.checkMandatoryTags(self.mandatory_tags):
+	    # find the current number of the action
+	    # first identify what type of action it is
+	    action = event.GetEventObject().actiontype
+	    # Reset buttons
+	    for act in self.action_buttons.keys():
+		self.action_buttons[act].Enable()
+	    for pa in self.prohibit_actions[action]:
+		self.action_buttons[pa].Disable()
+	    # Get current action number	
+	    if self.cell_history:
+		prev_actions = [pv[0] for pv in self.cell_history
+		                if pv[0].startswith(action)]
+	    else:
+		prev_actions = []
+	    
+	    if prev_actions:
+		prev_act = sorted(prev_actions, key = meta.stringSplitByNumbers)[-1]
+		curr_act_num = int(prev_act.split(action)[1])+1
+	    else:
+		curr_act_num = 1
+		if action == 'Passage':
+		    curr_act_num += int(meta.get_field(self.tag_stump+'|OrgPassageNo|%s'%str(self.tab_number), default = 0))
+	
+		 
+	    
+	    # Show the passage dialog
+	    dia = MaintainAction(self, self.protocol, curr_act_num, action)
+	    if dia.ShowModal() == wx.ID_OK: 
+	        if self.cell_history and action == 'Passage':
+		   # update master elapsed time
+		    last_pd_act = [pv[0] for pv in self.cell_history
+		                   if re.match('Seed|Passage', pv[0])][-1]
+		    if last_pd_act:
+			ldt = [tg[2] for tg in self.cell_history if tg[0] == last_pd_act][-1]
+			last_tp = datetime.datetime(*map(int, [ldt[0],ldt[1],ldt[2],ldt[3],ldt[4],ldt[5]]))
+			elapsed_time = (dia.selected_datetime-last_tp)
+			elapsed_min = (elapsed_time.days * 1440) + (elapsed_time.seconds / 60)
+			self.master_elapsed_min += elapsed_min
+			self.elapsed_time.append(self.master_elapsed_min/60)
+			last_seed_density = [info[1] for info in meta.get_field(self.tag_stump+'|%s|%s' %(last_pd_act, str(self.tab_number)))
+			  if info[0]=='SEED']
+			cell_growth = max(math.log(dia.curr_protocol['HARVEST'][0]/last_seed_density[0][0]), 1)
+			pdt = (elapsed_min*math.log(2)/cell_growth)/60
+			self.cumulative_pd.append(self.cumulative_pd[-1]+pdt)
+			data = []
+			for i, timepoint in enumerate(self.elapsed_time):
+			    data.append((timepoint, self.cumulative_pd[i]))
+			line = plot.PolyLine(data, colour='green', width=1)
+				## also draw markers, default colour is black and size is 2
+				## other shapes 'circle', 'cross', 'square', 'dot', 'plus'
+			marker = plot.PolyMarker(data, marker='circle', colour='green')
+				## set up text, axis and draw
+			gc = plot.PlotGraphics([line, marker], 'Population double chart', 'Accumulated Time (hours)', 'Accumulated PDs')
+			self.canvas.Refresh()
+			self.canvas.Draw(gc, xAxis=(0,max(self.elapsed_time)+24), yAxis=(0,max(self.cumulative_pd)+1))	
+			
+		attribute = '%s%s'%(action, str(curr_act_num))    
+		self.cell_history.append((attribute, dia.settings_controls['Admin|0'].GetValue(), dia.sel_date_time, self.master_elapsed_min))
+		meta.set_field(self.historyTAG, self.cell_history)
+		meta.set_field(self.tag_stump+'|%s|%s' %(attribute, str(self.tab_number)), dia.curr_protocol.items())	# set the value as a list rather than a dictionary
+	    dia.Destroy()   
+	  
+	    # self.drawPDChart()
+
     def onRecordPassage(self, event):
         if meta.checkMandatoryTags(self.mandatory_tags):
 	    orgPassNum = meta.get_field(self.tag_stump+'|OrgPassageNo|%s'%str(self.tab_number), default = 0)
@@ -888,21 +971,53 @@ class CellLinePanel(wx.Panel):
 		self.currpassageNo = int(orgPassNum)+1
 	    
 	    # Show the passage dialog
-	    dia = PassageStepBuilder(self, self.protocol, self.currpassageNo)
+	    dia = PassageStepBuilder(self, self.protocol, self.currpassageNo, 'passage')
 	    if dia.ShowModal() == wx.ID_OK: 
 		meta.set_field(self.tag_stump+'|Passage%s|%s' %(str(self.currpassageNo), str(self.tab_number)), dia.curr_protocol.items())	# set the value as a list rather than a dictionary
-		self.showPassages()
-	    dia.Destroy()	
+		#self.showPassages()
+	    dia.Destroy()
+	    
+    def onshowPassHistory(self, event):
+	passages = [attr for attr in meta.get_attribute_list_by_instance(self.tag_stump, str(self.tab_number))
+		                    if attr.startswith('Passage')]
+	if passages: 
+	    metadata = ''
+	    for passage in reversed(sorted(passages, key=meta.alphanumeric_sort)):
+		# make a foldable panel for each passage
+		admin_info = self.getAdminInfo(passage)	    
+		passage_info = meta.get_field(self.tag_stump+'|%s|%s' %(passage, str(self.tab_number)))
+		curr_protocol = dict(passage_info)
+		steps = sorted([step for step in curr_protocol.keys()
+		         if step.startswith('Step')] , key = meta.stringSplitByNumbers)
+		string = ''
+		for s in steps:
+		    step_info = curr_protocol.get(s)
+		    string += s+': %s ' %step_info[0]
+		    if len(step_info[1])> 0:
+			string += 'for %s mins ' %step_info[1]
+		    if len(step_info[2])> 0:
+			string += 'at %s C ' %step_info[2]	  
+		    if len(step_info[3])> 0:
+			string += 'Tips: %s' %step_info[3]		    
+		    string += '\n'
+		    
+		metadata += '\n'+passage+': %s\n'%admin_info	
+		metadata += string
+		
+	    dia = MultiLineShow(self, '', '', '', metadata)
+	    dia.ShowModal()
 
     def showPassages(self):
 	'''This method writes the updated passage history in a sequence fashion'''
 	passages = [attr for attr in meta.get_attribute_list_by_instance(self.tag_stump, str(self.tab_number))
 		                    if attr.startswith('Passage')]
 
-	if passages: 
+	if passages: 	    
+	    self.curr_pass_text.SetLabel('%s' %re.sub("[^0-9]", "", sorted(passages, key=meta.alphanumeric_sort)[-1]))
+	    
 	    self.fpbsizer.Clear(deleteWindows=True)
 	    self.settings_controls[self.tag_stump+'|OrgPassageNo|%s'%str(self.tab_number)].Disable()
-	    pass_title = wx.StaticText(self.bot_panel, -1, 'Passage History')
+	    #pass_title = wx.StaticText(self.bot_panel, -1, 'Passage History')
 	    font = wx.Font(8, wx.SWISS, wx.NORMAL, wx.BOLD)
 	    pass_title.SetFont(font)
 	    self.fpbsizer.Add(pass_title, 0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)	  
@@ -925,49 +1040,40 @@ class CellLinePanel(wx.Panel):
 		gc = plot.PlotGraphics([line, marker], 'Population double chart', 'Accumulated Time (hours)', 'Accumulated PDs')
 		self.canvas.Refresh()
 		self.canvas.Draw(gc, xAxis=(0,max(self.elapsed_time)+24), yAxis=(0,max(self.cumulative_pd)+1))		
-    
-	    for passage in reversed(sorted(passages, key=meta.alphanumeric_sort)):
-		# make a foldable panel for each passage
-		admin_info = self.getAdminInfo(passage)
-		passagepane = wx.CollapsiblePane(self.bot_panel, label=passage+': '+admin_info, style=wx.CP_DEFAULT_STYLE|wx.CP_NO_TLW_RESIZE)
-		self.Bind(wx.EVT_COLLAPSIBLEPANE_CHANGED, self.OnPaneChanged, passagepane)
-		self.passagePane(passagepane.GetPane(), passage)	
-		self.fpbsizer.Add(passagepane, 0, wx.RIGHT|wx.LEFT, 25)	
 
 	    # Sizers update	
 	    self.bot_panel.SetSizer(self.fpbsizer)
-	    self.top_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
-	    self.bot_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
+	    self.sw.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
     
     def OnPaneChanged(self, evt=None):
-	self.top_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
-	self.bot_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
+	self.sw.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
+	#self.bot_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
 	
-    def passagePane(self, pane, passage):
-	''' This pane makes the microscope stand (backbone of the microscope)'''	
+    #def passagePane(self, pane, passage):
+	#''' This pane makes the microscope stand (backbone of the microscope)'''	
 	
-	meta = ExperimentSettings.getInstance()
-	self.pane = pane
+	#meta = ExperimentSettings.getInstance()
+	#self.pane = pane
 	
-	passage_info = meta.get_field(self.tag_stump+'|%s|%s' %(passage, str(self.tab_number)))
-	curr_protocol = dict(passage_info)
+	#passage_info = meta.get_field(self.tag_stump+'|%s|%s' %(passage, str(self.tab_number)))
+	#curr_protocol = dict(passage_info)
 	
-	steps = sorted([step for step in curr_protocol.keys()
-		 if step.startswith('Step')] , key = meta.stringSplitByNumbers)
+	#steps = sorted([step for step in curr_protocol.keys()
+		 #if step.startswith('Step')] , key = meta.stringSplitByNumbers)
 	
-	string = ''
-	for s in steps:
-	    step_info = curr_protocol.get(s)
-	    string += s+': %s ' %step_info[0]
-	    if len(step_info[1])> 0:
-		string += 'for %s mins ' %step_info[1]
-	    if len(step_info[2])> 0:
-		string += 'at %s C ' %step_info[2]	  
-	    if len(step_info[3])> 0:
-		string += 'Tips: %s' %step_info[3]		    
-	    string += '\n'
+	#string = ''
+	#for s in steps:
+	    #step_info = curr_protocol.get(s)
+	    #string += s+': %s ' %step_info[0]
+	    #if len(step_info[1])> 0:
+		#string += 'for %s mins ' %step_info[1]
+	    #if len(step_info[2])> 0:
+		#string += 'at %s C ' %step_info[2]	  
+	    #if len(step_info[3])> 0:
+		#string += 'Tips: %s' %step_info[3]		    
+	    #string += '\n'
 	    
-	wx.StaticText(self.pane, -1, string) 
+	#wx.StaticText(self.pane, -1, string) 
 	
  
     def validate(self):

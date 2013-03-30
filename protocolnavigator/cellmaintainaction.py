@@ -14,13 +14,12 @@ from collections import OrderedDict
 meta = exp.ExperimentSettings.getInstance()
 locale.setlocale(locale.LC_ALL, "")
 
-Default_Protocol ={
+Passage_Protocol ={
     'ADMIN' : ['Your Name', '', ''],
     'SEED' : None,
     'HARVEST' : None,
     'RESEED' : None,
     'VESSEL' : None,
-    'PD': None,
     'Step1' : ['Remove medium with a stripette','','', ''],
     'Step2' : ['Add trypsin in the following volumes - 1ml for the 60mm dish or T25 flask OR 2ml for 100mm dish or T75 flask','','', ''],
     'Step3' : ['Gently tip to ensure trypsin reaches all surfaces','','', ''],
@@ -31,16 +30,45 @@ Default_Protocol ={
     'Step8' : ['Add medium (DMEM) to your dish or flask','','', ''],
     'Step9' : ['Flush off the cells and then pipette your trypsinised cells into the appropriate new container.','','', 'Excess cells should be placed in container and treated appropriately. Waste cells must not be sucked into traps.  The trypsin should not really be >10% of your final volume.  If it does you should spin down your cells (5mins at 1000rpm), draw off most of the supernatant and replace with fresh medium.'],
     }
+Seed_Protocol ={
+    'ADMIN' : ['Your Name', '', ''],
+    'SEED' : None,
+    'VESSEL' : None,
+    'Step1' : ['Remove medium with a stripette','','', ''],
+    'Step2' : ['Add trypsin in the following volumes - 1ml for the 60mm dish or T25 flask OR 2ml for 100mm dish or T75 flask','','', ''],
+    }
+Thaw_Protocol ={
+    'ADMIN' : ['Your Name', '', ''],
+    'SEED' : None,
+    'VESSEL' : None,
+    'Step1' : ['Remove medium with a stripette','','', ''],
+    'Step2' : ['Add trypsin in the following volumes - 1ml for the 60mm dish or T25 flask OR 2ml for 100mm dish or T75 flask','','', ''],
+    }
+Freeze_Protocol ={
+    'ADMIN' : ['Your Name', '', ''],
+    'SEED' : None,
+    'VESSEL' : None,
+    'Step1' : ['Remove medium with a stripette','','', ''],
+    'Step2' : ['Add trypsin in the following volumes - 1ml for the 60mm dish or T25 flask OR 2ml for 100mm dish or T75 flask','','', ''],
+    }
+Enrich_Protocol ={
+    'ADMIN' : ['Your Name', '', ''],
+    'SEED' : None,
+    'VESSEL' : None,
+    'Step1' : ['Remove medium with a stripette','','', ''],
+    'Step2' : ['Add trypsin in the following volumes - 1ml for the 60mm dish or T25 flask OR 2ml for 100mm dish or T75 flask','','', ''],
+    }
  
-class PassageStepBuilder(wx.Dialog):
-    def __init__(self, parent, protocol, currpassageNo, action_type):
+class MaintainAction(wx.Dialog):
+    def __init__(self, parent, protocol, curractionNo, action_type):
         wx.Dialog.__init__(self, parent, -1, size=(850,500), style=wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER)
 
 	self.protocol = protocol
-	self.currpassageNo = currpassageNo
+	self.curractionNo = curractionNo
 	self.action_type = action_type
+	self.action_attr = '%s %s'%(self.action_type, str(self.curractionNo))	
 	
-	self.SetTitle(self.action_type.title())
+	self.SetTitle(self.action_attr)
 	
 	self.top_panel = wx.Panel(self)
 	self.bot_panel = wx.ScrolledWindow(self)	
@@ -48,23 +76,54 @@ class PassageStepBuilder(wx.Dialog):
 	self.settings_controls = {}
 	self.curr_protocol = {}
 	self.admin_info = {}  	
+	self.mandatory_tags = []
+	self.labels = {}	
 	
 	self.today_datetime = datetime.datetime.now()
 	
 	self.tag_stump = exp.get_tag_stump(self.protocol, 2)
 	self.instance = exp.get_tag_attribute(self.protocol)
-		
-	if meta.get_field(self.tag_stump+'|Passage%s|%s' %(str(self.currpassageNo-1), self.instance)) is None:
-	    self.curr_protocol = Default_Protocol
-	else:
-	    d =  meta.get_field(self.tag_stump+'|Passage%s|%s' %(str(self.currpassageNo-1), self.instance))
-	    for k, v in d:
-		self.curr_protocol[k] = v	
-		
+	
+	if self.action_type == 'Passage':	
+	    if meta.get_field(self.tag_stump+'|Passage%s|%s' %(str(self.curractionNo-1), self.instance)) is None:
+		self.curr_protocol = Passage_Protocol
+	    else:
+		d =  meta.get_field(self.tag_stump+'|Passage%s|%s' %(str(self.curractionNo-1), self.instance))
+		for k, v in d:
+		    self.curr_protocol[k] = v	
+	if self.action_type == 'Seed':	
+	    if meta.get_field(self.tag_stump+'|Seed%s|%s' %(str(self.curractionNo-1), self.instance)) is None:
+		self.curr_protocol = Seed_Protocol
+	    else:
+		d =  meta.get_field(self.tag_stump+'|Seed%s|%s' %(str(self.curractionNo-1), self.instance))
+		for k, v in d:
+		    self.curr_protocol[k] = v
+	if self.action_type == 'Thaw':	
+	    if meta.get_field(self.tag_stump+'|Thaw%s|%s' %(str(self.curractionNo-1), self.instance)) is None:
+		self.curr_protocol = Thaw_Protocol
+	    else:
+		d =  meta.get_field(self.tag_stump+'|Thaw%s|%s' %(str(self.curractionNo-1), self.instance))
+		for k, v in d:
+		    self.curr_protocol[k] = v	
+	if self.action_type == 'Freeze':	
+	    if meta.get_field(self.tag_stump+'|Freeze%s|%s' %(str(self.curractionNo-1), self.instance)) is None:
+		self.curr_protocol = Freeze_Protocol
+	    else:
+		d =  meta.get_field(self.tag_stump+'|Freeze%s|%s' %(str(self.curractionNo-1), self.instance))
+		for k, v in d:
+		    self.curr_protocol[k] = v
+	if self.action_type == 'Enrich':	
+	    if meta.get_field(self.tag_stump+'|Enrich%s|%s' %(str(self.curractionNo-1), self.instance)) is None:
+		self.curr_protocol = Enrich_Protocol
+	    else:
+		d =  meta.get_field(self.tag_stump+'|Enrich%s|%s' %(str(self.curractionNo-1), self.instance))
+		for k, v in d:
+		    self.curr_protocol[k] = v
+		    
 	date= None	
 	self.initial_datetime = None
 	self.initial_seed_density = None	
-	self.curr_protocol['PD'] = []
+	#self.curr_protocol['PD'] = []
 	self.curr_protocol['HARVEST'] = []
 	self.curr_protocol['RESEED'] = []	
 	
@@ -93,29 +152,29 @@ class PassageStepBuilder(wx.Dialog):
 	
 	self.set_curr_time = wx.Button(self.top_panel, -1, 'Set Current Date Time')
 
-	if (self.action_type == 'passage') or (self.action_type == 'seed'): 
+	if (self.action_type == 'Passage') or (self.action_type == 'Seed'): 
 	    self.settings_controls['Seed|0'] = wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)
 	    unit_choices =['nM2', 'uM2', 'mM2','Other']
 	    self.settings_controls['Seed|1'] = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
-	    if self.curr_protocol['SEED']:
-		self.settings_controls['Seed|0'].SetValue(self.curr_protocol['SEED'][0])
-		self.settings_controls['Seed|0'].Disable()	
-		self.settings_controls['Seed|1'].Append(self.curr_protocol['SEED'][1])
-		self.settings_controls['Seed|1'].SetStringSelection(self.curr_protocol['SEED'][1])
-		self.settings_controls['Seed|1'].Disable()
-		self.settings_controls['Seed|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
-		self.settings_controls['Seed|1'].Bind(wx.EVT_LISTBOX, self.OnSavingData)		
-	if (self.action_type == 'passage'):     
+	    #if self.curr_protocol['SEED']:
+		#self.settings_controls['Seed|0'].SetValue(self.curr_protocol['SEED'][0])
+		#self.settings_controls['Seed|0'].Disable()	
+		#self.settings_controls['Seed|1'].Append(self.curr_protocol['SEED'][1])
+		#self.settings_controls['Seed|1'].SetStringSelection(self.curr_protocol['SEED'][1])
+		#self.settings_controls['Seed|1'].Disable()
+	    self.settings_controls['Seed|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
+	    self.settings_controls['Seed|1'].Bind(wx.EVT_LISTBOX, self.OnSavingData)		
+	if (self.action_type == 'Passage'):     
 	    self.settings_controls['Harvest|0'] = wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)
 	    unit_choices =['nM2', 'uM2', 'mM2','Other']
 	    self.settings_controls['Harvest|1'] = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
-	    self.settings_controls['Reseed|0'] = wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)
-	    unit_choices =['nM2', 'uM2', 'mM2','Other']
-	    self.settings_controls['Reseed|1'] = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
+	    #self.settings_controls['Reseed|0'] = wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)
+	    #unit_choices =['nM2', 'uM2', 'mM2','Other']
+	    #self.settings_controls['Reseed|1'] = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
 	    self.settings_controls['Harvest|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
 	    self.settings_controls['Harvest|1'].Bind(wx.EVT_LISTBOX, self.OnSavingData)	
-	    self.settings_controls['Reseed|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
-	    self.settings_controls['Reseed|1'].Bind(wx.EVT_LISTBOX, self.OnSavingData)	    
+	    #self.settings_controls['Reseed|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
+	    #self.settings_controls['Reseed|1'].Bind(wx.EVT_LISTBOX, self.OnSavingData)	    
 	
 	# CHANGE IT VESSEL DESIGN TWO SELECTIONS
 	vessel_types =['T75', 'T25', '6WellPlate','12WellPlate', 'Other']
@@ -129,7 +188,7 @@ class PassageStepBuilder(wx.Dialog):
 	font = wx.Font(12, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
 	self.pd_text.SetFont(font)	
 	
-	self.selection_btn = wx.Button(self, wx.ID_OK, 'Record Passage')
+	self.selection_btn = wx.Button(self, wx.ID_OK, 'Record')
         self.close_btn = wx.Button(self, wx.ID_CANCEL)  
 	
 	#self.selection_btn.Disable()
@@ -154,20 +213,21 @@ class PassageStepBuilder(wx.Dialog):
 	adminsizer.Add(self.set_curr_time, 0, wx.ALIGN_RIGHT|wx.LEFT, 15)
 
 	stat_fgs = wx.FlexGridSizer(cols=4, hgap=5, vgap=5)
-	if (self.action_type == 'passage') or (self.action_type == 'seed'): 
+	if (self.action_type == 'Seed'): 
 	    stat_fgs.Add(wx.StaticText(self.top_panel, -1, 'Seed Density'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	    stat_fgs.Add(self.settings_controls['Seed|0'], 0, wx.EXPAND)
 	    stat_fgs.Add(wx.StaticText(self.top_panel, -1, ' cells/'),0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)
 	    stat_fgs.Add(self.settings_controls['Seed|1'], 0, wx.EXPAND)
-	if (self.action_type == 'passage'):  
+	if (self.action_type == 'Passage'):  
 	    stat_fgs.Add(wx.StaticText(self.top_panel, -1, 'Harvest Density'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	    stat_fgs.Add(self.settings_controls['Harvest|0'], 0, wx.EXPAND)
 	    stat_fgs.Add(wx.StaticText(self.top_panel, -1, ' cells/'),0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)
-	    stat_fgs.Add(self.settings_controls['Harvest|1'], 0, wx.EXPAND)	
-	    stat_fgs.Add(wx.StaticText(self.top_panel, -1, 'Reseed Density'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	    stat_fgs.Add(self.settings_controls['Reseed|0'], 0, wx.EXPAND)
+	    stat_fgs.Add(self.settings_controls['Harvest|1'], 0, wx.EXPAND)
+	    stat_fgs.Add(wx.StaticText(self.top_panel, -1, '(Re)seed Density'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	    stat_fgs.Add(self.settings_controls['Seed|0'], 0, wx.EXPAND)
 	    stat_fgs.Add(wx.StaticText(self.top_panel, -1, ' cells/'),0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)
-	    stat_fgs.Add(self.settings_controls['Reseed|1'], 0, wx.EXPAND)	
+	    stat_fgs.Add(self.settings_controls['Seed|1'], 0, wx.EXPAND)	    
+		
 	    
 	stat_fgs.Add(wx.StaticText(self.top_panel, -1, 'Vessel Type'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	stat_fgs.Add(self.settings_controls['Vessel|0'], 0, wx.EXPAND)
@@ -371,10 +431,10 @@ class PassageStepBuilder(wx.Dialog):
 	    self.curr_protocol['HARVEST'] = [self.settings_controls['Harvest|0'].GetValue(), 
 	                                  self.settings_controls['Harvest|1'].GetStringSelection()
 	                                    ]
-	elif tag.startswith('Reseed'):	
-	    self.curr_protocol['SEED'] = [self.settings_controls['Reseed|0'].GetValue(), 
-	                                  self.settings_controls['Reseed|1'].GetStringSelection()
-	                                    ]
+	#elif tag.startswith('Reseed'):	
+	    #self.curr_protocol['SEED'] = [self.settings_controls['Reseed|0'].GetValue(), 
+	                                  #self.settings_controls['Reseed|1'].GetStringSelection()
+	                                    #]
 	elif tag.startswith('Vessel'):	
 	    self.curr_protocol['VESSEL'] = [self.settings_controls['Vessel|0'].GetStringSelection()]
 	    
@@ -401,24 +461,24 @@ class PassageStepBuilder(wx.Dialog):
 	time = self.curr_protocol['ADMIN'][2].split(':')
 	self.sel_date_time = map(int, [date[2],date[1],date[0],time[0],time[1], time[2]])
 	self.selected_datetime = datetime.datetime(*map(int, [date[2],date[1],date[0],time[0],time[1], time[2]]))
-	if (self.initial_datetime and self.initial_seed_density and self.curr_protocol['HARVEST']):
-	    # *** Harvest density can be less then seed density if cells die
-	    # the forumula is different check with Paul  #=elapsedtime*LN(2)/LN(harvest density/seed density)
-	    # ** time resloution can be days or hours
+	#if (self.initial_datetime and self.initial_seed_density and self.curr_protocol['HARVEST']):
+	    ## *** Harvest density can be less then seed density if cells die
+	    ## the forumula is different check with Paul  #=elapsedtime*LN(2)/LN(harvest density/seed density)
+	    ## ** time resloution can be days or hours
 	    
-	    time_elapsed =  (self.selected_datetime-self.initial_datetime)
-	    elapsed_minutes = (time_elapsed.days * 1440) + (time_elapsed.seconds / 60)
-	    if elapsed_minutes < 360:
-		dlg = wx.MessageDialog(None, 'Difference of seed-harvest time should be minimum 6 hr.\nReselect time', 'Time selection error', wx.OK| wx.ICON_STOP)
-		dlg.ShowModal()
-		return 		
-	    if (self.selected_datetime>self.initial_datetime and self.curr_protocol['HARVEST'][0] > self.initial_seed_density):
-		cell_growth = max(math.log(self.curr_protocol['HARVEST'][0]/self.initial_seed_density), 1)
-		pdt = (elapsed_minutes*math.log(2)/cell_growth)/60
-		self.pd_text.SetLabel('PD Time %.2f Hr' %pdt)
-		self.curr_protocol['PD'].append(pdt)
-		self.curr_protocol['PD'].append((elapsed_minutes/60)/pdt)
-		self.curr_protocol['PD'].append((elapsed_minutes/60))
+	    #time_elapsed =  (self.selected_datetime-self.initial_datetime)
+	    #elapsed_minutes = (time_elapsed.days * 1440) + (time_elapsed.seconds / 60)
+	    #if elapsed_minutes < 360:
+		#dlg = wx.MessageDialog(None, 'Difference of seed-harvest time should be minimum 6 hr.\nReselect time', 'Time selection error', wx.OK| wx.ICON_STOP)
+		#dlg.ShowModal()
+		#return 		
+	    #if (self.selected_datetime>self.initial_datetime and self.curr_protocol['HARVEST'][0] > self.initial_seed_density):
+		#cell_growth = max(math.log(self.curr_protocol['HARVEST'][0]/self.initial_seed_density), 1)
+		#pdt = (elapsed_minutes*math.log(2)/cell_growth)/60
+		#self.pd_text.SetLabel('PD Time %.2f Hr' %pdt)
+		#self.curr_protocol['PD'].append(pdt)
+		#self.curr_protocol['PD'].append((elapsed_minutes/60)/pdt)
+		#self.curr_protocol['PD'].append((elapsed_minutes/60))
     
 		
 	if self.initial_seed_density and self.curr_protocol['HARVEST']:
