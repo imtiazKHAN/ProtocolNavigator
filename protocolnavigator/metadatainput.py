@@ -856,21 +856,13 @@ class CellLinePanel(wx.Panel):
 	self.action_buttons['Seed'].actiontype = "Seed"
 	self.action_buttons['Passage'] = wx.Button(self.sw, -1, label="Passage")
 	self.action_buttons['Passage'].actiontype = "Passage"
-	self.action_buttons['Freeze'] = wx.Button(self.sw, -1, label="Freeze")
-	self.action_buttons['Freeze'].actiontype = "Freeze"
-	self.action_buttons['Enrich'] = wx.Button(self.sw, -1, label="Enrich")
-	self.action_buttons['Enrich'].actiontype = "Enrich"
 	
 	self.action_buttons['Seed'].Bind(wx.EVT_BUTTON, self.onRecordAction)
 	self.action_buttons['Passage'].Bind(wx.EVT_BUTTON, self.onRecordAction)
-	self.action_buttons['Freeze'].Bind(wx.EVT_BUTTON, self.onRecordAction)
-	self.action_buttons['Enrich'].Bind(wx.EVT_BUTTON, self.onRecordAction)
 	#self.recordPassageBtn.Bind(wx.EVT_BUTTON, self.onRecordPassage)
 	
 	act_fgs.Add(self.action_buttons['Seed'], 0)
 	act_fgs.Add(self.action_buttons['Passage'], 0)
-	act_fgs.Add(self.action_buttons['Freeze'], 0)
-	act_fgs.Add(self.action_buttons['Enrich'], 0)
 	actSizer = wx.StaticBoxSizer(act_staticbox, wx.VERTICAL)
 	actSizer.Add(act_fgs, 0, wx.EXPAND|wx.ALL, 5)
 	
@@ -900,8 +892,8 @@ class CellLinePanel(wx.Panel):
 	    # Reset buttons
 	    for act in self.action_buttons.keys():
 		self.action_buttons[act].Enable()
-	    for pa in self.prohibit_actions[action]:
-		self.action_buttons[pa].Disable()
+	    #for pa in self.prohibit_actions[action]:
+		#self.action_buttons[pa].Disable()
 	    # Get current action number	
 	    if self.cell_history:
 		prev_actions = [pv[0] for pv in self.cell_history
@@ -954,8 +946,12 @@ class CellLinePanel(wx.Panel):
 		self.cell_history.append((attribute, dia.settings_controls['Admin|0'].GetValue(), dia.sel_date_time, self.master_elapsed_min))
 		meta.set_field(self.historyTAG, self.cell_history)
 		meta.set_field(self.tag_stump+'|%s|%s' %(attribute, str(self.tab_number)), dia.curr_protocol.items())	# set the value as a list rather than a dictionary
+		meta.set_field(self.tag_stump+'|%s|%s' %(attribute, '2'), dia.curr_protocol.items())	# set the value as a list rather than a dictionary
 	    dia.Destroy()   
-	  
+	    
+	    panel = CellLinePanel(self.Parent, self.tag_stump, '2')
+	    self.Parent.AddPage(panel, 'Instance No: 2', True)
+	    
 	    # self.drawPDChart()
 
     def onRecordPassage(self, event):

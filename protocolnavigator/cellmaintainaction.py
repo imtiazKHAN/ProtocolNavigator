@@ -5,6 +5,8 @@ import experimentsettings as exp
 import wx.lib.masked as masked
 import locale
 import math
+import wx.lib.agw.flatnotebook as fnb
+import random
 from experimentsettings import ExperimentSettings
 from wx.lib.masked import NumCtrl
 from addrow import RowBuilder
@@ -66,27 +68,26 @@ class MaintainAction(wx.Dialog):
 	self.protocol = protocol
 	self.curractionNo = curractionNo
 	self.action_type = action_type
-	self.action_attr = '%s %s'%(self.action_type, str(self.curractionNo))	
+	self.action_attr = '%s %s'%(self.action_type, str(self.curractionNo))		
+	self.tag_stump = exp.get_tag_stump(self.protocol, 2)
+	self.instance = exp.get_tag_attribute(self.protocol)		
 	
 	self.SetTitle(self.action_attr)
 	
-	self.top_panel = wx.Panel(self)
-	self.bot_panel = wx.ScrolledWindow(self)	
+	self.sw = wx.ScrolledWindow(self)
+	self.swsizer = wx.BoxSizer(wx.VERTICAL)
+	
 	
 	self.settings_controls = {}
 	self.curr_protocol = {}
 	self.admin_info = {}  	
 	self.mandatory_tags = []
 	self.labels = {}	
-	
 	self.today_datetime = datetime.datetime.now()
-	
-	self.tag_stump = exp.get_tag_stump(self.protocol, 2)
-	self.instance = exp.get_tag_attribute(self.protocol)
 	
 	if self.action_type == 'Passage':	
 	    if meta.get_field(self.tag_stump+'|Passage%s|%s' %(str(self.curractionNo-1), self.instance)) is None:
-		self.curr_protocol = Passage_Protocol
+		self.curr_protocol = Passage_Protocol   # this has to be three different protocols Passage, Freeze, Enrich
 	    else:
 		d =  meta.get_field(self.tag_stump+'|Passage%s|%s' %(str(self.curractionNo-1), self.instance))
 		for k, v in d:
@@ -127,8 +128,6 @@ class MaintainAction(wx.Dialog):
 	self.curr_protocol['HARVEST'] = []
 	self.curr_protocol['RESEED'] = []	
 	
-	#datetime.datetime.fromtimestamp(wx.DateTime.Now().GetTicks()) 
-	#wx.DateTimeFromTimeT(time.mktime(datetime.datetime.now().timetuple())) 
 	if self.curr_protocol['ADMIN'][1]:
 	    date = self.curr_protocol['ADMIN'][1].split('/')
 	    time = self.curr_protocol['ADMIN'][2].split(':')
@@ -137,54 +136,50 @@ class MaintainAction(wx.Dialog):
 	    self.initial_seed_density = self.curr_protocol['SEED'][0]
 
 	#Admin	
-	self.settings_controls['Admin|0'] = wx.TextCtrl(self.top_panel, size=(70,-1), value=self.curr_protocol['ADMIN'][0])	
-	self.settings_controls['Admin|1'] = wx.DatePickerCtrl(self.top_panel, style = wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
+	self.settings_controls['Admin|0'] = wx.TextCtrl(self.sw, size=(70,-1), value=self.curr_protocol['ADMIN'][0])	
+	self.settings_controls['Admin|1'] = wx.DatePickerCtrl(self.sw, style = wx.DP_DROPDOWN | wx.DP_SHOWCENTURY)
 	if date is None:
 	    self.curr_protocol['ADMIN'][1] = str(self.today_datetime.day)+'/'+str(self.today_datetime.month)+'/'+str(self.today_datetime.year)
 	else:
 	    self.settings_controls['Admin|1'].SetValue(wx.DateTimeFromDMY(int(date[0]), int(date[1])-1, int(date[2])))
-	self.settings_controls['Admin|2'] = masked.TimeCtrl( self.top_panel, -1, name="24 hour control", fmt24hr=True )
+	self.settings_controls['Admin|2'] = masked.TimeCtrl( self.sw, -1, name="24 hour control", fmt24hr=True )
 	h = self.settings_controls['Admin|2'].GetSize().height
-	spin1 = wx.SpinButton( self.top_panel, -1, wx.DefaultPosition, (-1,h), wx.SP_VERTICAL )
+	spin1 = wx.SpinButton( self.sw, -1, wx.DefaultPosition, (-1,h), wx.SP_VERTICAL )
 	self.settings_controls['Admin|2'].BindSpinButton( spin1 )	
 	self.curr_protocol['ADMIN'][2] = str(self.today_datetime.hour)+':'+str(self.today_datetime.minute)+':'+str(self.today_datetime.second)
 	self.settings_controls['Admin|2'].SetValue(self.curr_protocol['ADMIN'][2])
 	
-	self.set_curr_time = wx.Button(self.top_panel, -1, 'Set Current Date Time')
+	self.set_curr_time = wx.Button(self.sw, -1, 'Set Current Date Time')
 
-	if (self.action_type == 'Passage') or (self.action_type == 'Seed'): 
-	    self.settings_controls['Seed|0'] = wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)
+	if self.action_type == 'Seed': 
+	    self.settings_controls['Seed|0'] = wx.lib.masked.NumCtrl(self.sw, size=(20,-1), style=wx.TE_PROCESS_ENTER)
 	    unit_choices =['nM2', 'uM2', 'mM2','Other']
-	    self.settings_controls['Seed|1'] = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
-	    #if self.curr_protocol['SEED']:
-		#self.settings_controls['Seed|0'].SetValue(self.curr_protocol['SEED'][0])
-		#self.settings_controls['Seed|0'].Disable()	
-		#self.settings_controls['Seed|1'].Append(self.curr_protocol['SEED'][1])
-		#self.settings_controls['Seed|1'].SetStringSelection(self.curr_protocol['SEED'][1])
-		#self.settings_controls['Seed|1'].Disable()
+	    self.settings_controls['Seed|1'] = wx.ListBox(self.sw, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
 	    self.settings_controls['Seed|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
-	    self.settings_controls['Seed|1'].Bind(wx.EVT_LISTBOX, self.OnSavingData)		
-	if (self.action_type == 'Passage'):     
-	    self.settings_controls['Harvest|0'] = wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)
-	    unit_choices =['nM2', 'uM2', 'mM2','Other']
-	    self.settings_controls['Harvest|1'] = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
-	    #self.settings_controls['Reseed|0'] = wx.lib.masked.NumCtrl(self.top_panel, size=(20,-1), style=wx.TE_PROCESS_ENTER)
-	    #unit_choices =['nM2', 'uM2', 'mM2','Other']
-	    #self.settings_controls['Reseed|1'] = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
-	    self.settings_controls['Harvest|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
-	    self.settings_controls['Harvest|1'].Bind(wx.EVT_LISTBOX, self.OnSavingData)	
-	    #self.settings_controls['Reseed|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
-	    #self.settings_controls['Reseed|1'].Bind(wx.EVT_LISTBOX, self.OnSavingData)	    
+	    self.settings_controls['Seed|1'].Bind(wx.EVT_LISTBOX, self.OnSavingData)
 	
-	# CHANGE IT VESSEL DESIGN TWO SELECTIONS
-	vessel_types =['T75', 'T25', '6WellPlate','12WellPlate', 'Other']
-	self.settings_controls['Vessel|0'] = wx.ListBox(self.top_panel, -1, wx.DefaultPosition, (100,20), vessel_types, wx.LB_SINGLE)
-	if self.curr_protocol['VESSEL']:
-	    self.settings_controls['Vessel|0'].Append(self.curr_protocol['VESSEL'][0])
-	    self.settings_controls['Vessel|0'].SetStringSelection(self.curr_protocol['VESSEL'][0]) 
+	    vessel_types =['T75', 'T25', '6WellPlate','12WellPlate', 'Other']
+	    self.settings_controls['Vessel|0'] = wx.ListBox(self.sw, -1, wx.DefaultPosition, (100,20), vessel_types, wx.LB_SINGLE)
+	    if self.curr_protocol['VESSEL']:
+		self.settings_controls['Vessel|0'].Append(self.curr_protocol['VESSEL'][0])
+		self.settings_controls['Vessel|0'].SetStringSelection(self.curr_protocol['VESSEL'][0])
+	    self.settings_controls['Vessel|0'].Bind(wx.EVT_LISTBOX, self.OnSavingData)
+	
+	if self.action_type == 'Passage': 
+	    self.actionSizer = wx.FlexGridSizer(cols=3, hgap=15, vgap=5)
+	    self.passage_btn = wx.RadioButton(self.sw, -1, "Passage", style = wx.RB_GROUP )
+	    self.freezer_btn = wx.RadioButton(self.sw, -1, "Freeze" )
+	    self.enrich_btn = wx.RadioButton(self.sw, -1, "Enrich" )
+	    self.passage_btn.Bind(wx.EVT_RADIOBUTTON, self.onShowPassage)
+	    self.freezer_btn.Bind(wx.EVT_RADIOBUTTON, self.onShowFreeze)
+	    self.enrich_btn.Bind(wx.EVT_RADIOBUTTON, self.onShowEnrich)
+	    self.actionSizer.Add(self.passage_btn, 0)
+	    self.actionSizer.Add(self.freezer_btn, 0)
+	    self.actionSizer.Add(self.enrich_btn , 0)	    
+
 	    
 	    
-	self.pd_text = wx.StaticText(self.top_panel, -1, '')
+	self.pd_text = wx.StaticText(self.sw, -1, '')
 	font = wx.Font(12, wx.FONTFAMILY_MODERN, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD)
 	self.pd_text.SetFont(font)	
 	
@@ -197,84 +192,136 @@ class MaintainAction(wx.Dialog):
 	self.settings_controls['Admin|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
 	self.settings_controls['Admin|1'].Bind(wx.EVT_DATE_CHANGED, self.OnSavingData)
 	self.settings_controls['Admin|2'].Bind(wx.EVT_TEXT, self.OnSavingData)	 
-	self.settings_controls['Vessel|0'].Bind(wx.EVT_LISTBOX, self.OnSavingData)
 	self.set_curr_time.Bind(wx.EVT_BUTTON, self.setCurrDateTime)
 
 	# Sizers and layout
-	staticbox = wx.StaticBox(self.top_panel, -1, "Admin")
+	staticbox = wx.StaticBox(self.sw, -1, "Admin")
 	adminsizer = wx.StaticBoxSizer(staticbox, wx.HORIZONTAL)	
-	adminsizer.Add(wx.StaticText(self.top_panel, -1, 'Operator Name'),0, wx.RIGHT, 5)
+	adminsizer.Add(wx.StaticText(self.sw, -1, 'Operator Name'),0, wx.RIGHT, 5)
 	adminsizer.Add(self.settings_controls['Admin|0'] , 0, wx.EXPAND)
-	adminsizer.Add(wx.StaticText(self.top_panel, -1, 'Date'),0, wx.RIGHT|wx.LEFT, 5)
+	adminsizer.Add(wx.StaticText(self.sw, -1, 'Date'),0, wx.RIGHT|wx.LEFT, 5)
 	adminsizer.Add(self.settings_controls['Admin|1'], 0, wx.EXPAND)
-	adminsizer.Add(wx.StaticText(self.top_panel, -1, 'Time'),0, wx.LEFT, 5)
+	adminsizer.Add(wx.StaticText(self.sw, -1, 'Time'),0, wx.LEFT, 5)
 	adminsizer.Add(self.settings_controls['Admin|2'], 0, wx.EXPAND)
 	adminsizer.Add( spin1, 0, wx.ALIGN_CENTRE )
 	adminsizer.Add(self.set_curr_time, 0, wx.ALIGN_RIGHT|wx.LEFT, 15)
 
-	stat_fgs = wx.FlexGridSizer(cols=4, hgap=5, vgap=5)
+	self.attr_fgs = wx.FlexGridSizer(cols=4, hgap=5, vgap=5)
 	if (self.action_type == 'Seed'): 
-	    stat_fgs.Add(wx.StaticText(self.top_panel, -1, 'Seed Density'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	    stat_fgs.Add(self.settings_controls['Seed|0'], 0, wx.EXPAND)
-	    stat_fgs.Add(wx.StaticText(self.top_panel, -1, ' cells/'),0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)
-	    stat_fgs.Add(self.settings_controls['Seed|1'], 0, wx.EXPAND)
-	if (self.action_type == 'Passage'):  
-	    stat_fgs.Add(wx.StaticText(self.top_panel, -1, 'Harvest Density'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	    stat_fgs.Add(self.settings_controls['Harvest|0'], 0, wx.EXPAND)
-	    stat_fgs.Add(wx.StaticText(self.top_panel, -1, ' cells/'),0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)
-	    stat_fgs.Add(self.settings_controls['Harvest|1'], 0, wx.EXPAND)
-	    stat_fgs.Add(wx.StaticText(self.top_panel, -1, '(Re)seed Density'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	    stat_fgs.Add(self.settings_controls['Seed|0'], 0, wx.EXPAND)
-	    stat_fgs.Add(wx.StaticText(self.top_panel, -1, ' cells/'),0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)
-	    stat_fgs.Add(self.settings_controls['Seed|1'], 0, wx.EXPAND)	    
+	    self.attr_fgs.Add(wx.StaticText(self.sw, -1, 'Seed Density'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	    self.attr_fgs.Add(self.settings_controls['Seed|0'], 0, wx.EXPAND)
+	    self.attr_fgs.Add(wx.StaticText(self.sw, -1, ' cells/'),0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)
+	    self.attr_fgs.Add(self.settings_controls['Seed|1'], 0, wx.EXPAND)	    
+	    self.attr_fgs.Add(wx.StaticText(self.sw, -1, 'Vessel Type'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	    self.attr_fgs.Add(self.settings_controls['Vessel|0'], 0, wx.EXPAND)
 		
-	    
-	stat_fgs.Add(wx.StaticText(self.top_panel, -1, 'Vessel Type'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-	stat_fgs.Add(self.settings_controls['Vessel|0'], 0, wx.EXPAND)
+	btnSizer = wx.BoxSizer(wx.HORIZONTAL)
+	btnSizer.Add(self.selection_btn  , 0, wx.ALL, 5)
+	btnSizer.Add(self.close_btn , 0, wx.ALL, 5)	
 	
-	staticbox = wx.StaticBox(self.top_panel, -1, "Statistics")
-	statsizer = wx.StaticBoxSizer(staticbox, wx.HORIZONTAL)	
-	statsizer.Add(stat_fgs, 0, wx.ALIGN_LEFT)
-	statsizer.Add(self.pd_text, 0, wx.ALIGN_CENTRE|wx.ALIGN_RIGHT|wx.ALL, 20)
+	self.step_fgs = wx.FlexGridSizer(cols=7, hgap=5, vgap=5)
 	
+	self.staticbox = wx.StaticBox(self.sw, -1, "Actions")
+	self.staticbox_sizer = wx.StaticBoxSizer(self.staticbox, wx.VERTICAL)
+	if self.action_type == 'Passage':
+	    self.staticbox_sizer.Add(self.actionSizer, 0, wx.ALIGN_LEFT|wx.ALL, 5)
+	    self.staticbox_sizer.Add((-1,5))	
+	self.staticbox_sizer.Add(self.attr_fgs, 0, wx.EXPAND|wx.ALL, 5)
+	self.staticbox_sizer.Add((-1,10))
+	self.staticbox_sizer.Add(self.step_fgs, 0, wx.EXPAND|wx.ALL, 5)	
 
- 	self.top_panel_sizer = wx.BoxSizer(wx.VERTICAL)
-	self.top_panel_sizer.Add(adminsizer, 0, wx.EXPAND|wx.ALL, 5)
-	self.top_panel_sizer.Add(statsizer, 0, wx.EXPAND|wx.ALL, 5)
+	self.swsizer.Add(adminsizer, 0, wx.EXPAND|wx.ALL, 5)
+	self.swsizer.Add(self.staticbox_sizer,0,wx.EXPAND|wx.ALL, 5)
+	self.sw.SetSizer(self.swsizer)
+	self.sw.SetScrollbars(20, 20, self.Size[0]+10, self.Size[1]+10, 0, 0)
+	self.Sizer = wx.BoxSizer(wx.VERTICAL)
+	self.Sizer.Add(self.sw, 1, wx.EXPAND)
+	self.Sizer.Add(btnSizer)
+	self.SetSizer(self.Sizer)	
+         
+     
+    def onShowPassage(self, event):
+	self.attr_fgs.Clear(deleteWindows=True)
+	self.step_fgs.Clear(deleteWindows=True)
 	
-	self.fgs = wx.FlexGridSizer(cols=7, hgap=5, vgap=5)	
+	self.settings_controls['Seed|0'] = wx.lib.masked.NumCtrl(self.sw, size=(20,-1), style=wx.TE_PROCESS_ENTER)
+	unit_choices =['nM2', 'uM2', 'mM2','Other']
+	self.settings_controls['Seed|1'] = wx.ListBox(self.sw, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
+	self.settings_controls['Seed|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.settings_controls['Seed|1'].Bind(wx.EVT_LISTBOX, self.OnSavingData)
+    
+	vessel_types =['T75', 'T25', '6WellPlate','12WellPlate', 'Other']
+	self.settings_controls['Vessel|0'] = wx.ListBox(self.sw, -1, wx.DefaultPosition, (100,20), vessel_types, wx.LB_SINGLE)
+	if self.curr_protocol['VESSEL']:
+	    self.settings_controls['Vessel|0'].Append(self.curr_protocol['VESSEL'][0])
+	    self.settings_controls['Vessel|0'].SetStringSelection(self.curr_protocol['VESSEL'][0]) 
+	
+	self.settings_controls['Harvest|0'] = wx.lib.masked.NumCtrl(self.sw, size=(20,-1), style=wx.TE_PROCESS_ENTER)
+	unit_choices =['nM2', 'uM2', 'mM2','Other']
+	self.settings_controls['Harvest|1'] = wx.ListBox(self.sw, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
+	self.settings_controls['Harvest|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
+	self.settings_controls['Harvest|1'].Bind(wx.EVT_LISTBOX, self.OnSavingData)		
+	
+	self.attr_fgs.Add(wx.StaticText(self.sw, -1, 'Harvest Density'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.attr_fgs.Add(self.settings_controls['Harvest|0'], 0, wx.EXPAND)
+	self.attr_fgs.Add(wx.StaticText(self.sw, -1, ' cells/'),0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)
+	self.attr_fgs.Add(self.settings_controls['Harvest|1'], 0, wx.EXPAND)
+	self.attr_fgs.Add(wx.StaticText(self.sw, -1, '(Re)seed Density'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.attr_fgs.Add(self.settings_controls['Seed|0'], 0, wx.EXPAND)
+	self.attr_fgs.Add(wx.StaticText(self.sw, -1, ' cells/'),0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)
+	self.attr_fgs.Add(self.settings_controls['Seed|1'], 0, wx.EXPAND)	    
+	self.attr_fgs.Add(wx.StaticText(self.sw, -1, 'Vessel Type'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.attr_fgs.Add(self.settings_controls['Vessel|0'], 0, wx.EXPAND)
 	
 	self.showSteps()
 	
-	btnSizer = wx.BoxSizer(wx.HORIZONTAL)
-	btnSizer.Add(self.selection_btn  , 0, wx.ALL, 5)
-	btnSizer.Add(self.close_btn , 0, wx.ALL, 5)	
-
-        self.top_panel.SetSizer(self.top_panel_sizer)
-	self.bot_panel.SetSizer(self.fgs)
-        self.bot_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
+	self.sw.SetSizer(self.swsizer)
+	self.sw.SetScrollbars(20, 20, self.Size[0]+10, self.Size[1]+10, 0, 0)
 	
-	btnSizer = wx.BoxSizer(wx.HORIZONTAL)
-	btnSizer.Add(self.selection_btn  , 0, wx.ALL, 5)
-	btnSizer.Add(self.close_btn , 0, wx.ALL, 5)	
+    def onShowFreeze(self, event):
+	self.attr_fgs.Clear(deleteWindows=True)
+	self.step_fgs.Clear(deleteWindows=True)
+	
+	self.settings_controls['Make'] = wx.TextCtrl(self.sw, size=(70,-1), value='Test')
+	self.settings_controls['Model'] = wx.TextCtrl(self.sw, size=(70,-1), value='Test')
+	self.settings_controls['Seed|0'] = wx.lib.masked.NumCtrl(self.sw, size=(20,-1), style=wx.TE_PROCESS_ENTER)
+	unit_choices =['nM2', 'uM2', 'mM2','Other']
+	self.settings_controls['Seed|1'] = wx.ListBox(self.sw, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
+	vessel_types =['T75', 'T25', '6WellPlate','12WellPlate', 'Other']
+	self.settings_controls['Vessel|0'] = wx.ListBox(self.sw, -1, wx.DefaultPosition, (100,20), vessel_types, wx.LB_SINGLE)
+	
+	self.attr_fgs.Add(wx.StaticText(self.sw, -1, 'Make'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.attr_fgs.Add(self.settings_controls['Make'], 0, wx.EXPAND)
+	
+	self.attr_fgs.Add(wx.StaticText(self.sw, -1, ' Model'),0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)
+	self.attr_fgs.Add(self.settings_controls['Model'], 0, wx.EXPAND)
+	self.attr_fgs.Add(wx.StaticText(self.sw, -1, '(Re)seed Density'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.attr_fgs.Add(self.settings_controls['Seed|0'], 0, wx.EXPAND)
+	self.attr_fgs.Add(wx.StaticText(self.sw, -1, ' cells/'),0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)
+	self.attr_fgs.Add(self.settings_controls['Seed|1'], 0, wx.EXPAND)	    
+	self.attr_fgs.Add(wx.StaticText(self.sw, -1, 'Vessel Type'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	self.attr_fgs.Add(self.settings_controls['Vessel|0'], 0, wx.EXPAND)
+	
+	self.showSteps()
+	    
+	#--- Sizers -------	
+	self.sw.SetSizer(self.swsizer)
+	self.sw.SetScrollbars(20, 20, self.Size[0]+10, self.Size[1]+10, 0, 0)
+    
+    def onShowEnrich(self, event):
+	pass
 
-        self.Sizer = wx.BoxSizer(wx.VERTICAL)
-	self.Sizer.Add(self.top_panel, 0, wx.EXPAND|wx.ALL, 5)
-	self.Sizer.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.ALL, 5)
-	self.Sizer.Add(self.bot_panel, 1, wx.EXPAND|wx.ALL, 5)
-	self.Sizer.Add(btnSizer)
-        self.Show()         
-          
+
     def showSteps(self):
 	# get the sorted steps in passaging
 	steps = sorted([step for step in self.curr_protocol.keys()
 		 if step.startswith('Step')] , key = meta.stringSplitByNumbers)
 		
 	#-- Header --#		
-	desp_header = wx.StaticText(self.bot_panel, -1, 'Description')
-	dur_header = wx.StaticText(self.bot_panel, -1, 'Duration\n(min)')
-	temp_header = wx.StaticText(self.bot_panel, -1, 'Temp\n(C)')
-	tips_header = wx.StaticText(self.bot_panel, -1, 'Tips')
+	desp_header = wx.StaticText(self.sw, -1, 'Description')
+	dur_header = wx.StaticText(self.sw, -1, 'Duration\n(min)')
+	temp_header = wx.StaticText(self.sw, -1, 'Temp\n(C)')
+	tips_header = wx.StaticText(self.sw, -1, 'Tips')
 	
 	font = wx.Font(6, wx.SWISS, wx.NORMAL, wx.BOLD)
 	desp_header.SetFont(font)
@@ -282,13 +329,13 @@ class MaintainAction(wx.Dialog):
 	temp_header.SetFont(font)
 	tips_header.SetFont(font)
 	
-	self.fgs.Add(wx.StaticText(self.bot_panel, -1, ''))
-	self.fgs.Add(desp_header, 0, wx.ALIGN_CENTRE)
-	self.fgs.Add(dur_header, 0, wx.ALIGN_CENTRE)
-	self.fgs.Add(temp_header, 0, wx.ALIGN_CENTRE)
-	self.fgs.Add(tips_header, 0, wx.ALIGN_CENTER)
-	self.fgs.Add(wx.StaticText(self.bot_panel, -1, ''))
-	self.fgs.Add(wx.StaticText(self.bot_panel, -1, ''))
+	self.step_fgs.Add(wx.StaticText(self.sw, -1, ''))
+	self.step_fgs.Add(desp_header, 0, wx.ALIGN_CENTRE)
+	self.step_fgs.Add(dur_header, 0, wx.ALIGN_CENTRE)
+	self.step_fgs.Add(temp_header, 0, wx.ALIGN_CENTRE)
+	self.step_fgs.Add(tips_header, 0, wx.ALIGN_CENTER)
+	self.step_fgs.Add(wx.StaticText(self.sw, -1, ''))
+	self.step_fgs.Add(wx.StaticText(self.sw, -1, ''))
 
 	for step in steps:    
 	    stepNo = int(step.split('Step')[1])
@@ -298,14 +345,14 @@ class MaintainAction(wx.Dialog):
 		step_info = ['','','','']
 
 	    #-- Widgets ---#
-	    self.settings_controls[step+'|0'] = wx.TextCtrl(self.bot_panel, size=(200,-1), value=step_info[0], style=wx.TE_PROCESS_ENTER)
-	    self.settings_controls[step+'|1'] = wx.TextCtrl(self.bot_panel, size=(30,-1), value=step_info[1], style=wx.TE_PROCESS_ENTER)
-	    self.settings_controls[step+'|2'] = wx.TextCtrl(self.bot_panel, size=(30,-1), value=step_info[2], style=wx.TE_PROCESS_ENTER)	
-	    self.settings_controls[step+'|3'] = wx.TextCtrl(self.bot_panel, size=(100,-1), value=step_info[3], style=wx.TE_PROCESS_ENTER)
+	    self.settings_controls[step+'|0'] = wx.TextCtrl(self.sw, size=(200,-1), value=step_info[0], style=wx.TE_PROCESS_ENTER)
+	    self.settings_controls[step+'|1'] = wx.TextCtrl(self.sw, size=(30,-1), value=step_info[1], style=wx.TE_PROCESS_ENTER)
+	    self.settings_controls[step+'|2'] = wx.TextCtrl(self.sw, size=(30,-1), value=step_info[2], style=wx.TE_PROCESS_ENTER)	
+	    self.settings_controls[step+'|3'] = wx.TextCtrl(self.sw, size=(100,-1), value=step_info[3], style=wx.TE_PROCESS_ENTER)
 	    if step_info[3]:
 		self.settings_controls[step+'|3'].SetForegroundColour(wx.RED) 
-	    self.del_btn = wx.Button(self.bot_panel, id=stepNo, label='Del -') 
-	    self.add_btn = wx.Button(self.bot_panel, id=stepNo, label='Add +')
+	    self.del_btn = wx.Button(self.sw, id=stepNo, label='Del -') 
+	    self.add_btn = wx.Button(self.sw, id=stepNo, label='Add +')
 	    #--- Tooltips --#
 	    self.settings_controls[step+'|0'].SetToolTipString(step_info[0])
 	    self.settings_controls[step+'|3'].SetToolTipString(step_info[3])
@@ -318,25 +365,30 @@ class MaintainAction(wx.Dialog):
 	    self.del_btn.Bind(wx.EVT_BUTTON, self.OnDelStep) 	    
 	    self.add_btn.Bind(wx.EVT_BUTTON, self.OnAddStep) 	    
 	    #--- Layout ---#
-	    self.fgs.Add(wx.StaticText(self.bot_panel, -1, 'Step%s'%str(stepNo)), 0, wx.ALIGN_CENTRE) 
-	    self.fgs.Add(self.settings_controls[step+'|0'], 1, wx.EXPAND|wx.ALL, 5) 
-	    self.fgs.Add(self.settings_controls[step+'|1'], 0, wx.ALIGN_CENTRE)
-	    self.fgs.Add(self.settings_controls[step+'|2'], 0, wx.ALIGN_CENTRE)
-	    self.fgs.Add(self.settings_controls[step+'|3'], 0, wx.ALIGN_CENTRE)
-	    self.fgs.Add(self.add_btn, 0, wx.ALIGN_CENTRE)
-	    self.fgs.Add(self.del_btn, 0, wx.ALIGN_CENTRE)
+	    self.step_fgs.Add(wx.StaticText(self.sw, -1, 'Step%s'%str(stepNo)), 0, wx.ALIGN_CENTRE) 
+	    self.step_fgs.Add(self.settings_controls[step+'|0'], 1, wx.EXPAND|wx.ALL, 5) 
+	    self.step_fgs.Add(self.settings_controls[step+'|1'], 0, wx.ALIGN_CENTRE)
+	    self.step_fgs.Add(self.settings_controls[step+'|2'], 0, wx.ALIGN_CENTRE)
+	    self.step_fgs.Add(self.settings_controls[step+'|3'], 0, wx.ALIGN_CENTRE)
+	    self.step_fgs.Add(self.add_btn, 0, wx.ALIGN_CENTRE)
+	    self.step_fgs.Add(self.del_btn, 0, wx.ALIGN_CENTRE)
 	    
 	    if stepNo == 1:
 		self.del_btn.Hide()
 	    
 	    # Sizers update
-	    self.bot_panel.SetSizer(self.fgs)
-	    self.bot_panel.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
+	    #self.sw.SetSizer(self.step_fgs)
+	    #self.sw.SetScrollbars(20, 20, self.Size[0]+20, self.Size[1]+20, 0, 0)
 	    
-	    self.Sizer = wx.BoxSizer(wx.VERTICAL)
-	    self.Sizer.Add(self.top_panel, 0, wx.EXPAND|wx.ALL, 5)
-	    self.Sizer.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.ALL, 5)
-	    self.Sizer.Add(self.bot_panel, 1, wx.EXPAND|wx.ALL, 10)	                   
+	    #self.Sizer = wx.BoxSizer(wx.VERTICAL)
+	    #self.Sizer.Add(self.sw, 0, wx.EXPAND|wx.ALL, 5)
+	    #self.Sizer.Add(wx.StaticLine(self), 0, wx.EXPAND|wx.ALL, 5)
+	    #self.Sizer.Add(self.sw, 1, wx.EXPAND|wx.ALL, 10)	
+	    
+	    #--- Sizers -------
+	    self.sw.SetSizer(self.swsizer)
+	    self.sw.SetScrollbars(20, 20, self.Size[0]+10, self.Size[1]+10, 0, 0) 
+	    self.sw.FitInside()	    
 		
 	
     def OnAddStep(self, event):
@@ -371,7 +423,7 @@ class MaintainAction(wx.Dialog):
 	for stepNo in sorted(temp_steps.iterkeys()):
 	    self.curr_protocol['Step%s'%str(stepNo)] = temp_steps[stepNo]	
 	
-	self.fgs.Clear(deleteWindows=True)
+	self.step_fgs.Clear(deleteWindows=True)
 	
 	self.showSteps()
 	   
@@ -396,7 +448,7 @@ class MaintainAction(wx.Dialog):
 	    self.curr_protocol['Step%s'%str(stepNo)] = temp_steps[stepNo]
 	
 	#clear the bottom panel
-	self.fgs.Clear(deleteWindows=True)
+	self.step_fgs.Clear(deleteWindows=True)
 	#redraw the panel
 	self.showSteps()
     
@@ -485,3 +537,17 @@ class MaintainAction(wx.Dialog):
 	    self.selection_btn.Enable()
 	if (self.initial_seed_density is None) and self.curr_protocol['SEED']:
 	    self.selection_btn.Enable()	
+    
+class TabPanel(wx.Panel):
+    #----------------------------------------------------------------------
+    def __init__(self, parent):
+        """"""
+        wx.Panel.__init__(self, parent=parent)
+ 
+        colors = ["red", "blue", "gray", "yellow", "green"]
+        self.SetBackgroundColour(random.choice(colors))
+ 
+        btn = wx.Button(self, label="Press Me")
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        sizer.Add(btn, 0, wx.ALL, 10)
+        self.SetSizer(sizer)
