@@ -557,7 +557,7 @@ class CellLinePanel(wx.Panel):
 	# Panel
 	self.sw = wx.ScrolledWindow(self)
 	
-	self.prohibit_actions = {
+	self.action_pair = {
 		    'Seed': ['Seed','Freeze'],
 		    'Passage': ['Seed'],
 		    'Freeze': ['Freeze','Passage', 'Enrich'],
@@ -856,15 +856,23 @@ class CellLinePanel(wx.Panel):
 	self.action_buttons['Seed'].actiontype = "Seed"
 	self.action_buttons['Passage'] = wx.Button(self.sw, -1, label="Passage")
 	self.action_buttons['Passage'].actiontype = "Passage"
+	self.action_buttons['Freeze'] = wx.Button(self.sw, -1, label="Freeze")
+	self.action_buttons['Freeze'].actiontype = "Freeze"	
+	self.action_buttons['Enrich'] = wx.Button(self.sw, -1, label="Enrich")
+	self.action_buttons['Enrich'].actiontype = "Enrich"
 	
 	self.action_buttons['Seed'].Bind(wx.EVT_BUTTON, self.onRecordAction)
 	self.action_buttons['Passage'].Bind(wx.EVT_BUTTON, self.onRecordAction)
+	self.action_buttons['Freeze'].Bind(wx.EVT_BUTTON, self.onRecordAction)
+	self.action_buttons['Enrich'].Bind(wx.EVT_BUTTON, self.onRecordAction)
 	#self.recordPassageBtn.Bind(wx.EVT_BUTTON, self.onRecordPassage)
 	
 	act_fgs.Add(self.action_buttons['Seed'], 0)
 	act_fgs.Add(self.action_buttons['Passage'], 0)
-	actSizer = wx.StaticBoxSizer(act_staticbox, wx.VERTICAL)
-	actSizer.Add(act_fgs, 0, wx.EXPAND|wx.ALL, 5)
+	act_fgs.Add(self.action_buttons['Freeze'], 0)
+	act_fgs.Add(self.action_buttons['Enrich'], 0)
+	actSizer = wx.StaticBoxSizer(act_staticbox, wx.HORIZONTAL)
+	actSizer.Add(act_fgs, 1, wx.EXPAND|wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5)
 	
 	# Set Mandatory Label colour
 	meta.setLabelColour(self.mandatory_tags, self.labels)	
@@ -892,12 +900,14 @@ class CellLinePanel(wx.Panel):
 	    # Reset buttons
 	    for act in self.action_buttons.keys():
 		self.action_buttons[act].Enable()
-	    #for pa in self.prohibit_actions[action]:
-		#self.action_buttons[pa].Disable()
+	    for pa in self.action_pair[action]:
+		self.action_buttons[pa].Disable()
 	    # Get current action number	
+	    last_date = []
 	    if self.cell_history:
 		prev_actions = [pv[0] for pv in self.cell_history
 		                if pv[0].startswith(action)]
+		last_date = self.cell_history[-1][2]
 	    else:
 		prev_actions = []
 	    
@@ -907,50 +917,61 @@ class CellLinePanel(wx.Panel):
 	    else:
 		curr_act_num = 1
 		if action == 'Passage':
-		    curr_act_num += int(meta.get_field(self.tag_stump+'|OrgPassageNo|%s'%str(self.tab_number), default = 0))
-	
-		 
+		    curr_act_num += int(meta.get_field(self.tag_stump+'|OrgPassageNo|%s'%str(self.tab_number), default = 0)) 
 	    
 	    # Show the passage dialog
-	    dia = MaintainAction(self, self.protocol, curr_act_num, action)
+	    dia = MaintainAction(self, self.protocol, curr_act_num, action, last_date)
 	    if dia.ShowModal() == wx.ID_OK: 
-	        if self.cell_history and action == 'Passage':
-		   # update master elapsed time
-		    last_pd_act = [pv[0] for pv in self.cell_history
-		                   if re.match('Seed|Passage', pv[0])][-1]
-		    if last_pd_act:
-			ldt = [tg[2] for tg in self.cell_history if tg[0] == last_pd_act][-1]
-			last_tp = datetime.datetime(*map(int, [ldt[0],ldt[1],ldt[2],ldt[3],ldt[4],ldt[5]]))
-			elapsed_time = (dia.selected_datetime-last_tp)
-			elapsed_min = (elapsed_time.days * 1440) + (elapsed_time.seconds / 60)
-			self.master_elapsed_min += elapsed_min
-			self.elapsed_time.append(self.master_elapsed_min/60)
-			last_seed_density = [info[1] for info in meta.get_field(self.tag_stump+'|%s|%s' %(last_pd_act, str(self.tab_number)))
-			  if info[0]=='SEED']
-			cell_growth = max(math.log(dia.curr_protocol['HARVEST'][0]/last_seed_density[0][0]), 1)
-			pdt = (elapsed_min*math.log(2)/cell_growth)/60
-			self.cumulative_pd.append(self.cumulative_pd[-1]+pdt)
-			data = []
-			for i, timepoint in enumerate(self.elapsed_time):
-			    data.append((timepoint, self.cumulative_pd[i]))
-			line = plot.PolyLine(data, colour='green', width=1)
-				## also draw markers, default colour is black and size is 2
-				## other shapes 'circle', 'cross', 'square', 'dot', 'plus'
-			marker = plot.PolyMarker(data, marker='circle', colour='green')
-				## set up text, axis and draw
-			gc = plot.PlotGraphics([line, marker], 'Population double chart', 'Accumulated Time (hours)', 'Accumulated PDs')
-			self.canvas.Refresh()
-			self.canvas.Draw(gc, xAxis=(0,max(self.elapsed_time)+24), yAxis=(0,max(self.cumulative_pd)+1))	
-			
-		attribute = '%s%s'%(action, str(curr_act_num))    
-		self.cell_history.append((attribute, dia.settings_controls['Admin|0'].GetValue(), dia.sel_date_time, self.master_elapsed_min))
-		meta.set_field(self.historyTAG, self.cell_history)
-		meta.set_field(self.tag_stump+'|%s|%s' %(attribute, str(self.tab_number)), dia.curr_protocol.items())	# set the value as a list rather than a dictionary
-		meta.set_field(self.tag_stump+'|%s|%s' %(attribute, '2'), dia.curr_protocol.items())	# set the value as a list rather than a dictionary
+		attribute = '%s%s'%(action, str(curr_act_num))
+	        if self.cell_history and action == 'Passage':   
+			meta.set_field(self.tag_stump+'|%s|%s' %(attribute, str(self.tab_number)), dia.curr_protocol.items())
+			# update master elapsed time
+			last_pd_act = [pv[0] for pv in self.cell_history
+		                       if re.match('Seed|Passage', pv[0])][-1]
+			if last_pd_act:
+			    ldt = [tg[2] for tg in self.cell_history if tg[0] == last_pd_act][-1]
+			    last_tp = datetime.datetime(*map(int, [ldt[0],ldt[1],ldt[2],ldt[3],ldt[4],ldt[5]]))
+			    elapsed_time = (dia.selected_datetime-last_tp)
+			    elapsed_min = (elapsed_time.days * 1440) + (elapsed_time.seconds / 60)
+			    self.master_elapsed_min += elapsed_min
+			    self.elapsed_time.append(self.master_elapsed_min/60)
+			    last_seed_density = [info[1] for info in meta.get_field(self.tag_stump+'|%s|%s' %(last_pd_act, str(self.tab_number)))
+			      if info[0]=='SEED']
+			    cell_growth = max(math.log(dia.curr_protocol['HARVEST'][0]/last_seed_density[0][0]), 1)
+			    pdt = (elapsed_min*math.log(2)/cell_growth)/60
+			    self.cumulative_pd.append(self.cumulative_pd[-1]+pdt)
+			    data = []
+			    for i, timepoint in enumerate(self.elapsed_time):
+				data.append((timepoint, self.cumulative_pd[i]))
+			    line = plot.PolyLine(data, colour='green', width=1)
+				    ## also draw markers, default colour is black and size is 2
+				    ## other shapes 'circle', 'cross', 'square', 'dot', 'plus'
+			    marker = plot.PolyMarker(data, marker='circle', colour='green')
+				    ## set up text, axis and draw
+			    gc = plot.PlotGraphics([line, marker], 'Population double chart', 'Accumulated Time (hours)', 'Accumulated PDs')
+			    self.canvas.Refresh()
+			    self.canvas.Draw(gc, xAxis=(0,max(self.elapsed_time)+24), yAxis=(0,max(self.cumulative_pd)+1))
+		# Set the cell history
+		self.cell_history.append((attribute, dia.curr_protocol['ADMIN'][0], dia.sel_date_time, self.master_elapsed_min))
+		meta.set_field(self.historyTAG, self.cell_history)		
+		
+		if action == 'Passage' or action == 'Seed':
+		    meta.set_field(self.tag_stump+'|%s|%s' %(attribute, str(self.tab_number)), dia.curr_protocol.items())
+		if action == 'Freeze':
+		    meta.set_field(self.tag_stump+'|%s|%s' %(attribute, self.tab_number), dia.curr_protocol.items())
+		    attr_list = meta.get_attribute_list_by_instance(self.tag_stump, self.tab_number)
+		    for tab in range(1, int(dia.curr_protocol['SPLIT'])+1):
+			for attr in attr_list:
+			    meta.set_field(self.tag_stump+'|%s|%s'%(attr, str(int(self.tab_number)+tab)), 
+			                   meta.get_field(self.tag_stump+'|%s|%s'%(attr, self.tab_number))) 
+			panel = CellLinePanel(self.Parent, self.tag_stump, str(int(self.tab_number)+tab))
+			self.Parent.AddPage(panel, 'Instance No: %s'%str(int(self.tab_number)+tab), True)			    
+		
+		    
 	    dia.Destroy()   
 	    
-	    panel = CellLinePanel(self.Parent, self.tag_stump, '2')
-	    self.Parent.AddPage(panel, 'Instance No: 2', True)
+	    #panel = CellLinePanel(self.Parent, self.tag_stump, '2')
+	    #self.Parent.AddPage(panel, 'Instance No: 2', True)
 	    
 	    # self.drawPDChart()
 
