@@ -580,10 +580,6 @@ class CellLinePanel(wx.Panel):
 	titlesizer.Add(attach_btn, 0)
 	titlesizer.AddSpacer((5,-1))
 	titlesizer.Add(self.attach_file_num)	
-	
-	# History
-	self.historyTAG = self.tag_stump+'|History|%s'%str(self.tab_number)
-	self.cell_history = meta.get_field(self.historyTAG, default=[])
 
 	# Attributes
 	attributesizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
@@ -848,6 +844,27 @@ class CellLinePanel(wx.Panel):
 	propSizer.Add(prop_fgs,  0, wx.ALIGN_LEFT|wx.ALL, 5 )
 	propSizer.Add(self.showpasshisBut, 0, wx.EXPAND|wx.ALL, 5)
 	propSizer.Add(self.canvas, 0, wx.EXPAND|wx.ALL, 5)
+	
+	# Draw PD Chart from previous instances
+	self.historyTAG = self.tag_stump+'|History|%s'%str(self.tab_number)
+	self.cell_history = meta.get_field(self.historyTAG, default=[])
+	
+	if len(self.cell_history) > 1:
+	    for a, action in enumerate(self.cell_history):
+		if a+1 < len(self.cell_history):
+		    min_diff = self.cell_history[a+1][3] - self.cell_history[a][3] 
+		    last_seed_density = [info[1] for info in meta.get_field(self.tag_stump+'|%s|%s' %(self.cell_history[a][0], str(self.tab_number)))
+					  if info[0]=='SEED']
+		    curr_harvest_density = [info[1] for info in meta.get_field(self.tag_stump+'|%s|%s' %(self.cell_history[a+1][0], str(self.tab_number)))
+					  if info[0]=='HARVEST']
+		    if last_seed_density and curr_harvest_density and (min_diff > 0):
+			self.master_elapsed_min += min_diff
+			self.elapsed_time.append(self.master_elapsed_min/60)			
+			cell_growth = max(math.log(curr_harvest_density[0][0]/last_seed_density[0][0]), 1)
+			pdt = (min_diff*math.log(2)/cell_growth)/60
+			self.cumulative_pd.append(self.cumulative_pd[-1]+pdt)
+		    
+	    self.drawPDChart()	
 
 	act_staticbox = wx.StaticBox(self.sw, -1, "Actions")
 	act_fgs = wx.FlexGridSizer(cols=5, hgap=5, vgap=5)
@@ -875,7 +892,7 @@ class CellLinePanel(wx.Panel):
 	actSizer.Add(act_fgs, 1, wx.EXPAND|wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5)
 	
 	# Set Mandatory Label colour
-	meta.setLabelColour(self.mandatory_tags, self.labels)	
+	#meta.setLabelColour(self.mandatory_tags, self.labels)	
 	
 	#---------------Layout with sizers---------------		
 	topsizer = wx.BoxSizer(wx.VERTICAL)
@@ -924,33 +941,24 @@ class CellLinePanel(wx.Panel):
 	    if dia.ShowModal() == wx.ID_OK: 
 		attribute = '%s%s'%(action, str(curr_act_num))
 	        if self.cell_history and action == 'Passage':   
-			meta.set_field(self.tag_stump+'|%s|%s' %(attribute, str(self.tab_number)), dia.curr_protocol.items())
 			# update master elapsed time
 			last_pd_act = [pv[0] for pv in self.cell_history
 		                       if re.match('Seed|Passage', pv[0])][-1]
 			if last_pd_act:
 			    ldt = [tg[2] for tg in self.cell_history if tg[0] == last_pd_act][-1]
 			    last_tp = datetime.datetime(*map(int, [ldt[0],ldt[1],ldt[2],ldt[3],ldt[4],ldt[5]]))
-			    elapsed_time = (dia.selected_datetime-last_tp)
-			    elapsed_min = (elapsed_time.days * 1440) + (elapsed_time.seconds / 60)
-			    self.master_elapsed_min += elapsed_min
+			    time_diff = (dia.selected_datetime-last_tp)
+			    min_diff = (time_diff.days * 1440) + (time_diff.seconds / 60)
+			    self.master_elapsed_min += min_diff
 			    self.elapsed_time.append(self.master_elapsed_min/60)
 			    last_seed_density = [info[1] for info in meta.get_field(self.tag_stump+'|%s|%s' %(last_pd_act, str(self.tab_number)))
 			      if info[0]=='SEED']
 			    cell_growth = max(math.log(dia.curr_protocol['HARVEST'][0]/last_seed_density[0][0]), 1)
-			    pdt = (elapsed_min*math.log(2)/cell_growth)/60
+			    pdt = (min_diff*math.log(2)/cell_growth)/60
 			    self.cumulative_pd.append(self.cumulative_pd[-1]+pdt)
-			    data = []
-			    for i, timepoint in enumerate(self.elapsed_time):
-				data.append((timepoint, self.cumulative_pd[i]))
-			    line = plot.PolyLine(data, colour='green', width=1)
-				    ## also draw markers, default colour is black and size is 2
-				    ## other shapes 'circle', 'cross', 'square', 'dot', 'plus'
-			    marker = plot.PolyMarker(data, marker='circle', colour='green')
-				    ## set up text, axis and draw
-			    gc = plot.PlotGraphics([line, marker], 'Population double chart', 'Accumulated Time (hours)', 'Accumulated PDs')
-			    self.canvas.Refresh()
-			    self.canvas.Draw(gc, xAxis=(0,max(self.elapsed_time)+24), yAxis=(0,max(self.cumulative_pd)+1))
+			    
+			    self.drawPDChart()
+			    
 		# Set the cell history
 		self.cell_history.append((attribute, dia.curr_protocol['ADMIN'][0], dia.sel_date_time, self.master_elapsed_min))
 		meta.set_field(self.historyTAG, self.cell_history)		
@@ -974,6 +982,18 @@ class CellLinePanel(wx.Panel):
 	    #self.Parent.AddPage(panel, 'Instance No: 2', True)
 	    
 	    # self.drawPDChart()
+    def drawPDChart(self):
+	data = []
+	for i, timepoint in enumerate(self.elapsed_time):
+	    data.append((timepoint, self.cumulative_pd[i]))
+	line = plot.PolyLine(data, colour='green', width=1)
+		## also draw markers, default colour is black and size is 2
+		## other shapes 'circle', 'cross', 'square', 'dot', 'plus'
+	marker = plot.PolyMarker(data, marker='circle', colour='green')
+		## set up text, axis and draw
+	gc = plot.PlotGraphics([line, marker], 'Population double chart', 'Accumulated Time (hours)', 'Accumulated PDs')
+	self.canvas.Refresh()
+	self.canvas.Draw(gc, xAxis=(0,max(self.elapsed_time)+24), yAxis=(0,max(self.cumulative_pd)+1))	
 
     def onRecordPassage(self, event):
         if meta.checkMandatoryTags(self.mandatory_tags):
