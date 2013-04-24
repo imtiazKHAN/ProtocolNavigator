@@ -365,7 +365,7 @@ class TimelinePanel(wx.Panel):
 		    meta.set_field('Notes|%s|%s|%s' %(note_dia.noteType, timepoint, str(self.page_counter)), note_dia.noteDescrip.GetValue())  
 	    elif exp.get_tag_type(self.curr_note_tag) == 'Attachments':
 		attfileTAG = 'Attachments|Files|%s|%s' %(timepoint, str(self.page_counter))
-		dia = FileListDialog(self, attfileTAG, meta.get_field(attfileTAG, []))
+		dia = FileListDialog(self, attfileTAG, meta.get_field(attfileTAG, []), None)
 		if dia.ShowModal()== wx.ID_OK:
 		    f_list = dia.file_list
 		    if f_list:
