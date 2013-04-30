@@ -36,21 +36,32 @@ class LineageFrame(wx.ScrolledWindow):
         self.lineage_panel = lineage_panel
         timeline_panel.set_style(padding=20)
         lineage_panel.set_style(padding=20, flask_gap = 40)
-        sw.SetSizer(wx.BoxSizer(wx.VERTICAL))
-        sw.Sizer.Add(timeline_panel, 0, wx.EXPAND|wx.LEFT, 40)
-        sw.Sizer.Add(lineage_panel, 1, wx.EXPAND)
-        sw.SetScrollbars(20, 20, self.Size[0]/20, self.Size[1]/20, 0, 0)
+        #sw.SetSizer(wx.BoxSizer(wx.VERTICAL))
+        #sw.Sizer.Add(timeline_panel, 0, wx.EXPAND|wx.LEFT, 40)
+        #sw.Sizer.Add(lineage_panel, 1, wx.EXPAND)
+        #sw.SetScrollbars(20, 20, self.Size[0]/20, self.Size[1]/20, 0, 0)
         
         #tb = self.CreateToolBar(wx.TB_HORZ_TEXT|wx.TB_FLAT)
         #tb.AddControl(wx.StaticText(tb, -1, 'zoom'))
         #self.zoom = tb.AddControl(wx.Slider(tb, -1, style=wx.SL_AUTOTICKS|wx.VERTICAL)).GetControl()
         #self.zoom.SetRange(1, 30)
-        #self.zoom.SetValue(8)
-        ##x_spacing = tb.AddControl(wx.CheckBox(tb, -1, 'Time-relative branches'))
-        ##x_spacing.GetControl().SetValue(0)
-        ##generate = tb.AddControl(wx.Button(tb, -1, '+data'))        
+        #self.zoom.SetValue(8)       
         #tb.Realize()
-        
+	self.zoom = wx.Slider(sw, -1, size=(-1, 70), style=wx.SL_AUTOTICKS|wx.VERTICAL)
+        self.zoom.SetRange(1, 30)
+	self.zoom.SetValue(8)
+	
+	time_panel_sizer = wx.BoxSizer(wx.HORIZONTAL)
+	time_panel_sizer.Add(self.zoom, 0, wx.RIGHT, 5)
+	time_panel_sizer.Add(timeline_panel, 1)
+	
+	
+        sw.SetSizer(wx.BoxSizer(wx.VERTICAL))
+	sw.Sizer.Add(time_panel_sizer, 0, wx.EXPAND)
+        sw.Sizer.Add(lineage_panel, 1, wx.EXPAND)
+        sw.SetScrollbars(20, 20, self.Size[0]/20, self.Size[1]/20, 0, 0)	
+	
+	
         #from f import TreeCtrlComboPopup
         #cc = wx.combo.ComboCtrl(sw)
         #self.tcp = TreeCtrlComboPopup()
@@ -667,6 +678,7 @@ class LineagePanel(wx.Panel):
 			    #dc.DrawCircle(X, Y, NODE_R)
 			    #dc.SetPen(wx.Pen('BLACK'))
 			    #dc.DrawCircle(X, Y, NODE_R-3/2)
+			    #dc.DrawBitmap(meta.getEventIcon(16.0, event), X - 16.0 / 2.0, Y - 16.0 / 2.0)
 			    dc.DrawBitmap(meta.getEventIcon(16.0, event), X - 16.0 / 2.0, Y - 16.0 / 2.0)
 				
 			else:
