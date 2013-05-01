@@ -47,12 +47,16 @@ class LineageFrame(wx.ScrolledWindow):
         #self.zoom.SetRange(1, 30)
         #self.zoom.SetValue(8)       
         #tb.Realize()
-	self.zoom = wx.Slider(sw, -1, size=(-1, 70), style=wx.SL_AUTOTICKS|wx.VERTICAL)
+	self.zoom = wx.Slider(sw, -1, size=(-1, 70), style=wx.SL_AUTOTICKS|wx.VERTICAL|wx.SL_INVERSE|wx.SL_LEFT)
         self.zoom.SetRange(1, 30)
 	self.zoom.SetValue(8)
+	self.Bind(wx.EVT_SLIDER, self.on_zoom, self.zoom)
 	
+	zoom_sizer = wx.BoxSizer(wx.VERTICAL)
+	zoom_sizer.Add(wx.StaticText(sw, -1, 'Zoom'), 0)
+	zoom_sizer.Add(self.zoom, 0)
 	time_panel_sizer = wx.BoxSizer(wx.HORIZONTAL)
-	time_panel_sizer.Add(self.zoom, 0, wx.RIGHT, 5)
+	time_panel_sizer.Add(zoom_sizer, 0, wx.RIGHT, 5)
 	time_panel_sizer.Add(timeline_panel, 1)
 	
 	
@@ -87,9 +91,12 @@ class LineageFrame(wx.ScrolledWindow):
                     item3 = self.tcp.AddItem(ttt, item2)
 
     def on_zoom(self, evt):
-        self.lineage_panel.set_style(node_radius=self.zoom.GetValue(),
-                                     xgap=self.lineage_panel.NODE_R*2+1,
-                                     ygap=self.lineage_panel.NODE_R*2+1)
+        #self.lineage_panel.set_style(node_radius=self.zoom.GetValue(),
+                                     #xgap=self.lineage_panel.NODE_R*2+1,
+                                     #ygap=self.lineage_panel.NODE_R*2+1)
+	self.lineage_panel.set_style(icon_size=self.zoom.GetValue(),
+	                             xgap=self.lineage_panel.ICON_SIZE*2+1,
+	                             ygap=self.lineage_panel.ICON_SIZE*2+1)	
         self.timeline_panel.set_style(icon_size=self.zoom.GetValue()*2,
                                       xgap=self.timeline_panel.ICON_SIZE+2)
         
@@ -390,8 +397,11 @@ class LineagePanel(wx.Panel):
     PAD = 30
     NODE_R = 8
     SM_NODE_R = 3
-    MIN_X_GAP = NODE_R*2 + 2
-    MIN_Y_GAP = NODE_R*2 + 2
+    ICON_SIZE = 16.0
+    #MIN_X_GAP = NODE_R*2 + 2
+    #MIN_Y_GAP = NODE_R*2 + 2
+    MIN_X_GAP = ICON_SIZE + 2
+    MIN_Y_GAP = ICON_SIZE + 2    
     FLASK_GAP = MIN_X_GAP
     #X_SPACING = 'EVEN'
 
@@ -426,7 +436,7 @@ class LineagePanel(wx.Panel):
         self.Refresh(eraseBackground=False)
         
     def set_style(self, padding=None, xgap=None, ygap=None, node_radius=None,
-                  flask_gap=None):
+                  flask_gap=None, icon_size=None):
         if padding is not None:
             self.PAD = padding
         if xgap is not None:
@@ -437,6 +447,8 @@ class LineagePanel(wx.Panel):
             self.NODE_R = node_radius
         if flask_gap is not None:
             self.FLASK_GAP = flask_gap
+	if icon_size is not None:
+	    self.ICON_SIZE = icon_size	
         self._recalculate_min_size()
         self.Refresh(eraseBackground=False)
      
@@ -474,6 +486,7 @@ class LineagePanel(wx.Panel):
                 self.SetMinSize((len(self.nodes_by_timepoint) * self.MIN_X_GAP + self.PAD * 2,
                                  n_leaves * self.MIN_Y_GAP + self.PAD * 2))
 
+
     def _on_paint(self, evt=None):
         '''Handler for paint events.
         '''
@@ -482,7 +495,8 @@ class LineagePanel(wx.Panel):
             return	
 
         t0 = time()
-        PAD = self.PAD + self.NODE_R
+        #PAD = self.PAD + self.NODE_R
+	PAD = self.PAD + self.ICON_SIZE
         NODE_R = self.NODE_R
 	SM_NODE_R = self.SM_NODE_R 
         MIN_X_GAP = self.MIN_X_GAP
@@ -602,7 +616,8 @@ class LineagePanel(wx.Panel):
 			    event = 'CellLine'
 			else:
 			    event = exp.get_tag_event(node_tags[0])
-			dc.DrawBitmap(meta.getEventIcon(16.0, event), X - 16.0 / 2.0, Y - 16.0 / 2.0)
+			#dc.DrawBitmap(meta.getEventIcon(16.0, event), X - 16.0 / 2.0, Y - 16.0 / 2.0)
+			dc.DrawBitmap(meta.getEventIcon(self.ICON_SIZE, event), X - self.ICON_SIZE / 2.0, Y - self.ICON_SIZE / 2.0)
 ##                      dc.DrawText(str(node.get_tags()), X, Y+NODE_R)
                     nodeY[node.id] = Y
                     Y += y_gap
@@ -679,7 +694,7 @@ class LineagePanel(wx.Panel):
 			    #dc.SetPen(wx.Pen('BLACK'))
 			    #dc.DrawCircle(X, Y, NODE_R-3/2)
 			    #dc.DrawBitmap(meta.getEventIcon(16.0, event), X - 16.0 / 2.0, Y - 16.0 / 2.0)
-			    dc.DrawBitmap(meta.getEventIcon(16.0, event), X - 16.0 / 2.0, Y - 16.0 / 2.0)
+			    dc.DrawBitmap(meta.getEventIcon(self.ICON_SIZE, event), X - self.ICON_SIZE / 2.0, Y - self.ICON_SIZE / 2.0)
 				
 			else:
 			    #dc.DrawCircle(X-NODE_R,Y, SM_NODE_R) # draws the node slightly left hand side on the furcation point
