@@ -50,8 +50,8 @@ STD_PROTOCOLS ={
     'ADMIN' : ['Your Name', '', ''],
     'SEED' : None,
     'VESSEL' : None,
-    'Step1' : ['enrich','Remove medium with a stripette','','', ''],
-    'Step2' : ['enrich','Add trypsin in the following volumes - 1ml for the 60mm dish or T25 flask OR 2ml for 100mm dish or T75 flask','','', ''],
+    'Step1' : ['enrich','Sort cells in flowcytometer','','', ''],
+    'Step2' : ['enrich','add medium','','', ''],
     }
  }
 class MaintainAction(wx.Dialog):
@@ -196,6 +196,41 @@ class MaintainAction(wx.Dialog):
 	    self.attr_fgs.Add(self.settings_controls['Seed|1'], 0, wx.EXPAND)	    
 	    self.attr_fgs.Add(wx.StaticText(self.sw, -1, 'Vessel Type'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
 	    self.attr_fgs.Add(self.settings_controls['Vessel|0'], 0, wx.EXPAND)
+	    
+	if self.action_type == 'Enrich':   
+	    self.settings_controls['Split'] = wx.Choice(self.sw, -1,  choices= map(str, range(1,21)), style=wx.TE_PROCESS_ENTER)
+	    self.settings_controls['Split'].Bind(wx.EVT_CHOICE, self.OnSavingData)
+	    self.settings_controls['Make'] = wx.TextCtrl(self.sw, size=(70,-1), value='Test')
+	    self.settings_controls['Make'].Bind(wx.EVT_TEXT, self.OnSavingData)
+	    self.settings_controls['Model'] = wx.TextCtrl(self.sw, size=(70,-1), value='Test')
+	    self.settings_controls['Make'].Bind(wx.EVT_TEXT, self.OnSavingData)
+	    self.settings_controls['Seed|0'] = wx.lib.masked.NumCtrl(self.sw, size=(20,-1), style=wx.TE_PROCESS_ENTER)
+	    unit_choices =['nM2', 'uM2', 'mM2','Other']
+	    self.settings_controls['Seed|1'] = wx.ListBox(self.sw, -1, wx.DefaultPosition, (50,20), unit_choices, wx.LB_SINGLE)
+	    self.settings_controls['Seed|0'].Bind(wx.EVT_TEXT, self.OnSavingData)
+	    self.settings_controls['Seed|1'].Bind(wx.EVT_LISTBOX, self.OnSavingData)	    
+	    vessel_types =['T75', 'T25', '6WellPlate','12WellPlate', 'Other']
+	    self.settings_controls['Vessel|0'] = wx.ListBox(self.sw, -1, wx.DefaultPosition, (100,20), vessel_types, wx.LB_SINGLE)
+	    self.settings_controls['Vessel|0'].Bind(wx.EVT_LISTBOX, self.OnSavingData)
+	    
+	    self.attr_fgs.Add(wx.StaticText(self.sw, -1, 'Split 1: '),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	    self.attr_fgs.Add(self.settings_controls['Split'], 0, wx.EXPAND)
+	    self.attr_fgs.Add(wx.StaticText(self.sw, -1, ''),0)
+	    self.attr_fgs.Add(wx.StaticText(self.sw, -1, ''),0)
+	    self.attr_fgs.Add(wx.StaticText(self.sw, -1, 'Flow Cytometer'),0)
+	    self.attr_fgs.Add(wx.StaticText(self.sw, -1, ''),0)
+	    self.attr_fgs.Add(wx.StaticText(self.sw, -1, ''),0)
+	    self.attr_fgs.Add(wx.StaticText(self.sw, -1, ''),0)	    
+	    self.attr_fgs.Add(wx.StaticText(self.sw, -1, 'Make'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	    self.attr_fgs.Add(self.settings_controls['Make'], 0, wx.EXPAND)	    
+	    self.attr_fgs.Add(wx.StaticText(self.sw, -1, ' Model'),0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)
+	    self.attr_fgs.Add(self.settings_controls['Model'], 0, wx.EXPAND)
+	    self.attr_fgs.Add(wx.StaticText(self.sw, -1, '(Re)seed Density'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	    self.attr_fgs.Add(self.settings_controls['Seed|0'], 0, wx.EXPAND)
+	    self.attr_fgs.Add(wx.StaticText(self.sw, -1, ' cells/'),0, wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL)
+	    self.attr_fgs.Add(self.settings_controls['Seed|1'], 0, wx.EXPAND)	    
+	    self.attr_fgs.Add(wx.StaticText(self.sw, -1, 'Vessel Type'),0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+	    self.attr_fgs.Add(self.settings_controls['Vessel|0'], 0, wx.EXPAND)
 	        
 	self.selection_btn = wx.Button(self, wx.ID_OK, 'Record')
         self.close_btn = wx.Button(self, wx.ID_CANCEL)  
@@ -323,9 +358,12 @@ class MaintainAction(wx.Dialog):
 	
     def OnAddStep(self, event):
 	meta = ExperimentSettings.getInstance()
-	steps = sorted([step for step in self.curr_protocol.keys()
-	if not step.startswith('ADMIN')] , key = meta.stringSplitByNumbers)
-	for step in steps:
+	steps = []
+	for step in self.curr_protocol.keys():
+	    if step not in ['ADMIN','SEED','HARVEST','VESSEL']:
+		steps.append(step)
+		
+	for step in sorted(steps, key = meta.stringSplitByNumbers):
 	    if not self.curr_protocol[step]:
 		dial = wx.MessageDialog(None, 'Please fill the description in %s !!' %step, 'Error', wx.OK | wx.ICON_ERROR)
 		dial.ShowModal()  
@@ -333,7 +371,7 @@ class MaintainAction(wx.Dialog):
 	ctrl = event.GetEventObject()
 	#Rearrange the steps numbers in the experimental settings
 	temp_steps = {}
-	for step in steps:
+	for step in sorted(steps, key = meta.stringSplitByNumbers):
 	    stepNo = int(step.split('Step')[1])
 	    step_info =  self.curr_protocol[step]	    	    
 	    if stepNo > ctrl.GetId() and temp_steps[stepNo] is not []:

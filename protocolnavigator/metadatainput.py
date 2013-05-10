@@ -817,25 +817,24 @@ class CellLinePanel(wx.Panel):
 	prop_staticbox = wx.StaticBox(self.sw, -1, "Cell History")	
 	prop_fgs = wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
 
-        orgpassTAG = self.tag_stump+'|OrgPassageNo|%s'%str(self.tab_number)
-        self.settings_controls[orgpassTAG] = wx.lib.masked.NumCtrl(self.sw,  size=(20,-1), style=wx.TE_PROCESS_ENTER, value=meta.get_field(orgpassTAG, default=0))
-        self.settings_controls[orgpassTAG].Bind(wx.EVT_TEXT, self.OnSavingData)    
-        self.settings_controls[orgpassTAG].SetToolTipString('Numeric value of the passage of the cells under investigation')
-	self.labels[orgpassTAG] = wx.StaticText(self.sw, -1, 'Original Passage No')
-        prop_fgs.Add(self.labels[orgpassTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
-        prop_fgs.Add(self.settings_controls[orgpassTAG], 0, wx.EXPAND)
+        self.orgpassTAG = self.tag_stump+'|OrgPassageNo|%s'%str(self.tab_number)
+        self.settings_controls[self.orgpassTAG] = wx.lib.masked.NumCtrl(self.sw,  size=(20,-1), style=wx.TE_PROCESS_ENTER, value=meta.get_field(self.orgpassTAG, default=0))
+        self.settings_controls[self.orgpassTAG].Bind(wx.EVT_TEXT, self.OnSavingData)    
+        self.settings_controls[self.orgpassTAG].SetToolTipString('Numeric value of the passage of the cells under investigation')
+	self.labels[self.orgpassTAG] = wx.StaticText(self.sw, -1, 'Original Passage No')
+        prop_fgs.Add(self.labels[self.orgpassTAG], 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)
+        prop_fgs.Add(self.settings_controls[self.orgpassTAG], 0, wx.EXPAND)
+	if self.settings_controls[self.orgpassTAG].GetValue() > 0:
+	    self.settings_controls[self.orgpassTAG].Disable()
 	
 	self.curr_pass_text = wx.StaticText(self.sw, -1, '')
 	prop_fgs.Add(wx.StaticText(self.sw, -1, 'Current Passage No'), 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL)	
 	prop_fgs.Add(self.curr_pass_text, 0, wx.ALIGN_RIGHT|wx.ALIGN_CENTER_VERTICAL|wx.RIGHT, 5)	
+	self.updatePassageNo() #update the current passage number
 	
 	self.canvas = plot.PlotCanvas(self.sw)
 	self.canvas.SetInitialSize(size=(400, 300))
 	
-	passages = [attr for attr in meta.get_attribute_list_by_instance(self.tag_stump, str(self.tab_number))
-		                            if attr.startswith('Passage')]	
-	if passages:
-	    self.curr_pass_text.SetLabel('%d' %len(passages))
 	    
 	self.showpasshisBut  = wx.Button(self.sw, -1, label="Show History")
 	self.showpasshisBut.Bind(wx.EVT_BUTTON, self.onshowPassHistory)
@@ -910,7 +909,9 @@ class CellLinePanel(wx.Panel):
 	self.SetSizer(self.Sizer)
   
     def onRecordAction(self, event):
-	if meta.checkMandatoryTags(self.mandatory_tags):
+	if meta.checkMandatoryTags(self.mandatory_tags):    
+	    self.settings_controls[self.orgpassTAG].Disable()
+	    
 	    # find the current number of the action
 	    # first identify what type of action it is
 	    action = event.GetEventObject().actiontype
@@ -961,11 +962,12 @@ class CellLinePanel(wx.Panel):
 			    
 		# Set the cell history
 		self.cell_history.append((attribute, dia.curr_protocol['ADMIN'][0], dia.sel_date_time, self.master_elapsed_min))
-		meta.set_field(self.historyTAG, self.cell_history)		
+		meta.set_field(self.historyTAG, self.cell_history)
 		
 		if action == 'Passage' or action == 'Seed':
 		    meta.set_field(self.tag_stump+'|%s|%s' %(attribute, str(self.tab_number)), dia.curr_protocol.items())
-		if action == 'Freeze':
+		    self.updatePassageNo() #update the current passage number
+		else:
 		    meta.set_field(self.tag_stump+'|%s|%s' %(attribute, self.tab_number), dia.curr_protocol.items())
 		    attr_list = meta.get_attribute_list_by_instance(self.tag_stump, self.tab_number)
 		    for tab in range(1, int(dia.curr_protocol['SPLIT'])+1):
@@ -1116,6 +1118,13 @@ class CellLinePanel(wx.Panel):
     def validate(self):
         pass
     
+    def updatePassageNo(self):
+	self.curr_pass_text.SetLabel('%d' %self.settings_controls[self.orgpassTAG].GetValue())
+	passages = [attr for attr in meta.get_attribute_list_by_instance(self.tag_stump, str(self.tab_number))
+		                    if attr.startswith('Passage')]	
+	if passages:
+	    self.curr_pass_text.SetLabel('%d' %(len(passages)+self.settings_controls[self.orgpassTAG].GetValue()))
+	    
     def getAdminInfo(self, passage):
 	meta = ExperimentSettings.getInstance()
 	passage_info = meta.get_field(self.tag_stump+'|%s|%s' %(passage, str(self.tab_number)))
@@ -1134,14 +1143,16 @@ class CellLinePanel(wx.Panel):
     def OnSavingSettings(self, event):
 	meta.saving_settings(self.protocol, self.nameTAG, self.mandatory_tags)    
     
-    def OnSavingData(self, event):
+    def OnSavingData(self, event):	
 	ctrl = event.GetEventObject()
 	tag = [t for t, c in self.settings_controls.items() if c==ctrl][0]
 	if exp.get_tag_stump(tag, 4) in self.mandatory_tags:
 	    meta.saveData(ctrl, tag, self.settings_controls)
 	    meta.setLabelColour(self.mandatory_tags, self.labels)	    
 	elif meta.checkMandatoryTags(self.mandatory_tags):
-	    meta.saveData(ctrl, tag, self.settings_controls)     
+	    meta.saveData(ctrl, tag, self.settings_controls)
+	    
+	self.updatePassageNo() #update the current passage number
 	
     
 	
