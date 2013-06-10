@@ -57,7 +57,7 @@ class LineageFrame(wx.ScrolledWindow):
 	zoom_sizer.Add(self.zoom, 0)
 	time_panel_sizer = wx.BoxSizer(wx.HORIZONTAL)
 	time_panel_sizer.Add(zoom_sizer, 0, wx.RIGHT, 5)
-	time_panel_sizer.Add(timeline_panel, 1)
+	time_panel_sizer.Add(timeline_panel, 1, wx.EXPAND)
 	
 	
         sw.SetSizer(wx.BoxSizer(wx.VERTICAL))
@@ -690,10 +690,6 @@ class LineagePanel(wx.Panel):
 				event = 'CellLine'
 			    else:
 				event = exp.get_tag_event(node_tags[0])
-			    #dc.DrawCircle(X, Y, NODE_R)
-			    #dc.SetPen(wx.Pen('BLACK'))
-			    #dc.DrawCircle(X, Y, NODE_R-3/2)
-			    #dc.DrawBitmap(meta.getEventIcon(16.0, event), X - 16.0 / 2.0, Y - 16.0 / 2.0)
 			    dc.DrawBitmap(meta.getEventIcon(self.ICON_SIZE, event), X - self.ICON_SIZE / 2.0, Y - self.ICON_SIZE / 2.0)
 				
 			else:
@@ -704,8 +700,8 @@ class LineagePanel(wx.Panel):
                         
                     # DRAW LINES CONNECTING THIS NODE TO ITS CHILDREN
                     dc.SetBrush(wx.Brush('#FAF9F7'))
-                    #dc.SetPen(wx.Pen(wx.BLACK, 1))
-		    dc.SetPen(wx.Pen('#D1CDCF'))
+                    dc.SetPen(wx.Pen(wx.BLACK, 1))
+		    #dc.SetPen(wx.Pen('#D1CDCF'))
 		    #dc.SetPen(wx.Pen(stateRGB))
                     harvest_tag = False
                     for tag in node.get_tags():
@@ -720,7 +716,8 @@ class LineagePanel(wx.Panel):
 				for tag in nn.get_tags():
 				    if (tag.startswith('Transfer|Seed') and 
 				        meta.get_field('Transfer|Seed|HarvestInstance|'+exp.get_tag_instance(tag)) == exp.get_tag_instance(harvest_tag)):
-					dc.SetPen(wx.Pen('#948BB3', 1, wx.SHORT_DASH))
+					#dc.SetPen(wx.Pen('#948BB3', 1, wx.SHORT_DASH))
+					dc.SetPen(wx.Pen(wx.BLACK, 1, wx.SHORT_DASH))
 					dc.DrawLine(X + NODE_R, Y, 
 				                    X + x_gap - NODE_R ,nodeY[nn.id])
 			else:
@@ -731,7 +728,8 @@ class LineagePanel(wx.Panel):
 					            X + x_gap - NODE_R, nodeY[child.id])	
 				else:
 				    if children_status and stateRGB != (255,255,255,100):
-					    dc.SetPen(wx.Pen('#D1CDCF'))
+					    #dc.SetPen(wx.Pen('#D1CDCF'))
+					    dc.SetPen(wx.Pen(wx.BLACK))
 					    #dc.SetPen(wx.Pen(stateRGB))
 					    dc.DrawLine(X, Y,
 						        X + x_gap, nodeY[child.id])
