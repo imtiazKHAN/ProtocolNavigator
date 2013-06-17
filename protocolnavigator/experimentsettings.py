@@ -7,7 +7,7 @@ from utils import *
 from timeline import Timeline
 
 
-VERSION = 'ProtocolNavigator_v1.03.21'
+VERSION = 'ProtocolNavigator_v1.06.10'
 # TODO: Updating PlateDesign could be done entirely within 
 #       set_field and remove_field.
 #
@@ -756,7 +756,7 @@ class ExperimentSettings(Singleton):
 	elif act =='Initiation':
 	    icon = icons.initiation.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()
 	elif act =='Storage':
-	    icon = icons.initiation.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
+	    icon = icons.storage.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap()	
 	elif act =='Incubation':
 	    icon = icons.incubator.Scale(icon_size, icon_size, quality=wx.IMAGE_QUALITY_HIGH).ConvertToBitmap() 
 	elif act =='RheoManipulation':
