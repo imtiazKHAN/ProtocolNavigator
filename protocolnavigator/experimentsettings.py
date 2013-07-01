@@ -62,8 +62,9 @@ class ExperimentSettings(Singleton):
     global_settings = {}
     timeline        = Timeline('TEST_STOCK')
     subscribers     = {}
-    curr_dir =  os.path.dirname(os.path.abspath(__file__))
-    save_file_path = curr_dir+'\\temporary_experiment.txt'    # first assign it to the temp directory
+    #curr_dir =  os.path.dirname(os.path.abspath(__file__))
+    #save_file_path = curr_dir+'\\temporary_experiment.txt'    # first assign it to the temp directory
+    save_file_path = None
    
    
     def __init__(self):
@@ -300,68 +301,59 @@ class ExperimentSettings(Singleton):
                 self.timeline.add_event(welltag, platewell_ids)
 		
     def save_file_dialogue(self):
-	print self.save_file_path
 	exp_date = self.get_field('Overview|Project|ExptDate')
 	exp_num = self.get_field('Overview|Project|ExptNum')
 	exp_title = self.get_field('Overview|Project|Title')
-	if None not in [exp_date, exp_num, exp_title]:
-	    day, month, year = exp_date.split('/')
-	    filename = '%s%s%s_%s_%s.txt'%(year, month, day , exp_num, exp_title)
-	elif self.save_file_path:
+	if self.save_file_path:
+	    self.save_to_file()
+	    #import ntpath
+	    #filename = os.path.splitext(ntpath.basename(self.save_file_path))[0]
+	else:
+	    filename = 'new_experiment.txt'
+	    if None not in [exp_date, exp_num, exp_title]:
+		day, month, year = exp_date.split('/')
+		filename = '%s%s%s_%s_%s.txt'%(year, month, day , exp_num, exp_title)
+	    dlg = wx.FileDialog(None, message='Saving experimental protocol...', 
+	                        defaultDir=os.getcwd(), defaultFile=filename, 
+	                        wildcard='.txt', 
+	                        style=wx.SAVE|wx.FD_OVERWRITE_PROMPT)
+	    if dlg.ShowModal() == wx.ID_OK:
+		self.save_file_path = dlg.GetPath()
+		self.save_to_file()
+	
+    def save_as_file_dialogue(self):
+	exp_date = self.get_field('Overview|Project|ExptDate')
+	exp_num = self.get_field('Overview|Project|ExptNum')
+	exp_title = self.get_field('Overview|Project|Title')
+	if self.save_file_path:
 	    import ntpath
 	    filename = os.path.splitext(ntpath.basename(self.save_file_path))[0]
 	else:
 	    filename = 'new_experiment.txt'
-	
+	    if None not in [exp_date, exp_num, exp_title]:
+		day, month, year = exp_date.split('/')
+		filename = '%s%s%s_%s_%s.txt'%(year, month, day , exp_num, exp_title)
 	dlg = wx.FileDialog(None, message='Saving experimental protocol...', 
                             defaultDir=os.getcwd(), defaultFile=filename, 
                             wildcard='.txt', 
                             style=wx.SAVE|wx.FD_OVERWRITE_PROMPT)
 	if dlg.ShowModal() == wx.ID_OK:
 	    self.save_file_path = dlg.GetPath()
-	self.save_to_file()
-	
-    def save_as_file_dialogue(self):
-	exp_date = self.get_field('Overview|Project|ExptDate')
-	exp_num = self.get_field('Overview|Project|ExptNum')
-	exp_title = self.get_field('Overview|Project|Title')
-	
-	if None not in [exp_date, exp_num, exp_title]:
-	    day, month, year = exp_date.split('/')
-	    filename = '%s%s%s_%s_%s.txt'%(year, month, day , exp_num, exp_title)
-	else:
-	    filename = 'new_experiment.txt'
-	
-	dlg = wx.FileDialog(None, message='Saving experimental metadata...', 
-                            defaultDir=os.getcwd(), defaultFile=filename, 
-                            wildcard='.txt', 
-                            style=wx.SAVE|wx.FD_OVERWRITE_PROMPT)
-	if dlg.ShowModal() == wx.ID_OK:
-	    #os.chdir(os.path.split(dlg.GetPath())[0])
-	    self.save_file_path = dlg.GetPath()
-	    self.save_to_file()	
+	    self.save_to_file()
 	    
     def save_to_file(self):
-	# if permenemt file path exists save info there
-	# elif temp file path exists save info there
-	# else warn users that they need to create a file path
-	#if self.save_file_path:
-	    #"I am in save file path"
-	#elif self.temp_file_path:
-	    #print self.temp_file_path
-	#else:
-	    #print "Wrong Terror"
-	try:
-	    f = open(self.save_file_path, 'w')
-	    f.write(VERSION+'\n')
-	    for field, value in sorted(self.global_settings.items()):
-		f.write('%s = %s\n'%(field, repr(value)))
-	    f.close()	
-	except IOError:
-	    import wx
-	    dial = wx.MessageDialog(None, 'No permission to create temporary experimental file in current directory\nPlease save file in separate directory.', 'Error', wx.OK | wx.ICON_ERROR)
-	    if dial.ShowModal() == wx.ID_OK:
-		self.save_as_file_dialogue()    
+	if self.save_file_path:
+	    try:
+		f = open(self.save_file_path, 'w')
+		f.write(VERSION+'\n')
+		for field, value in sorted(self.global_settings.items()):
+		    f.write('%s = %s\n'%(field, repr(value)))
+		f.close()	
+	    except IOError:
+		import wx
+		dial = wx.MessageDialog(None, 'No permission to create temporary experimental file in current directory\nPlease save file in separate directory.', 'Error', wx.OK | wx.ICON_ERROR)
+		if dial.ShowModal() == wx.ID_OK:
+		    self.save_as_file_dialogue()	
 
     def saveData(self, ctrl, tag, settings_controls):
 	if isinstance(ctrl, wx.ListBox) and ctrl.GetStringSelection() == 'Other':
@@ -460,10 +452,6 @@ class ExperimentSettings(Singleton):
     def load_from_file(self, file, menuitem):
         # Populate the tag structure
         self.clear()
-	self.save_file_path = file
-	import ntpath
-	self.temp_file_path = os.path.dirname(os.path.abspath(file))+os.path.splitext(ntpath.basename(self.save_file_path))[0]+'_temp.txt'
-	
         f = open(file, 'r')
 	lines = [line.strip() for line in f]
 	if not lines.pop(0).startswith('ProtocolNavigator'):
@@ -471,6 +459,7 @@ class ExperimentSettings(Singleton):
 	    dial = wx.MessageDialog(None, 'Selected file is not a ProtocolNavigator file', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()  
 	    return
+	
         for line in lines:
             tag, value = line.split('=', 1)
             tag = tag.strip()
@@ -478,7 +467,11 @@ class ExperimentSettings(Singleton):
         f.close()
 	# Disable the open file menu
 	menuitem.Enable(False)
-        
+	# index the file path
+        self.save_file_path = file
+	#import ntpath
+	#self.temp_file_path = os.path.dirname(os.path.abspath(file))+os.path.splitext(ntpath.basename(self.save_file_path))[0]+'_temp.txt'
+		
         # Populate PlateDesign
         PlateDesign.clear()
         for vessel_type in ('Plate', 'Flask', 'Dish', 'Coverslip', 'Tube'):
@@ -561,7 +554,7 @@ class ExperimentSettings(Singleton):
     def notify_subscribers(self, tag):
         for matchstring, callbacks in self.subscribers.items():
             if re.match(matchstring, tag):
-		self.save_to_file()
+		#self.save_to_temp_file()  # update info to the temp file
                 for callback in callbacks:
                     callback(tag)
                     

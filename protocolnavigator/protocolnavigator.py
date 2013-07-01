@@ -32,15 +32,12 @@ class ProtocolNavigator(wx.App):
         self.loadSettingsMenuItem = fileMenu.Append(wx.ID_OPEN, 'Open Protocol\tCtrl+O', 'Open previously curated protocol')
         printExperimentMenuItem = fileMenu.Append(wx.ID_PRINT, 'Print Protocol\tCtrl+P', 'Printing current protocol')
 	exitMenuItem = fileMenu.Append(wx.ID_CLOSE, 'Close\tCtrl+C', 'Close current protocol')
-        #self.settings_frame.Bind(wx.EVT_MENU, self.on_new_experiment, newExperimentMenuItem)
-       
+
         self.settings_frame.Bind(wx.EVT_MENU, self.on_save_settings, saveSettingsMenuItem)
 	self.settings_frame.Bind(wx.EVT_MENU, self.on_save_as_settings, saveasSettingsMenuItem)
         self.settings_frame.Bind(wx.EVT_MENU, self.on_load_settings, self.loadSettingsMenuItem)
         self.settings_frame.Bind(wx.EVT_MENU, self.on_print_protocol, printExperimentMenuItem)
 	self.settings_frame.Bind(wx.EVT_MENU, self.onCloseWindow, exitMenuItem)
-	
-	self.temp_filename = 'temp_experiment.txt'	
 
         self.settings_frame.GetMenuBar().Append(fileMenu, 'File')
         
