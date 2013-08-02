@@ -422,32 +422,14 @@ class ExperimentSettings(Singleton):
 	attributes = list(set(self.get_attribute_list_by_instance(tag_stump, instance)))
 	if 'Wells' in attributes: attributes.remove('Wells')
 	for attr in attributes:
-	    info = self.get_field(tag_stump+'|%s|%s' %(attr, instance))
-	    f.write('%s = %s\n'%(attr, repr(info)))
-	f.close()	    	
-    
-    #def save_supp_protocol_file(self, file, protocol):
-	#instance = get_tag_attribute(protocol)
-	#tag_stump = get_tag_stump(protocol, 2)
-		    
-	#f = open(file,'w')
-	#attributes = self.get_attribute_list_by_instance(tag_stump, instance)
-    
-	#for attr in attributes:
-	    #info = self.get_field(tag_stump+'|%s|%s' %(attr, instance))
-	    #if isinstance(info, list):
-		#f.write('%s|'%attr)	    		    
-		#for i, val in enumerate(info):
-		    #if isinstance(val, tuple):
-			#print val
-		    #elif i == len(info)-1:
-			#f.write('%s'%val)
-		    #else:
-			#f.write('%s|'%val)
-		#f.write('\n')
-	    #else:
-		#f.write('%s|%s\n'%(attr, info))
-	#f.close()	
+	    value = self.get_field(tag_stump+'|%s|%s' %(attr, instance))
+	    if attr.endswith('Instance'):
+		f.write('Dependency%s = %s\n'%(attr, repr(value))) # to get the ...Instance which will be overwritten 
+		for d_attr, d_val in self.get_attribute_dict('%s|%s' %(DEPENDENCY[get_tag_event(protocol)], value)).iteritems():
+		    f.write('Dependency%s = %s\n'%(d_attr, repr(d_val)))	
+	    else:
+		f.write('%s = %s\n'%(attr, repr(value)))
+	f.close()	    		
 
     def load_from_file(self, file, menuitem):
         # Populate the tag structure
@@ -504,10 +486,9 @@ class ExperimentSettings(Singleton):
 	tag_stump = get_tag_stump(protocol, 2)	
 	
 	lines = [line.strip() for line in open(file)]
-	
 	if not lines:
 	    import wx
-	    dial = wx.MessageDialog(None, 'Supplementary protocol file is empty!!', 'Error', wx.OK | wx.ICON_ERROR)
+	    dial = wx.MessageDialog(None, 'Sub-process file is empty!!', 'Error', wx.OK | wx.ICON_ERROR)
 	    dial.ShowModal()  
 	    return	
 
@@ -525,16 +506,44 @@ class ExperimentSettings(Singleton):
 	instance = get_tag_attribute(protocol)
 	tag_stump = get_tag_stump(protocol, 2)	
 	f = open(file, 'r')
-	
 	lines = [line.strip() for line in f]
-	lines.pop(0) # takes out the first line or the header where all setting type microscope/spin etc are written	
+	event = lines.pop(0) # takes out the first line or the header where all setting type microscope/spin etc are written	
+	attributes = {}
 	for line in lines:
 	    attr, value = line.split('=', 1)
-	    attr = attr.strip()
+	    attributes[attr.strip()] = value
+	# set all dependency attributes e.g. Centifugation depends on Centrifuge
+	dependecny_attrs = [s for s in attributes if 'Dependency' in s]
+	if dependecny_attrs:
+	    d_inst = self.get_new_protocol_id(DEPENDENCY[event])
+	    for d_attr in dependecny_attrs:
+		if d_attr.endswith('Instance'):
+		    tag = tag_stump+'|%s|%s'%(d_attr.split('Dependency')[1], instance)
+		    self.set_field(tag, d_inst, notify_subscribers=False)
+		    self.notify_subscribers(tag)
+		    del attributes[d_attr]
+		else:
+		    tag = DEPENDENCY[event]+'|%s|%s'%(d_attr.split('Dependency')[1], d_inst)
+		    self.set_field(tag, eval(attributes[d_attr]), notify_subscribers=False)
+		    self.notify_subscribers(tag)
+		    del attributes[d_attr]
+	# set rest of the attributes
+	for attr in attributes:
 	    tag = tag_stump+'|%s|%s'%(attr, instance)
-	    self.set_field(tag, eval(value), notify_subscribers=False)
+	    self.set_field(tag, eval(attributes[attr]), notify_subscribers=False)
 	    self.notify_subscribers(tag)
-	    f.close()
+	    f.close()	    
+		
+	
+	    
+	    
+	#for line in lines:
+	    #attr, value = line.split('=', 1)
+	    #attr = attr.strip()
+	    #tag = tag_stump+'|%s|%s'%(attr, instance)
+	    #self.set_field(tag, eval(value), notify_subscribers=False)
+	    #self.notify_subscribers(tag)
+	    #f.close()
 	
     def add_subscriber(self, callback, match_string):
         '''callback -- the function to be called
@@ -866,7 +875,13 @@ EVENT_RGB ={
 }
 
 	
-
+DEPENDENCY = { 
+    'Instrument':'InstProcess',
+    'Centrifugation':'Instrument|Centrifuge', 
+    'Incubation':'Instrument|Incubator',
+    'Drying':'Instrument|Oven',
+    'RheoManipulation':'Instrument|Rheometer',
+    }
             
         
 

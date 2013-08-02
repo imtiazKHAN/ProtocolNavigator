@@ -675,6 +675,9 @@ class LineagePanel(wx.Panel):
 			    dc.SetPen(wx.Pen(stateRGB, 1))
 			    self.current_node = node                        
 			    self.SetToolTipString(self.ShowTooltipsInfo())
+			    #print self.current_node.get_tags()
+			    #print self.current_node.get_well_ids()
+			   			    
                     else:
                         # No MouseOver
 			if event_status:
@@ -860,10 +863,14 @@ class LineagePanel(wx.Panel):
 	    
       
     def ShowTooltipsInfo(self):
-        info_string = ''
+        what = ''
+	where = ''
         for tag in self.current_node.get_tags():
-            info_string += str(meta.get_attribute_dict(exp.get_tag_protocol(tag)))
-        return info_string  
+	    what = exp.get_tag_event(exp.get_tag_protocol(tag))+' instance %s was used on'%exp.get_tag_attribute(exp.get_tag_protocol(tag))
+	for pw in self.current_node.get_well_ids():
+	    where += str(pw) 
+        return what+'\n'+where  
+
     
     def get_description(self, protocol):
         return '\n'.join(['%s=%s'%(k, v) for k, v in meta.get_attribute_dict(exp.get_tag_protocol(protocol))])  

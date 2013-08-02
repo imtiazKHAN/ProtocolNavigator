@@ -891,7 +891,7 @@ class CellLinePanel(wx.Panel):
 	actSizer.Add(act_fgs, 1, wx.EXPAND|wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5)
 	
 	# Set Mandatory Label colour
-	#meta.setLabelColour(self.mandatory_tags, self.labels)	
+	meta.setLabelColour(self.mandatory_tags, self.labels)	
 	
 	#---------------Layout with sizers---------------		
 	topsizer = wx.BoxSizer(wx.VERTICAL)
