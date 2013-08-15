@@ -1026,7 +1026,7 @@ class PrintProtocol(wx.Frame):
 	                                   'Centrifugation', 'Incubation', 'RheoManipulation', 'Drying',	                                   
 	                                   'TLM', 'HCS','FCS', 'RHE', 'Text', 'Hint', 'Rest', 'URL', 'MultiMedia'):
 	    for attr in meta.get_attribute_list_by_instance(tag_stump, instance):
-		if attr.endswith('1'):
+		if re.search(r"(\w+)1", attr):  # avoids FL-1 type of attributes only takes step1
 		    metadata[attr[:-1]] = self.decode_subprocess(protocol, attr[:-1])
 		elif attr.startswith('AttachFiles'):
 		    metadata[attr] = [f for f in meta.get_field(tag_stump+'|AttachFiles|%s'%instance)] 

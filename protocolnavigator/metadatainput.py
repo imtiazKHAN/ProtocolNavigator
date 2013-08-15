@@ -85,7 +85,7 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
 	self.tree.AppendItem(inp, 'Incubation')
 	self.tree.AppendItem(inp, 'Rheological Manipulation')	
         dta = self.tree.AppendItem(stc, 'Data Acquisition')
-        self.tree.AppendItem(dta, 'Flow Cytometer Files')
+        self.tree.AppendItem(dta, 'Flow Cytometer File')
 	self.tree.AppendItem(dta, 'Rheological Measurement')
 	self.tree.AppendItem(dta, 'Static Image')
 	self.tree.AppendItem(dta, 'Timelapse Image')
@@ -264,7 +264,7 @@ class ExperimentSettingsWindow(wx.SplitterWindow):
             self.settings_panel = TLMSettingPanel(self.settings_container)
         elif self.tree.GetItemText(item) == 'Static Image':
             self.settings_panel = HCSSettingPanel(self.settings_container)
-        elif self.tree.GetItemText(item) == 'Flow Cytometer Files':
+        elif self.tree.GetItemText(item) == 'Flow Cytometer File':
             self.settings_panel = FCSSettingPanel(self.settings_container)
 	elif self.tree.GetItemText(item) == 'Rheological Measurement':
 	    self.settings_panel = RHESettingPanel(self.settings_container)   
@@ -558,10 +558,10 @@ class CellLinePanel(wx.Panel):
 	self.sw = wx.ScrolledWindow(self)
 	
 	self.action_pair = {
-		    'Seed': ['Seed','Freeze'],
+		    'Seed': ['Seed'],
 		    'Passage': ['Seed'],
-		    'Freeze': ['Freeze','Passage', 'Enrich'],
-		    'Enrich': ['Enrich','Seed']
+		    #'Freeze': ['Freeze','Passage', 'Enrich'],
+		    #'Enrich': ['Enrich','Seed']
 		}	
 
 	# Title
@@ -872,21 +872,21 @@ class CellLinePanel(wx.Panel):
 	self.action_buttons['Seed'].actiontype = "Seed"
 	self.action_buttons['Passage'] = wx.Button(self.sw, -1, label="Passage")
 	self.action_buttons['Passage'].actiontype = "Passage"
-	self.action_buttons['Freeze'] = wx.Button(self.sw, -1, label="Freeze")
-	self.action_buttons['Freeze'].actiontype = "Freeze"	
-	self.action_buttons['Enrich'] = wx.Button(self.sw, -1, label="Enrich")
-	self.action_buttons['Enrich'].actiontype = "Enrich"
+	#self.action_buttons['Freeze'] = wx.Button(self.sw, -1, label="Freeze")
+	#self.action_buttons['Freeze'].actiontype = "Freeze"	
+	#self.action_buttons['Enrich'] = wx.Button(self.sw, -1, label="Enrich")
+	#self.action_buttons['Enrich'].actiontype = "Enrich"
 	
 	self.action_buttons['Seed'].Bind(wx.EVT_BUTTON, self.onRecordAction)
 	self.action_buttons['Passage'].Bind(wx.EVT_BUTTON, self.onRecordAction)
-	self.action_buttons['Freeze'].Bind(wx.EVT_BUTTON, self.onRecordAction)
-	self.action_buttons['Enrich'].Bind(wx.EVT_BUTTON, self.onRecordAction)
+	#self.action_buttons['Freeze'].Bind(wx.EVT_BUTTON, self.onRecordAction)
+	#self.action_buttons['Enrich'].Bind(wx.EVT_BUTTON, self.onRecordAction)
 	#self.recordPassageBtn.Bind(wx.EVT_BUTTON, self.onRecordPassage)
 	
 	act_fgs.Add(self.action_buttons['Seed'], 0)
 	act_fgs.Add(self.action_buttons['Passage'], 0)
-	act_fgs.Add(self.action_buttons['Freeze'], 0)
-	act_fgs.Add(self.action_buttons['Enrich'], 0)
+	#act_fgs.Add(self.action_buttons['Freeze'], 0)
+	#act_fgs.Add(self.action_buttons['Enrich'], 0)
 	actSizer = wx.StaticBoxSizer(act_staticbox, wx.HORIZONTAL)
 	actSizer.Add(act_fgs, 1, wx.EXPAND|wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5)
 	

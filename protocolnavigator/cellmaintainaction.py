@@ -284,7 +284,7 @@ class MaintainAction(wx.Dialog):
 	# get the sorted steps in passaging
 	steps = sorted([step for step in self.curr_protocol.keys()
 		 if step.startswith('Step')] , key = meta.stringSplitByNumbers)
-		
+
 	#-- Header --#	
 	name_header = wx.StaticText(self.sw, -1, 'Name')
 	desp_header = wx.StaticText(self.sw, -1, 'Description')
@@ -393,8 +393,8 @@ class MaintainAction(wx.Dialog):
 	#delete the step from the experimental settings 
 	del self.curr_protocol[self.del_btn.step_to_delete]
 	# Rearrange the steps numbers in the experimental settings
-	steps = sorted([step for step in self.curr_protocol.keys()
-		 if not step.startswith('ADMIN')] , key = meta.stringSplitByNumbers)
+	steps = sorted([element for element in self.curr_protocol.keys()
+		 if element.startswith('Step')] , key = meta.stringSplitByNumbers)
 	temp_steps = {}
 	for stepNo in range(len(steps)):
 	    temp_steps[stepNo+1] = self.curr_protocol[steps[stepNo]]
@@ -446,22 +446,11 @@ class MaintainAction(wx.Dialog):
 	    
 	else:   # if this is a step 
 	    step = tag.split('|')[0]
-	    # get the sibling controls like description, duration, temp controls for this step
-	    info = []
-	    for tg in [t for t, c in self.settings_controls.items()]:
-		if exp.get_tag_stump(tag, 1) == exp.get_tag_stump(tg, 1) and tg.startswith('Step'):
-		    c_num = int(tg.split('|')[1])
-		    if isinstance(self.settings_controls[tg], wx.Choice):
-			info.insert(c_num, self.settings_controls[tg].GetStringSelection())
-		    elif isinstance(self.settings_controls[tg], wx.ListBox):
-			info.insert(c_num, self.settings_controls[tg].GetStringSelection())		    
-		    else:
-			user_input = self.settings_controls[tg].GetValue()
-			user_input.rstrip('\n')
-			user_input.rstrip('\t')
-			info.insert(c_num, user_input)
-		    
-	    self.curr_protocol[step] = info
+	    self.curr_protocol[step] = [self.settings_controls[step+'|0'].GetValue(),
+	                                self.settings_controls[step+'|1'].GetValue(),
+	                                self.settings_controls[step+'|2'].GetValue(),
+	                                self.settings_controls[step+'|3'].GetValue(),
+	                                self.settings_controls[step+'|4'].GetValue()]
 	
 	date = self.curr_protocol['ADMIN'][1].split('/')
 	time = self.curr_protocol['ADMIN'][2].split(':')
