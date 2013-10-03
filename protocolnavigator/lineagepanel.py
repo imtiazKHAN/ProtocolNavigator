@@ -851,14 +851,23 @@ class LineagePanel(wx.Panel):
 		    image_urls = []
 		    for row in dia.get_selected_urls():
 			image_urls.append(row[3])
+				
+				
 		    if os.path.isfile('C:\Program Files\ImageJ\ImageJ.exe') is False:
-			err_dlg = wx.MessageDialog(None, 'ImageJ was not found in C\Program Files directory to show images!!', 'Error', wx.OK | wx.ICON_ERROR)
-			err_dlg.ShowModal()			 
-			return 			
+			for r,d,f in os.walk("c:\\"):
+			    if r.endswith('ImageJ'):
+				for files in f:
+				    if files == "ImageJ.exe":
+					ImageJPath = os.path.join(r,files)	
+			if not ImageJPath:
+			    err_dlg = wx.MessageDialog(None, 'ImageJ was not found in C\Program Files directory to show images!!', 'Error', wx.OK | wx.ICON_ERROR)
+			    err_dlg.ShowModal()			 
+			    return 			
 		    else:
 			#TO DO: check the image format and image path are compatible with mageJ    
 			ImageJPath = 'C:\Program Files\ImageJ\ImageJ.exe'
-			subprocess.Popen("%s %s" % (ImageJPath, ' '.join(image_urls)))		    
+			
+		    subprocess.Popen('%s %s' % (ImageJPath, ' '.join('"' + item + '"' for item in image_urls)))
 	    dia.Destroy()	
 	    
       
