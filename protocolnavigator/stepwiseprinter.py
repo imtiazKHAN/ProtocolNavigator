@@ -163,7 +163,7 @@ class PrintProtocol(wx.Frame):
 		if 'RelProduct' in protocol_info:
 		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Related Products: </b>'+protocol_info['RelProduct']+'</font></code></td></tr>')		    
 		if 'OrgPassageNo' in protocol_info:
-		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Orginal Passage No: </b>'+protocol_info['OrgPassageNo']+'</font></code></td></tr>')		    
+		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Orginal Passage No: </b>'+str(protocol_info['OrgPassageNo'])+'</font></code></td></tr>')		    
 		if 'Preservation' in protocol_info:
 		    self.printfile.write('<tr><td align="left"><code><font size="1"><b>Preservation: </b>'+protocol_info['Preservation']+'</font></code></td></tr>')		    
 		if 'GrowthMedium' in protocol_info:
@@ -226,7 +226,7 @@ class PrintProtocol(wx.Frame):
 		protocol_info = self.decode_event_description('Instrument|Flowcytometer|%s'%instance)
 		self.printfile.write('<br /><table border="1"><tr><th colspan="2" align="center"><i>Settings Name: %s'%protocol_info.get('Name', '')+ ' Flowcytometer (%s %s) was used. This will be referred as instance %s' %(protocol_info.get('Manufacturer', ''), protocol_info.get('Model', ''), str(instance))+'</i></th></tr>')		
 		for ch, components in protocol_info.iteritems():
-		    if ch not in ['Name', 'Manufacturer', 'Model']:
+		    if ch not in ['Name', 'Manufacturer', 'Model', 'NickName', 'NickName','Address', 'Room']:
 			self.printfile.write('<tr><code><td width=10% align="center"><font size="2"><b>'+ch+'</b></font></code></td>')
 			self.printfile.write('<code><td width=90% align="left"><font size="1">')
 			for component in components[:-1]: 
@@ -433,10 +433,10 @@ class PrintProtocol(wx.Frame):
 			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['DyeName']+'</font></code></td></tr>')
 		    if 'LabellingConc' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Labelling Concentration</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+' '.join(map(str(protocol_info['LabellingConc'])))+'</font></code></td></tr>')	
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+' '.join(map(str, protocol_info['LabellingConc']))+'</font></code></td></tr>')	
 		    if 'StockConc' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Stock Concentration</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+' '.join(map(str(protocol_info['StockConc'])))+'</font></code></td></tr>')	
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+' '.join(map(str, protocol_info['StockConc']))+'</font></code></td></tr>')	
 		    if 'Manufacturer' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Manufacturer</b></font></code></td></tr>')
 			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Manufacturer']+'</font></code></td></tr>')	
