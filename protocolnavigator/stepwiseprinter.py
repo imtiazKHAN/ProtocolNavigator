@@ -442,7 +442,7 @@ class PrintProtocol(wx.Frame):
 			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Manufacturer']+'</font></code></td></tr>')	
 		    if 'CatNum' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Catalogue Number</b></font></code></td></tr>')
-			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Catalogue Number']+'</font></code></td></tr>')	
+			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['CatNum']+'</font></code></td></tr>')	
 		    if 'Storage' in protocol_info:
 			self.printfile.write('<tr><td align="left"><code><font size="1"><b>Storage</b></font></code></td></tr>')
 			self.printfile.write('<tr><td align="left"><code><font size="1">'+protocol_info['Storage']+'</font></code></td></tr>')			
