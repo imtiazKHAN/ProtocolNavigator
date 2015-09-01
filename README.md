@@ -8,6 +8,11 @@ Imtiaz A. Khan, Adam Fraser, Mark-Anthony Bray, Paul J. Smith, Nick S. White, An
 
 ProtocolNavigator was developed in collaboration with School of Medicine, Cardiff University, Cardiff, UK.  School of Optometry and Vision Sciences, Cardiff University, Cardiff, UK and Imaging Platform, Broad Institute of MIT and Harvard, Cambridge, MA, USA.  
 
+PUBLICATION
+---------------------------------------------------------------------------------
+ProtocolNavigator was published in Bioinformatics journal
+http://bioinformatics.oxfordjournals.org/content/30/23/3440
+
 
 FUNDING 
 ---------------------------------------------------------------------------------
